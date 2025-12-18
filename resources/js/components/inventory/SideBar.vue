@@ -45,7 +45,6 @@ const toggleSidebar = () => {
     mobileMenuOpen.value = !mobileMenuOpen.value
   } else {
     sidebarCollapsed.value = !sidebarCollapsed.value
-    console.log('Sidebar collapsed:', sidebarCollapsed.value)
     emit('sidebar-toggle', sidebarCollapsed.value)
   }
 }

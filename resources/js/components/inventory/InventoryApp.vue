@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import axios from '@/lib/axios'
 import { useAuth } from '../../composables/useAuth'
 import FlowbiteTable from './FlowbiteTable_clean.vue'
 import Sidebar from './SideBar.vue'
@@ -49,6 +50,21 @@ const sidebarCollapsed = ref(false)
 const globalSectionQuery = ref('')
 const globalSizeQuery = ref('')
 
+// Dashboard stats
+const finishedGoodsStats = ref({
+  totalProducts: 0,
+  inStock: 0,
+  lowStock: 0,
+  outOfStock: 0
+})
+
+const rawMaterialsStats = ref({
+  totalProducts: 0,
+  inStock: 0,
+  lowStock: 0,
+  outOfStock: 0
+})
+
 // Authentication
 const { user, isAuthenticated, isAdmin, initAuth, login, logout, startSessionKeepAlive } = useAuth()
 const authLoading = ref(true)
@@ -75,6 +91,8 @@ onMounted(async () => {
     // Start session keep-alive if user is authenticated
     if (isAuthenticated.value) {
       startSessionKeepAlive()
+      // Load dashboard stats
+      await loadDashboardStats()
     }
   } catch (error) {
     console.error('Auth initialization error:', error)
@@ -84,16 +102,59 @@ onMounted(async () => {
   }
 })
 
+// Watch for view changes to load stats when dashboard is accessed
+watch(currentView, async (newView) => {
+  if (newView === 'dashboard' && isAuthenticated.value) {
+    await loadDashboardStats()
+  }
+})
+
 // Handle sidebar toggle
 const handleSidebarToggle = (collapsed: boolean) => {
-  console.log('InventoryApp: Sidebar toggle received:', collapsed)
   sidebarCollapsed.value = collapsed
 }
 
-// Watch sidebar collapse state
-watch(sidebarCollapsed, (newValue) => {
-  console.log('InventoryApp: sidebarCollapsed changed to:', newValue)
-})
+// Load dashboard statistics
+const loadDashboardStats = async () => {
+  try {
+    // Load all inventory data and calculate totals
+    const [veeResponse, coggedResponse, polyResponse, tpuResponse] = await Promise.all([
+      axios.get('/api/vee-belts'),
+      axios.get('/api/cogged-belts'), 
+      axios.get('/api/poly-belts'),
+      axios.get('/api/tpu-belts')
+    ])
+
+    const allFinishedGoods = [
+      ...(veeResponse.data || []),
+      ...(coggedResponse.data || []),
+      ...(polyResponse.data || []),
+      ...(tpuResponse.data || [])
+    ]
+
+    // Calculate finished goods stats
+    finishedGoodsStats.value = {
+      totalProducts: allFinishedGoods.length,
+      inStock: allFinishedGoods.filter(p => (p.stock || 0) > 0).length,
+      lowStock: allFinishedGoods.filter(p => (p.stock || 0) > 0 && (p.stock || 0) <= (p.reorder_level || 5)).length,
+      outOfStock: allFinishedGoods.filter(p => (p.stock || 0) === 0).length
+    }
+
+    // For now, set raw materials to placeholder (no API available yet)
+    rawMaterialsStats.value = {
+      totalProducts: 0,
+      inStock: 0,
+      lowStock: 0,
+      outOfStock: 0
+    }
+
+  } catch (error) {
+    console.error('Error loading dashboard stats:', error)
+    // Set error state
+    finishedGoodsStats.value = { totalProducts: 0, inStock: 0, lowStock: 0, outOfStock: 0 }
+    rawMaterialsStats.value = { totalProducts: 0, inStock: 0, lowStock: 0, outOfStock: 0 }
+  }
+}
 
 // Computed style for main content margin
 const mainContentStyle = computed(() => {
@@ -539,11 +600,10 @@ onMounted(() => {
       />
       
       <div v-if="currentView === 'inventory'">
-      <FlowbiteTable 
-        :globalSectionQuery="globalSectionQuery"
-        :globalSizeQuery="globalSizeQuery"
+      <VeeBeltTable 
+        section="A"
+        title="A Section Inventory"
         :sidebar-collapsed="sidebarCollapsed"
-        @clear-global-search="clearGlobalSearch"
       />
     </div>
     <div v-else-if="currentView === 'spa-groups' || currentView === 'spa-l-groups'">
@@ -614,7 +674,7 @@ onMounted(() => {
                 </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Products</p>
-                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">1,247</p>
+                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ finishedGoodsStats.totalProducts.toLocaleString() }}</p>
                 </div>
               </div>
             </div>
@@ -627,7 +687,7 @@ onMounted(() => {
                 </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-gray-600 dark:text-gray-400">In Stock</p>
-                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">892</p>
+                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ finishedGoodsStats.inStock.toLocaleString() }}</p>
                 </div>
               </div>
             </div>
@@ -640,7 +700,7 @@ onMounted(() => {
                 </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Low Stock</p>
-                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">23</p>
+                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ finishedGoodsStats.lowStock.toLocaleString() }}</p>
                 </div>
               </div>
             </div>
@@ -653,7 +713,7 @@ onMounted(() => {
                 </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Out of Stock</p>
-                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">12</p>
+                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ finishedGoodsStats.outOfStock.toLocaleString() }}</p>
                 </div>
               </div>
             </div>
@@ -690,7 +750,7 @@ onMounted(() => {
                 </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Materials</p>
-                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">456</p>
+                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ rawMaterialsStats.totalProducts.toLocaleString() }}</p>
                 </div>
               </div>
             </div>
@@ -703,7 +763,7 @@ onMounted(() => {
                 </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Available</p>
-                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">389</p>
+                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ rawMaterialsStats.inStock.toLocaleString() }}</p>
                 </div>
               </div>
             </div>
@@ -716,7 +776,7 @@ onMounted(() => {
                 </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Low Stock</p>
-                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">34</p>
+                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ rawMaterialsStats.lowStock.toLocaleString() }}</p>
                 </div>
               </div>
             </div>
@@ -729,7 +789,7 @@ onMounted(() => {
                 </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Out of Stock</p>
-                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">8</p>
+                  <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ rawMaterialsStats.outOfStock.toLocaleString() }}</p>
                 </div>
               </div>
             </div>
