@@ -10,11 +10,12 @@ const expandedVeeBelts = ref(false)
 const expandedCoggedBelts = ref(false)
 const expandedPolyBelts = ref(false)
 const expandedTimingBelts = ref(false)
-const expandedTimingBeltsCommercial = ref(false)
-const expandedTimingBeltsNeoprene = ref(false)
+const expandedTimingCommercial = ref(false)
+const expandedTimingNeoprene = ref(false)
 const expandedTPUBelts = ref(false)
 const expandedSpecialBelts = ref(false)
 const expandedRawMaterials = ref(false)
+const expandedRawMaterial = ref(false)
 const expandedRawVeeBelts = ref(false)
 const expandedRawCoggedBelts = ref(false)
 const expandedRawPolyBelts = ref(false)
@@ -22,6 +23,8 @@ const expandedRawTimingBelts = ref(false)
 const expandedRawTPUBelts = ref(false)
 const expandedRawSpecialBelts = ref(false)
 const expandedRawMaterialCategories = ref(false)
+
+
 
 const emit = defineEmits(['navigate', 'sidebar-toggle', 'search'])
 
@@ -46,6 +49,8 @@ const performSectionSearch = () => {
 const performSizeSearch = () => {
   performCombinedSearch()
 }
+
+
 </script>
 
 <template>
