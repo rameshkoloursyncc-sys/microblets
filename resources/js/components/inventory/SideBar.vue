@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useAuth } from '../../composables/useAuth'
 
 const sidebarCollapsed = ref(false)
@@ -45,6 +45,7 @@ const toggleSidebar = () => {
     mobileMenuOpen.value = !mobileMenuOpen.value
   } else {
     sidebarCollapsed.value = !sidebarCollapsed.value
+    console.log('Sidebar collapsed:', sidebarCollapsed.value)
     emit('sidebar-toggle', sidebarCollapsed.value)
   }
 }
@@ -100,6 +101,28 @@ watch([sectionSearch, sizeSearch], () => {
       performSearch()
     }, 500) // 500ms delay
   }
+})
+
+// Computed property for sidebar classes and style
+const sidebarClasses = computed(() => {
+  return [
+    // Mobile: show/hide based on mobileMenuOpen
+    mobileMenuOpen.value ? 'translate-x-0' : '-translate-x-full',
+    // Desktop: always show
+    'sm:translate-x-0',
+    // Mobile width
+    'w-80'
+  ]
+})
+
+const sidebarStyle = computed(() => {
+  // Force width with CSS for desktop
+  if (typeof window !== 'undefined' && window.innerWidth >= 640) {
+    return {
+      width: sidebarCollapsed.value ? '4rem' : '20rem'
+    }
+  }
+  return {}
 })
 
 
@@ -259,15 +282,7 @@ watch([sectionSearch, sizeSearch], () => {
   class="fixed inset-0 z-30 bg-black bg-opacity-50 sm:hidden"
 ></div>
 
-<aside id="logo-sidebar" class="fixed top-0 left-0 z-40 h-screen pt-20 transition-all duration-300 bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700" :class="[
-  // Mobile: show/hide based on mobileMenuOpen
-  mobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
-  // Desktop: always show, but collapse/expand
-  'sm:translate-x-0',
-  sidebarCollapsed ? 'sm:w-16' : 'sm:w-80',
-  // Mobile width
-  'w-80'
-]" aria-label="Sidebar">
+<aside id="logo-sidebar" class="fixed top-0 left-0 z-40 h-screen pt-20 transition-all duration-300 bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700" :class="sidebarClasses" :style="sidebarStyle" aria-label="Sidebar">
   <div class="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800 relative">
     <!-- Mobile Close Button -->
     <button
@@ -296,7 +311,7 @@ watch([sectionSearch, sizeSearch], () => {
       </svg>
     </button>
     <!-- Mobile Search Section (Alternative) -->
-    <div class="md:hidden mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+    <div v-if="!sidebarCollapsed" class="md:hidden mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
       <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Advanced Search</h3>
       <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">Use the search bar above for quick search, or use this for detailed search</p>
       <div class="space-y-2">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useAuth } from '../../composables/useAuth'
 import FlowbiteTable from './FlowbiteTable_clean.vue'
 import Sidebar from './SideBar.vue'
@@ -86,8 +86,29 @@ onMounted(async () => {
 
 // Handle sidebar toggle
 const handleSidebarToggle = (collapsed: boolean) => {
+  console.log('InventoryApp: Sidebar toggle received:', collapsed)
   sidebarCollapsed.value = collapsed
 }
+
+// Watch sidebar collapse state
+watch(sidebarCollapsed, (newValue) => {
+  console.log('InventoryApp: sidebarCollapsed changed to:', newValue)
+})
+
+// Computed style for main content margin
+const mainContentStyle = computed(() => {
+  // Force margin with CSS for desktop
+  if (typeof window !== 'undefined' && window.innerWidth >= 640) {
+    return {
+      marginLeft: sidebarCollapsed.value ? '4rem' : '20rem',
+      transition: 'margin-left 0.3s ease'
+    }
+  }
+  return {
+    marginLeft: '0',
+    transition: 'margin-left 0.3s ease'
+  }
+})
 
 // Initialize datepickers
 const initializeDatepickers = () => {
@@ -342,10 +363,10 @@ const customViewMapping = computed(() => {
   'tpu-belts-t10M-page': { component: TpuBeltTable, props: { section: 'T10', title: 'T10 Section Inventory' } },
   
   // Settings page (admin only)
-  'settings': { component: SettingsPage, props: { sidebarCollapsed: sidebarCollapsed.value } },
+  'settings': { component: SettingsPage, props: {} },
   
   // User management page (admin only)
-  'user-management': { component: UserManagement, props: { sidebarCollapsed: sidebarCollapsed.value } },
+  'user-management': { component: UserManagement, props: {} },
   
     'poly-belts-pj-page': PJTable,
     'poly-belts-pk-page': PKTable,
@@ -521,6 +542,7 @@ onMounted(() => {
       <FlowbiteTable 
         :globalSectionQuery="globalSectionQuery"
         :globalSizeQuery="globalSizeQuery"
+        :sidebar-collapsed="sidebarCollapsed"
         @clear-global-search="clearGlobalSearch"
       />
     </div>
@@ -528,6 +550,7 @@ onMounted(() => {
       <FlowbiteTable
         title="SPA Section Inventory"
         initialCategory="SPA Section"
+        :sidebar-collapsed="sidebarCollapsed"
       />
     </div>
     <!-- Belt Section Navigation -->
@@ -551,10 +574,10 @@ onMounted(() => {
   />
 </div>
 
-    <div v-else-if="currentView === 'create-product'" :class="sidebarCollapsed ? 'sm:ml-16' : 'sm:ml-80'" class="ml-0 transition-all duration-300">
+    <div v-else-if="currentView === 'create-product'" :style="mainContentStyle">
       <CreateProduct />
     </div>
-    <div v-else-if="currentView === 'dashboard'" :class="sidebarCollapsed ? 'sm:ml-16' : 'sm:ml-80'" class="ml-0 transition-all duration-300">
+    <div v-else-if="currentView === 'dashboard'" :style="mainContentStyle">
       <div class="p-3 sm:p-6 mt-14 min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
         <div class="mb-6">
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>

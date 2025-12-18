@@ -1,5 +1,5 @@
 <template>
-  <div class="transition-all duration-300" :class="sidebarCollapsed ? 'sm:ml-16' : 'sm:ml-80'">
+  <div class="transition-all duration-300" :class="props.sidebarCollapsed ? 'sm:ml-16' : 'sm:ml-80'">
     <div class="p-6 mt-14 min-h-screen bg-gray-50 dark:bg-gray-900">
       <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
@@ -337,6 +337,7 @@ const props = defineProps<{
   initialCategories?: string[]
   globalSectionQuery?: string
   globalSizeQuery?: string
+  sidebarCollapsed?: boolean
 }>()
 
 const emit = defineEmits(['clear-global-search'])
@@ -431,7 +432,6 @@ const inoutFilters = ref({
 })
 const selectedIds = ref<number[]>([])
 
-const sidebarCollapsed = ref(false)
 const dateFrom = ref('')
 const dateTo = ref('')
 
@@ -1185,13 +1185,7 @@ const downloadJson = () => {
   showNotification('success', 'Downloaded', `${sectionName}Products.json downloaded`)
 }
 
-// Sidebar state detection
-const checkSidebarState = () => {
-  const sidebar = document.getElementById('logo-sidebar')
-  if (sidebar) {
-    sidebarCollapsed.value = sidebar.classList.contains('w-16')
-  }
-}
+
 
 // Watch for category changes and reload data
 watch(() => props.initialCategories, () => {
@@ -1203,12 +1197,5 @@ watch(() => props.initialCategories, () => {
 onMounted(() => {
   loadProducts()
   loadTransactionHistory()
-  checkSidebarState()
-  window.addEventListener('resize', checkSidebarState)
-  const observer = new MutationObserver(checkSidebarState)
-  const sidebar = document.getElementById('logo-sidebar')
-  if (sidebar) {
-    observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] })
-  }
 })
 </script>
