@@ -1,0 +1,41 @@
+[
+  {
+    "id": 1765792773965.6067,
+    "category": "3VX Section",
+    "name": "3VX",
+    "sku": "3VX-335",
+    "size": "335",
+    "stock": 0,
+    "reorder_level": 5,
+    "rate": 57.285,
+    "value": 0,
+    "in_qty": 0,
+    "out_qty": 0
+  },
+  {
+    "id": 1765792773966.8054,
+    "category": "3VX Section",
+    "name": "3VX",
+    "sku": "3VX-560",
+    "size": "560",
+    "stock": 10,
+    "reorder_level": 5,
+    "rate": 95.76,
+    "value": 957.6,
+    "in_qty": 0,
+    "out_qty": 0
+  },
+  {
+    "id": 1765792773971.2656,
+    "category": "3VX Section",
+    "name": "3VX",
+    "sku": "3VX-1400",
+    "size": "1400",
+    "stock": 32,
+    "reorder_level": 5,
+    "rate": 239.4,
+    "value": 7660.8,
+    "in_qty": 0,
+    "out_qty": 0
+  }
+]

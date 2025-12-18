@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Excel Upload Test</title>
+</head>
+
+<body>
+    <h1>Excel Upload Test</h1>
+    <p>Open browser console and navigate to any section (like 5V Section) to test Excel upload.</p>
+    <p>Upload the 5V - Section.xlsx file and check the console logs to see:</p>
+    <ul>
+        <li>What data is being parsed</li>
+        <li>What categories are being assigned</li>
+        <li>What products are being filtered</li>
+    </ul>
+
+    <h2>Expected Flow:</h2>
+    <ol>
+        <li>Go to "5V Section" in navigation</li>
+        <li>Upload "5V - Section.xlsx" file</li>
+        <li>Check console for debug logs</li>
+        <li>Verify data appears in table</li>
+    </ol>
+
+    <h2>Debug Information:</h2>
+    <p>The debug logs will show:</p>
+    <ul>
+        <li><strong>Processing Excel upload data:</strong> Raw data from Excel</li>
+        <li><strong>Processing item:</strong> Each item being processed</li>
+        <li><strong>visibleProducts Debug:</strong> Filtering logic</li>
+        <li><strong>Props initialCategories:</strong> What categories the section expects</li>
+        <li><strong>Unique categories in products:</strong> What categories are actually in the data</li>
+    </ul>
+</body>
+
+</html>

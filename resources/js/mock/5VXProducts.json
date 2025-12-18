@@ -1,0 +1,93 @@
+[
+  {
+    "id": 1,
+    "category": "5VX Section",
+    "name": "5VX",
+    "sku": "790",
+    "size": "790",
+    "stock": 7,
+    "reorder_level": 5,
+    "rate": 427.39,
+    "value": 2991.73,
+    "in_qty": 0,
+    "out_qty": 0
+  },
+  {
+    "id": 2,
+    "category": "5VX Section",
+    "name": "5VX",
+    "sku": "710",
+    "size": "710",
+    "stock": 1,
+    "reorder_level": 5,
+    "rate": 384.11,
+    "value": 384.11,
+    "in_qty": 0,
+    "out_qty": 0
+  },
+  {
+    "id": 3,
+    "category": "5VX Section",
+    "name": "5VX",
+    "sku": "510",
+    "size": "510",
+    "stock": 2,
+    "reorder_level": 5,
+    "rate": 275.91,
+    "value": 551.82,
+    "in_qty": 0,
+    "out_qty": 0
+  },
+  {
+    "id": 4,
+    "category": "5VX Section",
+    "name": "5VX",
+    "sku": "1080",
+    "size": "1080",
+    "stock": 0,
+    "reorder_level": 5,
+    "rate": 584.28,
+    "value": 0,
+    "in_qty": 0,
+    "out_qty": 0
+  },
+  {
+    "id": 5,
+    "category": "5VX Section",
+    "name": "5VX",
+    "sku": "1150",
+    "size": "1150",
+    "stock": 12,
+    "reorder_level": 5,
+    "rate": 622.15,
+    "value": 7465.799999999999,
+    "in_qty": 0,
+    "out_qty": 0
+  },
+  {
+    "id": 6,
+    "category": "5VX Section",
+    "name": "5VX",
+    "sku": "1900",
+    "size": "1900",
+    "stock": 12,
+    "reorder_level": 5,
+    "rate": 1027.9,
+    "value": 12334.800000000001,
+    "in_qty": 0,
+    "out_qty": 0
+  },
+  {
+    "id": 7,
+    "category": "5VX Section",
+    "name": "5VX",
+    "sku": "1120",
+    "size": "1120",
+    "stock": 31,
+    "reorder_level": 5,
+    "rate": 605.92,
+    "value": 18783.52,
+    "in_qty": 0,
+    "out_qty": 0
+  }
+]

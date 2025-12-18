@@ -1,0 +1,28 @@
+[
+  { "id": 1, "category": "SPA Section", "name": "SPA", "sku": "800", "size": "800", "stock": 111, "reorder_level": 5, "rate": 0, "value": 111, "in_qty": 0, "out_qty": 0 },
+  { "id": 2, "category": "SPA Section", "name": "SPA", "sku": "825", "size": "825", "stock": 29, "reorder_level": 5, "rate": 0, "value": 29, "in_qty": 0, "out_qty": 0 },
+  { "id": 3, "category": "SPA Section", "name": "SPA", "sku": "850", "size": "850", "stock": 10, "reorder_level": 5, "rate": 0, "value": 10, "in_qty": 0, "out_qty": 0 },
+  { "id": 4, "category": "SPA Section", "name": "SPA", "sku": "875", "size": "875", "stock": 0, "reorder_level": 5, "rate": 0, "value": 0, "in_qty": 0, "out_qty": 0 },
+  { "id": 5, "category": "SPA Section", "name": "SPA", "sku": "932", "size": "932", "stock": 0, "reorder_level": 5, "rate": 0, "value": 0, "in_qty": 0, "out_qty": 0 },
+  { "id": 6, "category": "SPA Section", "name": "SPA", "sku": "950", "size": "950", "stock": 0, "reorder_level": 5, "rate": 0, "value": 0, "in_qty": 0, "out_qty": 0 },
+  { "id": 7, "category": "SPA Section", "name": "SPA", "sku": "995", "size": "995", "stock": 0, "reorder_level": 5, "rate": 0, "value": 0, "in_qty": 0, "out_qty": 0 },
+  { "id": 8, "category": "SPA Section", "name": "SPA", "sku": "1000", "size": "1000", "stock": 75, "reorder_level": 5, "rate": 0, "value": 75, "in_qty": 0, "out_qty": 0 },
+  { "id": 9, "category": "SPA Section", "name": "SPA", "sku": "1020", "size": "1020", "stock": 0, "reorder_level": 5, "rate": 0, "value": 0, "in_qty": 0, "out_qty": 0 },
+  { "id": 10, "category": "SPA Section", "name": "SPA", "sku": "1030", "size": "1030", "stock": 0, "reorder_level": 5, "rate": 0, "value": 0, "in_qty": 0, "out_qty": 0 },
+  { "id": 11, "category": "SPA Section", "name": "SPA", "sku": "1032", "size": "1032", "stock": 0, "reorder_level": 5, "rate": 0, "value": 0, "in_qty": 0, "out_qty": 0 },
+  { "id": 12, "category": "SPA Section", "name": "SPA", "sku": "1050", "size": "1050", "stock": 12, "reorder_level": 5, "rate": 0, "value": 12, "in_qty": 0, "out_qty": 0 },
+  { "id": 13, "category": "SPA Section", "name": "SPA", "sku": "1060", "size": "1060", "stock": 0, "reorder_level": 5, "rate": 0, "value": 0, "in_qty": 0, "out_qty": 0 },
+  { "id": 14, "category": "SPA Section", "name": "SPA", "sku": "1080", "size": "1080", "stock": 0, "reorder_level": 5, "rate": 0, "value": 0, "in_qty": 0, "out_qty": 0 },
+  { "id": 15, "category": "SPA Section", "name": "SPA", "sku": "1100", "size": "1100", "stock": 0, "reorder_level": 5, "rate": 0, "value": 0, "in_qty": 0, "out_qty": 0 },
+  { "id": 16, "category": "SPA Section", "name": "SPA", "sku": "1107", "size": "1107", "stock": 0, "reorder_level": 5, "rate": 0, "value": 0, "in_qty": 0, "out_qty": 0 },
+  { "id": 17, "category": "SPA Section", "name": "SPA", "sku": "1112", "size": "1112", "stock": 0, "reorder_level": 5, "rate": 0, "value": 0, "in_qty": 0, "out_qty": 0 },
+  { "id": 18, "category": "SPA Section", "name": "SPA", "sku": "1120", "size": "1120", "stock": 8, "reorder_level": 5, "rate": 0, "value": 8, "in_qty": 0, "out_qty": 0 },
+  { "id": 19, "category": "SPA Section", "name": "SPA", "sku": "1150", "size": "1150", "stock": 87, "reorder_level": 5, "rate": 0, "value": 87, "in_qty": 0, "out_qty": 0 },
+  { "id": 20, "category": "SPA Section", "name": "SPA", "sku": "1200", "size": "1200", "stock": 7, "reorder_level": 5, "rate": 0, "value": 7, "in_qty": 0, "out_qty": 0 },
+  { "id": 21, "category": "SPA Section", "name": "SPA", "sku": "1207", "size": "1207", "stock": 40, "reorder_level": 5, "rate": 0, "value": 40, "in_qty": 0, "out_qty": 0 },
+  { "id": 22, "category": "SPA Section", "name": "SPA", "sku": "1232", "size": "1232", "stock": 10, "reorder_level": 5, "rate": 0, "value": 10, "in_qty": 0, "out_qty": 0 },
+  { "id": 23, "category": "SPA Section", "name": "SPA", "sku": "1250", "size": "1250", "stock": 236, "reorder_level": 5, "rate": 0, "value": 236, "in_qty": 0, "out_qty": 0 },
+  { "id": 24, "category": "SPA Section", "name": "SPA", "sku": "1260", "size": "1260", "stock": 6, "reorder_level": 5, "rate": 0, "value": 6, "in_qty": 0, "out_qty": 0 }
+]
+
+
