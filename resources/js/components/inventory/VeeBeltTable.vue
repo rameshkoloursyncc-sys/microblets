@@ -427,11 +427,26 @@ const visibleProducts = computed(() => {
   
   // Search filter
   if (searchTerm.value) {
-    const q = searchTerm.value.toLowerCase()
-    list = list.filter(p => 
-      p.section.toLowerCase().includes(q) || 
-      p.size.toLowerCase().includes(q)
-    )
+    const q = searchTerm.value.toLowerCase().trim()
+    
+    // Check if search contains both section and size (space-separated)
+    const searchParts = q.split(' ').filter(part => part.length > 0)
+    
+    if (searchParts.length >= 2) {
+      // Combined search: exact match for section AND size contains
+      const [sectionPart, sizePart] = searchParts
+      list = list.filter(p => 
+        p.section.toLowerCase() === sectionPart && 
+        p.size.toLowerCase().includes(sizePart)
+      )
+    } else {
+      // Single search term: match section OR size (including partial matches)
+      list = list.filter(p => 
+        p.section.toLowerCase().includes(q) || 
+        p.size.toLowerCase().includes(q) ||
+        p.size.toString().includes(q) // Also search size as string for numbers like "2"
+      )
+    }
   }
   
   // Low stock filter
@@ -645,6 +660,16 @@ onMounted(async () => {
 watch(() => props.section, async (newSection) => {
   console.log('Section changed to:', newSection)
   await fetchProducts()
+})
+
+// Watch for globalSearch changes
+watch(() => props.globalSearch, (newGlobalSearch) => {
+  console.log('GlobalSearch changed to:', newGlobalSearch)
+  if (newGlobalSearch) {
+    searchTerm.value = newGlobalSearch
+  } else {
+    searchTerm.value = ''
+  }
 })
 
 // Watch date filters for debugging

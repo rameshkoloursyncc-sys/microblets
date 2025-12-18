@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue'
+import { useAuth } from '../../composables/useAuth'
 import FlowbiteTable from './FlowbiteTable_clean.vue'
 import Sidebar from './SideBar.vue'
 import CreateProduct from './CreateProduct.vue'
@@ -41,10 +42,37 @@ import PLTable from './tables/polybelts/PL_table.vue'
 import PMTable from './tables/polybelts/PM_table.vue'
 import FiveVXTable from './tables/veebelts/5VX_table.vue'
 import SettingsPage from './SettingsPage.vue'
+import LoginPage from '../auth/LoginPage.vue'
+import UserManagement from '../auth/UserManagement.vue'
 const currentView = ref('inventory')
 const sidebarCollapsed = ref(false)
 const globalSectionQuery = ref('')
 const globalSizeQuery = ref('')
+
+// Authentication
+const { user, isAuthenticated, isAdmin, initAuth, login, logout } = useAuth()
+const authLoading = ref(true)
+
+// Handle login success
+const handleLoginSuccess = (userData: any) => {
+  login(userData)
+  authLoading.value = false
+}
+
+// Handle logout
+const handleLogout = async () => {
+  await logout()
+  currentView.value = 'inventory' // Reset to default view
+}
+
+// Initialize auth on mount
+onMounted(async () => {
+  try {
+    await initAuth()
+  } finally {
+    authLoading.value = false
+  }
+})
 
 // Handle sidebar toggle
 const handleSidebarToggle = (collapsed: boolean) => {
@@ -214,14 +242,31 @@ const navigationMapping: Record<string, { title: string; categories: string[] }>
   'raw-material-steel-wire': { title: 'Raw Material - Steel Wire', categories: ['Steel Wire'] },
   'raw-material-packing': { title: 'Raw Material - Packing Material', categories: ['Packing Material'] },
 }
-const customViewMapping = computed(() => ({
-  // Vee Belts Search - All sections
-  'vee-belts-search': { component: VeeBeltTable, props: { title: 'Vee Belts Search Results', globalSearch: globalSectionQuery.value || globalSizeQuery.value } },
-  // Vee Belts - Using new backend-connected VeeBeltTable
-  'vee-belts-a-page': { component: VeeBeltTable, props: { section: 'A', title: 'A Section Inventory' } },
-  
-  // Cogged Belts - Using new backend-connected CoggedBeltTable
-  'cogged-belts-search': { component: CoggedBeltTable, props: { title: 'Cogged Belts Search Results', globalSearch: globalSectionQuery.value || globalSizeQuery.value } },
+const customViewMapping = computed(() => {
+  return {
+    // Vee Belts Search - All sections
+    'vee-belts-search': { 
+      component: VeeBeltTable, 
+      props: { 
+        title: 'Vee Belts Search Results', 
+        section: globalSectionQuery.value,
+        globalSearch: globalSizeQuery.value,
+        key: `vee-search-${globalSectionQuery.value}-${globalSizeQuery.value}` // Force re-render on change
+      } 
+    },
+    // Vee Belts - Using new backend-connected VeeBeltTable
+    'vee-belts-a-page': { component: VeeBeltTable, props: { section: 'A', title: 'A Section Inventory' } },
+    
+    // Cogged Belts - Using new backend-connected CoggedBeltTable
+    'cogged-belts-search': { 
+      component: CoggedBeltTable, 
+      props: { 
+        title: 'Cogged Belts Search Results', 
+        section: globalSectionQuery.value,
+        globalSearch: globalSizeQuery.value,
+        key: `cogged-search-${globalSectionQuery.value}-${globalSizeQuery.value}` // Force re-render on change
+      } 
+    },
   'cogged-belts-ax': { component: CoggedBeltTable, props: { section: 'AX', title: 'AX Section Inventory' } },
   'cogged-belts-bx': { component: CoggedBeltTable, props: { section: 'BX', title: 'BX Section Inventory' } },
   'cogged-belts-cx': { component: CoggedBeltTable, props: { section: 'CX', title: 'CX Section Inventory' } },
@@ -232,8 +277,27 @@ const customViewMapping = computed(() => ({
   'cogged-belts-3vx': { component: CoggedBeltTable, props: { section: '3VX', title: '3VX Section Inventory' } },
   'cogged-belts-5vx': { component: CoggedBeltTable, props: { section: '5VX', title: '5VX Section Inventory' } },
   
-  // Poly Belts - Using new backend-connected PolyBeltTable
-  'poly-belts-search': { component: PolyBeltTable, props: { title: 'Poly Belts Search Results', globalSearch: globalSectionQuery.value || globalSizeQuery.value } },
+    // Poly Belts - Using new backend-connected PolyBeltTable
+    'poly-belts-search': { 
+      component: PolyBeltTable, 
+      props: { 
+        title: 'Poly Belts Search Results', 
+        section: globalSectionQuery.value,
+        globalSearch: globalSizeQuery.value,
+        key: `poly-search-${globalSectionQuery.value}-${globalSizeQuery.value}` // Force re-render on change
+      } 
+    },
+    
+    // TPU Belts - Using new backend-connected TpuBeltTable
+    'tpu-belts-search': { 
+      component: TpuBeltTable, 
+      props: { 
+        title: 'TPU Belts Search Results', 
+        section: globalSectionQuery.value,
+        globalSearch: globalSizeQuery.value,
+        key: `tpu-search-${globalSectionQuery.value}-${globalSizeQuery.value}` // Force re-render on change
+      } 
+    },
   'poly-belts-pj': { component: PolyBeltTable, props: { section: 'PJ', title: 'PJ Section Inventory' } },
   'poly-belts-pk': { component: PolyBeltTable, props: { section: 'PK', title: 'PK Section Inventory' } },
   'poly-belts-pl': { component: PolyBeltTable, props: { section: 'PL', title: 'PL Section Inventory' } },
@@ -267,24 +331,37 @@ const customViewMapping = computed(() => ({
   'tpu-belts-at20m-page': { component: TpuBeltTable, props: { section: 'AT20', title: 'AT20 Section Inventory' } },
   'tpu-belts-t10M-page': { component: TpuBeltTable, props: { section: 'T10', title: 'T10 Section Inventory' } },
   
-  // Settings page
-  'settings': { component: SettingsPage, props: {} },
+  // Settings page (admin only)
+  'settings': { component: SettingsPage, props: { sidebarCollapsed: sidebarCollapsed.value } },
   
-  'poly-belts-pj-page': PJTable,
-  'poly-belts-pk-page': PKTable,
-  'poly-belts-pl-page': PLTable,
-  'poly-belts-pm-page': PMTable,
-  'poly-belts-ph-page': PHTable,
-  'poly-belts-dpl-page': DPLTable,
-  'poly-belts-dpk-page': DPKTable,
-}))
+  // User management page (admin only)
+  'user-management': { component: UserManagement, props: { sidebarCollapsed: sidebarCollapsed.value } },
+  
+    'poly-belts-pj-page': PJTable,
+    'poly-belts-pk-page': PKTable,
+    'poly-belts-pl-page': PLTable,
+    'poly-belts-pm-page': PMTable,
+    'poly-belts-ph-page': PHTable,
+    'poly-belts-dpl-page': DPLTable,
+    'poly-belts-dpk-page': DPKTable,
+  }
+});
 const handleNavigation = (view: string) => {
+  // Check admin access for restricted views
+  if ((view === 'settings' || view === 'user-management') && !isAdmin.value) {
+    console.warn('Access denied: Admin privileges required')
+    return
+  }
+  
   currentView.value = view
-  // Clear global search when navigating to specific sections
-  if (view !== 'inventory') {
+  
+  // Clear global search when navigating to specific sections (except search views)
+  const searchViews = ['vee-belts-search', 'cogged-belts-search', 'poly-belts-search', 'tpu-belts-search']
+  if (view !== 'inventory' && !searchViews.includes(view)) {
     globalSectionQuery.value = ''
     globalSizeQuery.value = ''
   }
+  
   // Initialize datepickers when navigating to dashboard
   if (view === 'dashboard') {
     initializeDatepickers()
@@ -292,16 +369,106 @@ const handleNavigation = (view: string) => {
 }
 
 const handleSearch = (searchData: { type: string; sectionQuery?: string; sizeQuery?: string }) => {
-  // Set global search parameters for combined search
+  // Set global search parameters
   globalSectionQuery.value = searchData.sectionQuery || ''
   globalSizeQuery.value = searchData.sizeQuery || ''
   
-  // Navigate to vee-belts-search view to show all vee belts search results
-  currentView.value = 'vee-belts-search'
+  // Determine which search view to show based on section
+  const section = globalSectionQuery.value.toUpperCase()
   
-  console.log('Vee Belts search activated:', {
+  // Check if it's a vee belt section
+  const veeSections = ['A', 'B', 'C', 'D', 'E', 'SPA', 'SPB', 'SPC', 'SPZ', '3V', '5V', '8V']
+  // Check if it's a cogged belt section
+  const coggedSections = ['AX', 'BX', 'CX', 'XPA', 'XPB', 'XPC', 'XPZ', '3VX', '5VX', '8VX']
+  // Check if it's a poly belt section
+  const polySections = ['PJ', 'PK', 'PL', 'PM', 'PH', 'DPL', 'DPK']
+  // Check if it's a TPU belt section
+  const tpuSections = ['5M', '8M', '8M RPP', 'S8M', '14M', 'XL', 'L', 'H', 'AT5', 'AT10', 'T10', 'AT20']
+  
+  // Simple logic: section determines the view, size is just a filter
+  if (section) {
+    if (globalSizeQuery.value) {
+      // Section + Size = Use search view for filtering
+      if (veeSections.includes(section)) {
+        currentView.value = 'vee-belts-search'
+      } else if (coggedSections.includes(section)) {
+        currentView.value = 'cogged-belts-search'
+      } else if (polySections.includes(section)) {
+        currentView.value = 'poly-belts-search'
+      } else if (tpuSections.includes(section)) {
+        currentView.value = 'tpu-belts-search'
+      } else {
+        currentView.value = 'inventory'
+      }
+    } else {
+      // Section only = Direct to section page
+      if (veeSections.includes(section)) {
+        const sectionPageMap: Record<string, string> = {
+          'A': 'vee-belts-a-page',
+          'B': 'vee-belts-b-page', 
+          'C': 'vee-belts-c-page',
+          'D': 'vee-belts-d-page',
+          'E': 'vee-belts-e-page',
+          'SPA': 'vee-belts-spa-page',
+          'SPB': 'vee-belts-spb-page',
+          'SPC': 'vee-belts-spc-page',
+          'SPZ': 'vee-belts-spz-page',
+          '3V': 'vee-belts-3v-page',
+          '5V': 'vee-belts-5v-page',
+          '8V': 'vee-belts-8v-page'
+        }
+        currentView.value = sectionPageMap[section] || 'vee-belts-search'
+      } else if (coggedSections.includes(section)) {
+        const sectionPageMap: Record<string, string> = {
+          'AX': 'cogged-belts-ax',
+          'BX': 'cogged-belts-bx',
+          'CX': 'cogged-belts-cx',
+          'XPA': 'cogged-belts-xpa',
+          'XPB': 'cogged-belts-xpb',
+          'XPC': 'cogged-belts-xpc',
+          'XPZ': 'cogged-belts-xpz',
+          '3VX': 'cogged-belts-3vx',
+          '5VX': 'cogged-belts-5vx'
+        }
+        currentView.value = sectionPageMap[section] || 'cogged-belts-search'
+      } else if (polySections.includes(section)) {
+        const sectionPageMap: Record<string, string> = {
+          'PJ': 'poly-belts-pj',
+          'PK': 'poly-belts-pk',
+          'PL': 'poly-belts-pl',
+          'PM': 'poly-belts-pm',
+          'PH': 'poly-belts-ph',
+          'DPL': 'poly-belts-dpl',
+          'DPK': 'poly-belts-dpk'
+        }
+        currentView.value = sectionPageMap[section] || 'poly-belts-search'
+      } else if (tpuSections.includes(section)) {
+        const sectionPageMap: Record<string, string> = {
+          '5M': 'tpu-belts-t5m-page',
+          '8M': 'tpu-belts-t8m-page',
+          '8M RPP': 'tpu-belts-t8m-RPP-page',
+          'S8M': 'tpu-belts-ts8m-page',
+          '14M': 'tpu-belts-t14m-page',
+          'XL': 'tpu-belts-txl-page',
+          'L': 'tpu-belts-tlm-page',
+          'H': 'tpu-belts-thm-page',
+          'AT5': 'tpu-belts-at5m-page',
+          'AT10': 'tpu-belts-at10m-page',
+          'T10': 'tpu-belts-t10M-page',
+          'AT20': 'tpu-belts-at20m-page'
+        }
+        currentView.value = sectionPageMap[section] || 'tpu-belts-search'
+      } else {
+        currentView.value = 'inventory'
+      }
+    }
+  }
+  
+  console.log('Universal search activated:', {
+    type: searchData.type,
     section: globalSectionQuery.value,
-    size: globalSizeQuery.value
+    size: globalSizeQuery.value,
+    view: currentView.value
   })
 }
 
@@ -320,8 +487,27 @@ onMounted(() => {
 
 <template>
   <div>
-    <Sidebar @navigate="handleNavigation" @sidebar-toggle="handleSidebarToggle" @search="handleSearch" />
-    <div v-if="currentView === 'inventory'">
+    <!-- Show loading while checking authentication -->
+    <div v-if="authLoading" class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p class="text-gray-600 dark:text-gray-400">Loading...</p>
+      </div>
+    </div>
+    
+    <!-- Show login page if not authenticated -->
+    <LoginPage v-else-if="!isAuthenticated" @login-success="handleLoginSuccess" />
+    
+    <!-- Show main app if authenticated -->
+    <div v-else>
+      <Sidebar 
+        @navigate="handleNavigation" 
+        @sidebar-toggle="handleSidebarToggle" 
+        @search="handleSearch"
+        @logout="handleLogout"
+      />
+      
+      <div v-if="currentView === 'inventory'">
       <FlowbiteTable 
         :globalSectionQuery="globalSectionQuery"
         :globalSizeQuery="globalSizeQuery"
@@ -343,7 +529,7 @@ onMounted(() => {
     :is="customViewMapping[currentView].component || customViewMapping[currentView]" 
     v-bind="customViewMapping[currentView].props || {}"
     :sidebar-collapsed="sidebarCollapsed"
-    :key="currentView"
+    :key="customViewMapping[currentView].props?.key || currentView"
   />
 </div>
 
@@ -517,6 +703,7 @@ onMounted(() => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </template>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useAuth } from '../../composables/useAuth'
 
 const sidebarCollapsed = ref(false)
 const sectionSearch = ref('')
@@ -26,29 +27,61 @@ const expandedRawMaterialCategories = ref(false)
 
 
 
-const emit = defineEmits(['navigate', 'sidebar-toggle', 'search'])
+const emit = defineEmits(['navigate', 'sidebar-toggle', 'search', 'logout'])
+
+// Clear search fields
+const clearSearchFields = () => {
+  sectionSearch.value = ''
+  sizeSearch.value = ''
+}
+
+// Authentication
+const { user, isAdmin } = useAuth()
 
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value
   emit('sidebar-toggle', sidebarCollapsed.value)
 }
 
-const performCombinedSearch = () => {
-  // Send both section and size for combined exact matching
-  emit('search', { 
-    type: 'combined', 
-    sectionQuery: sectionSearch.value.trim(),
-    sizeQuery: sizeSearch.value.trim()
-  })
+const performSearch = () => {
+  // Simple logic: if both section and size, it's combined; if only section, it's section-only
+  const section = sectionSearch.value.trim()
+  const size = sizeSearch.value.trim()
+  
+  if (section && size) {
+    // Both fields filled - combined search
+    emit('search', { 
+      type: 'combined', 
+      sectionQuery: section,
+      sizeQuery: size
+    })
+  } else if (section) {
+    // Only section filled - section search
+    emit('search', { 
+      type: 'section', 
+      sectionQuery: section,
+      sizeQuery: ''
+    })
+  }
+  // No size-only search - do nothing if only size is filled
 }
 
-const performSectionSearch = () => {
-  performCombinedSearch()
-}
+// Auto-search with debounce when fields change
+let searchTimeout: NodeJS.Timeout | null = null
 
-const performSizeSearch = () => {
-  performCombinedSearch()
-}
+watch([sectionSearch, sizeSearch], () => {
+  // Clear existing timeout
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+  
+  // Only auto-search if section is filled
+  if (sectionSearch.value.trim()) {
+    searchTimeout = setTimeout(() => {
+      performSearch()
+    }, 500) // 500ms delay
+  }
+})
 
 
 </script>
@@ -72,35 +105,52 @@ const performSizeSearch = () => {
         </a>
       </div>
       
-      <!-- Universal Search Bars -->
-      <div class="flex items-center gap-4">
-        <!-- Section Search -->
-        <form class="max-w-md">
-          <label for="section-search" class="block mb-2.5 text-sm font-medium text-gray-900 sr-only dark:text-white">Search Section</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-              <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/>
-              </svg>
-            </div>
-            <input type="search" id="section-search" v-model="sectionSearch" @keyup.enter="performSectionSearch" class="block w-full p-2 ps-10 pe-16 bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm placeholder:text-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" placeholder="Search Section" />
-            <button type="button" @click="performSectionSearch" class="absolute end-2 top-1/2 transform -translate-y-1/2 text-white bg-blue-600 hover:bg-blue-700 border border-transparent focus:ring-4 focus:ring-blue-300 shadow-sm font-medium rounded text-xs px-2 py-1 focus:outline-none dark:bg-blue-600 dark:hover:bg-blue-700">Search</button>
-          </div>
-        </form>
+      <!-- Universal Search -->
+      <div class="flex items-center gap-3">
+        <!-- Section Input -->
+        <div class="relative">
+          <input 
+            type="search" 
+            id="section-search" 
+            v-model="sectionSearch" 
+            @keyup.enter="performSearch" 
+            class="block w-32 p-2 ps-3 bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm placeholder:text-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" 
+            placeholder="Section (A, B, SPA...)" 
+          />
+        </div>
 
-        <!-- Size Search -->
-        <form class="max-w-md">
-          <label for="size-search" class="block mb-2.5 text-sm font-medium text-gray-900 sr-only dark:text-white">Search Size</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-              <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/>
-              </svg>
-            </div>
-            <input type="search" id="size-search" v-model="sizeSearch" @keyup.enter="performSizeSearch" class="block w-full p-2 ps-10 pe-16 bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm placeholder:text-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" placeholder="Search Size" />
-            <button type="button" @click="performSizeSearch" class="absolute end-2 top-1/2 transform -translate-y-1/2 text-white bg-blue-600 hover:bg-blue-700 border border-transparent focus:ring-4 focus:ring-blue-300 shadow-sm font-medium rounded text-xs px-2 py-1 focus:outline-none dark:bg-blue-600 dark:hover:bg-blue-700">Search</button>
-          </div>
-        </form>
+        <!-- Size Input -->
+        <div class="relative">
+          <input 
+            type="search" 
+            id="size-search" 
+            v-model="sizeSearch" 
+            @keyup.enter="performSearch" 
+            class="block w-24 p-2 ps-3 bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm placeholder:text-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" 
+            placeholder="Size" 
+          />
+        </div>
+
+        <!-- Search Button -->
+        <button 
+          @click="performSearch" 
+          class="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 border border-transparent focus:ring-4 focus:ring-blue-300 shadow-sm font-medium rounded text-sm focus:outline-none dark:bg-blue-600 dark:hover:bg-blue-700"
+          :disabled="!sectionSearch.trim()"
+          :class="{ 'opacity-50 cursor-not-allowed': !sectionSearch.trim() }"
+          :title="sizeSearch.trim() ? 'Search section with size filter' : 'Search section only'"
+        >
+          Search
+        </button>
+
+        <!-- Clear Button -->
+        <button 
+          @click="clearSearchFields" 
+          class="px-3 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 border border-gray-300 focus:ring-4 focus:ring-gray-300 shadow-sm font-medium rounded text-sm focus:outline-none dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          :disabled="!sectionSearch && !sizeSearch"
+          :class="{ 'opacity-50 cursor-not-allowed': !sectionSearch && !sizeSearch }"
+        >
+          Clear
+        </button>
       </div>
       
       <div class="flex items-center">
@@ -114,24 +164,24 @@ const performSizeSearch = () => {
             <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600" id="dropdown-user">
               <div class="px-4 py-3" role="none">
                 <p class="text-sm text-gray-900 dark:text-white" role="none">
-                  Neil Sims
+                  {{ user?.name }}
                 </p>
                 <p class="text-sm font-medium text-gray-900 truncate dark:text-gray-300" role="none">
-                  neil.sims@flowbite.com
+                  {{ user?.role === 'admin' ? 'Administrator' : 'User' }}
                 </p>
               </div>
               <ul class="py-1" role="none">
                 <li>
-                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Dashboard</a>
+                  <button @click="$emit('navigate', 'dashboard')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Dashboard</button>
+                </li>
+                <li v-if="isAdmin">
+                  <button @click="$emit('navigate', 'user-management')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">User Management</button>
+                </li>
+                <li v-if="isAdmin">
+                  <button @click="$emit('navigate', 'settings')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Settings</button>
                 </li>
                 <li>
-                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Settings</a>
-                </li>
-                <li>
-                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Earnings</a>
-                </li>
-                <li>
-                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Sign out</a>
+                  <button @click="$emit('logout')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Sign out</button>
                 </li>
               </ul>
             </div>
@@ -161,7 +211,7 @@ const performSizeSearch = () => {
     </button>
     <ul class="space-y-2 font-medium">
          <li>
-            <a href="#" @click="$emit('navigate', 'dashboard')" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" :title="sidebarCollapsed ? 'Dashboard' : ''">
+            <a href="#" @click="clearSearchFields(); $emit('navigate', 'dashboard')" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" :title="sidebarCollapsed ? 'Dashboard' : ''">
                <svg class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 21">
                   <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z"/>
                   <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z"/>
@@ -170,16 +220,24 @@ const performSizeSearch = () => {
             </a>
          </li>
       <li>
-        <button @click="$emit('navigate', 'create-product')" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full" :title="sidebarCollapsed ? 'Add Product' : ''">
+        <button @click="clearSearchFields(); $emit('navigate', 'create-product')" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full" :title="sidebarCollapsed ? 'Add Product' : ''">
           <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-900 dark:group-hover:text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"/></svg>
           <span v-if="!sidebarCollapsed" class="ms-3">Add Product</span>
         </button>
       </li>
       
-      <li>
+      <!-- Admin Only Sections -->
+      <li v-if="isAdmin">
         <button @click="$emit('navigate', 'settings')" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full" :title="sidebarCollapsed ? 'Settings' : ''">
           <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-900 dark:group-hover:text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
           <span v-if="!sidebarCollapsed" class="ms-3">Settings</span>
+        </button>
+      </li>
+      
+      <li v-if="isAdmin">
+        <button @click="$emit('navigate', 'user-management')" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full" :title="sidebarCollapsed ? 'User Management' : ''">
+          <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-900 dark:group-hover:text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+          <span v-if="!sidebarCollapsed" class="ms-3">User Management</span>
         </button>
       </li>
 
@@ -267,7 +325,7 @@ const performSizeSearch = () => {
                     <button
                       type="button"
                       class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                      @click="$emit('navigate', 'vee-belts-a-page')"
+                      @click="clearSearchFields(); $emit('navigate', 'vee-belts-a-page')"
                     >
                       <span>A</span>
                     </button>

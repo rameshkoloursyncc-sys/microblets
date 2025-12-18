@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import axios from 'axios'
+import axios from '@/lib/axios'
 
 export interface TpuBelt {
   id: number

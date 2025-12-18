@@ -39,3 +39,48 @@
 --------for raw material -----------
 
 `carbon, chemical,soft/stiff cord,fabric,oil,others,resign,tpu,fibre glass cord , steel wire , packing material ` ----,,
+
+
+
+User Seeding Commands
+Create individual users:
+
+# Create a regular user
+php artisan tinker --execute="App\Models\User::create(['name' => 'user1', 'password' => bcrypt('password123'), 'role' => 'user']);"
+
+# Create an admin user
+php artisan tinker --execute="App\Models\User::create(['name' => 'admin1', 'password' => bcrypt('admin123'), 'role' => 'admin']);"
+Product Seeding Commands
+For Vee Belts:
+
+php artisan db:seed --class=VeeBeltSeeder
+For Cogged Belts:
+
+php artisan db:seed --class=CoggedBeltSeeder
+For Poly Belts:
+
+php artisan db:seed --class=PolyBeltSeeder
+For TPU Belts:
+
+php artisan db:seed --class=TpuBeltSeeder
+For Rate Formulas:
+
+php artisan db:seed --class=RateFormulaSeeder
+Seed all at once:
+
+php artisan db:seed
+Or if you have specific production seeding scripts:
+
+# Run your existing production seeding scripts
+./seed_vee_belts_production.sh
+./seed_cogged_belts_production.sh
+./seed_poly_belts_production.sh
+./seed_tpu_belts_production.sh
+./seed_all_tpu_belts_production.sh
+The authentication system is now working properly with:
+
+✅ Default admin: koloursyncc / kolorsync1010 (hardcoded)
+✅ Database users can be created via User Management
+✅ Email field is now nullable
+✅ Session-based authentication working
+✅ Role-based access control

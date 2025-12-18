@@ -5,9 +5,16 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canRegister' => Features::enabled(Features::registration()),
-    ]);
+    // Check if user is logged in via session
+    $user = session('user');
+    
+    if ($user) {
+        // User is logged in, redirect to inventory
+        return redirect('/inventory');
+    }
+    
+    // User not logged in, redirect to inventory (which will show login page)
+    return redirect('/inventory');
 })->name('home');
 
 Route::get('dashboard', function () {

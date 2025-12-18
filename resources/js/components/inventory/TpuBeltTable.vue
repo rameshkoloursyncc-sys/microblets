@@ -501,12 +501,26 @@ const visibleProducts = computed(() => {
   
   // Search filter
   if (searchTerm.value) {
-    const q = searchTerm.value.toLowerCase()
-    list = list.filter(p => 
-      p.section.toLowerCase().includes(q) || 
-      p.width.toLowerCase().includes(q) ||
-      p.meter.toString().includes(q)
-    )
+    const q = searchTerm.value.toLowerCase().trim()
+    
+    // Check if search contains both section and width (space-separated)
+    const searchParts = q.split(' ').filter(part => part.length > 0)
+    
+    if (searchParts.length >= 2) {
+      // Combined search: exact match for section AND width
+      const [sectionPart, widthPart] = searchParts
+      list = list.filter(p => 
+        p.section.toLowerCase() === sectionPart && 
+        p.width.toLowerCase().includes(widthPart)
+      )
+    } else {
+      // Single search term: match section OR width OR meter
+      list = list.filter(p => 
+        p.section.toLowerCase().includes(q) || 
+        p.width.toLowerCase().includes(q) ||
+        p.meter.toString().includes(q)
+      )
+    }
   }
   
   // Zero meter filter
@@ -755,5 +769,15 @@ onMounted(async () => {
 watch(() => props.section, async (newSection) => {
   console.log('Section changed to:', newSection)
   await fetchProducts()
+})
+
+// Watch for globalSearch changes
+watch(() => props.globalSearch, (newGlobalSearch) => {
+  console.log('GlobalSearch changed to:', newGlobalSearch)
+  if (newGlobalSearch) {
+    searchTerm.value = newGlobalSearch
+  } else {
+    searchTerm.value = ''
+  }
 })
 </script>
