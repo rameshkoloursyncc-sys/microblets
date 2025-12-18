@@ -50,7 +50,7 @@ const globalSectionQuery = ref('')
 const globalSizeQuery = ref('')
 
 // Authentication
-const { user, isAuthenticated, isAdmin, initAuth, login, logout } = useAuth()
+const { user, isAuthenticated, isAdmin, initAuth, login, logout, startSessionKeepAlive } = useAuth()
 const authLoading = ref(true)
 
 // Handle login success
@@ -67,10 +67,20 @@ const handleLogout = async () => {
 
 // Initialize auth on mount
 onMounted(async () => {
+  console.log('InventoryApp mounting, initializing auth...')
   try {
     await initAuth()
+    console.log('Auth initialized, user:', user.value?.name)
+    
+    // Start session keep-alive if user is authenticated
+    if (isAuthenticated.value) {
+      startSessionKeepAlive()
+    }
+  } catch (error) {
+    console.error('Auth initialization error:', error)
   } finally {
     authLoading.value = false
+    console.log('Auth loading complete, authenticated:', isAuthenticated.value)
   }
 })
 

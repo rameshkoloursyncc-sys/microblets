@@ -28,26 +28,25 @@ export const useAuth = () => {
           const parsedUser = JSON.parse(storedUser)
           user.value = parsedUser
           console.log('Restored user from localStorage:', parsedUser.name)
+          
+          // Always keep the stored user during initialization
+          // Don't verify with backend during init to avoid logout on refresh
+          console.log('Keeping stored user without backend verification')
         } catch (e) {
           console.log('Invalid stored user data, clearing')
           localStorage.removeItem('user')
           user.value = null
         }
-      }
-      
-      // Always try to verify with backend, but don't fail if it's down
-      try {
-        await checkAuth()
-      } catch (e) {
-        console.log('Backend verification failed, using stored user if available')
-        // If we have a stored user and backend is unreachable, keep the user logged in
-        if (storedUser && user.value) {
-          console.log('Keeping user logged in despite backend error')
+      } else {
+        // No stored user, check if there's a server session
+        try {
+          await checkAuthSilent()
+        } catch (e) {
+          console.log('No stored user and no server session')
         }
       }
     } catch (e) {
       console.log('Session initialization failed:', e)
-      // Don't clear user on initialization failure - keep stored user if exists
     }
   }
 
@@ -69,39 +68,68 @@ export const useAuth = () => {
 
   const checkAuth = async () => {
     try {
-      const response = await axios.get('/api/user', { timeout: 10000 })
+      const response = await axios.get('/api/user', { timeout: 5000 })
       if (response.data.user) {
+        // Update user data from server
         user.value = response.data.user
         localStorage.setItem('user', JSON.stringify(response.data.user))
         return true
       } else {
-        // Only clear user if we get a valid response but no user
-        user.value = null
-        localStorage.removeItem('user')
+        // Server says no user - only clear if we're sure
+        console.log('Server returned no user data')
         return false
       }
     } catch (e: any) {
-      console.log('Auth check error:', e.response?.status, e.message)
+      console.log('Auth check error:', e.response?.status, e.code, e.message)
       
-      // If it's a clear authentication error (401/403), clear user
-      if (e.response?.status === 401 || e.response?.status === 403) {
+      // Only clear user on explicit authentication errors
+      if (e.response?.status === 401) {
+        console.log('Authentication failed - clearing user')
         user.value = null
         localStorage.removeItem('user')
         return false
       }
       
-      // For network errors, timeouts, or server errors (500, 502, 503, etc.)
-      // Keep the stored user and don't force logout
-      if (!e.response || e.response.status >= 500 || e.code === 'ECONNABORTED') {
-        console.log('Network/server error, keeping stored user')
-        return !!user.value
+      // For all other errors (network, timeout, server errors, etc.)
+      // Keep the existing user state and don't force logout
+      console.log('Non-auth error, keeping existing user state')
+      return !!user.value
+    }
+  }
+
+  const checkAuthSilent = async () => {
+    try {
+      const response = await axios.get('/api/user', { timeout: 5000 })
+      if (response.data.user) {
+        // Update user data from server
+        user.value = response.data.user
+        localStorage.setItem('user', JSON.stringify(response.data.user))
+        return true
+      } else {
+        // Server says no user - but don't clear stored user during init
+        console.log('Server returned no user data (silent check)')
+        return false
       }
+    } catch (e: any) {
+      console.log('Silent auth check error:', e.response?.status, e.code)
       
-      // For other client errors, clear user
-      user.value = null
-      localStorage.removeItem('user')
+      // During initialization, don't clear user on any errors
+      // Let the user try to use the app with stored credentials
       return false
     }
+  }
+
+  // Periodic session check to keep session alive
+  const startSessionKeepAlive = () => {
+    setInterval(async () => {
+      if (user.value) {
+        try {
+          await checkAuthSilent()
+        } catch (e) {
+          console.log('Session keep-alive failed:', e)
+        }
+      }
+    }, 5 * 60 * 1000) // Check every 5 minutes
   }
 
   return {
@@ -112,6 +140,7 @@ export const useAuth = () => {
     initAuth,
     login,
     logout,
-    checkAuth
+    checkAuth,
+    startSessionKeepAlive
   }
 }

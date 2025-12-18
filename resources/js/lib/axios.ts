@@ -22,9 +22,14 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear stored user data on 401 errors
-      localStorage.removeItem('user')
-      // Don't auto-reload, let the app handle the auth state
+      // Only clear user data on 401 if it's not the initial auth check
+      const isAuthCheck = error.config?.url?.includes('/api/user')
+      if (!isAuthCheck) {
+        console.log('Got 401 on protected route, clearing user')
+        localStorage.removeItem('user')
+        // Force page reload to show login
+        window.location.reload()
+      }
     }
     return Promise.reject(error)
   }

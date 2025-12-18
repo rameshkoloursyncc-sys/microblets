@@ -30,7 +30,8 @@ class AuthController extends Controller
                 'role' => 'admin',
             ]);
             
-            // Store in session
+            // Regenerate session ID for security and store user
+            session()->regenerate();
             session(['user' => [
                 'id' => 0,
                 'name' => 'koloursyncc',
@@ -56,7 +57,8 @@ class AuthController extends Controller
             ]);
         }
 
-        // Store in session
+        // Regenerate session ID for security and store user
+        session()->regenerate();
         session(['user' => [
             'id' => $user->id,
             'name' => $user->name,
