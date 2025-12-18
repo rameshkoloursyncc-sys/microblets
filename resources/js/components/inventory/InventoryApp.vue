@@ -551,11 +551,11 @@ onMounted(() => {
   />
 </div>
 
-    <div v-else-if="currentView === 'create-product'" :class="sidebarCollapsed ? 'sm:ml-16' : 'sm:ml-80'" class="transition-all duration-300">
+    <div v-else-if="currentView === 'create-product'" :class="sidebarCollapsed ? 'sm:ml-16' : 'sm:ml-80'" class="ml-0 transition-all duration-300">
       <CreateProduct />
     </div>
-    <div v-else-if="currentView === 'dashboard'" :class="sidebarCollapsed ? 'sm:ml-16' : 'sm:ml-80'" class="transition-all duration-300">
-      <div class="p-6 mt-14 min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+    <div v-else-if="currentView === 'dashboard'" :class="sidebarCollapsed ? 'sm:ml-16' : 'sm:ml-80'" class="ml-0 transition-all duration-300">
+      <div class="p-3 sm:p-6 mt-14 min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
         <div class="mb-6">
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
           <p class="text-gray-600 dark:text-gray-400">Welcome to your Microbelts IMA dashboard</p>
