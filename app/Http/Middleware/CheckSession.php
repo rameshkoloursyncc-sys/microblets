@@ -16,11 +16,22 @@ class CheckSession
     public function handle(Request $request, Closure $next): Response
     {
         // For API routes, check session (except login/logout routes)
-        if ($request->is('api/*') && !$request->is('api/login') && !$request->is('api/logout') && !$request->is('api/user')) {
+        if ($request->is('api/*') && !$request->is('api/login') && !$request->is('api/logout') && !$request->is('api/user') && !$request->is('api/ping')) {
             $user = session('user');
+            
+            // Debug logging (remove in production)
+            \Log::info('CheckSession middleware', [
+                'url' => $request->url(),
+                'session_id' => session()->getId(),
+                'user_exists' => !is_null($user),
+                'user_data' => $user ? ['id' => $user['id'], 'name' => $user['name']] : null
+            ]);
+            
             if (!$user) {
                 return response()->json([
-                    'message' => 'Unauthorized. Please login first.'
+                    'message' => 'Session expired. Please login again.',
+                    'error' => 'session_expired',
+                    'redirect' => '/login'
                 ], 401);
             }
         }

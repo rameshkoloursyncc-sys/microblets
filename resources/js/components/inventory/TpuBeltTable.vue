@@ -271,7 +271,7 @@
                 step="0.01" 
                 min="0.01"
                 class="w-full p-2 border rounded" 
-                :placeholder="`Enter ${inOutForm.unit_type} quantity`"
+                placeholder="Enter quantity"
               />
             </div>
 
@@ -392,7 +392,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useTpuBelts, type TpuBelt, type Transaction } from '../../composables/useTpuBelts'
 
 const props = defineProps<{
@@ -436,6 +436,7 @@ const dateTo = ref('')
 const showZeroMeterOnly = ref(false)
 const editingCell = ref<string|null>(null)
 const editValue = ref<any>('')
+const tableKey = ref(0) // Force re-render key
 
 const showCreateModal = ref(false)
 const createForm = ref({ 
@@ -648,7 +649,7 @@ const performInOut = async () => {
   if (!selectedProduct.value || !inOutForm.value.quantity) return
 
   try {
-    await inOutOperation({
+    const result = await inOutOperation({
       ids: [selectedProduct.value.id],
       action: inOutAction.value,
       quantity: inOutForm.value.quantity,
@@ -656,10 +657,23 @@ const performInOut = async () => {
       remark: inOutForm.value.remark
     })
     
+    // Force immediate data refresh
+    await fetchProducts()
+    
+    // Force table re-render
+    tableKey.value++
+    
+    // Update selected product with fresh data
+    const updatedProduct = products.value.find(p => p.id === selectedProduct.value?.id)
+    if (updatedProduct) {
+      selectedProduct.value = updatedProduct
+    }
+    
     showNotification('success', `${inOutAction.value} Complete`, 
       `${inOutAction.value} ${inOutForm.value.quantity} ${inOutForm.value.unit_type} for ${selectedProduct.value.section}-${selectedProduct.value.width}`)
     
     showInOutModalFlag.value = false
+    
   } catch (err: any) {
     showNotification('error', 'Error', err.response?.data?.message || 'Operation failed')
   }

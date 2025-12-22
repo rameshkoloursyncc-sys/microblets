@@ -28,6 +28,109 @@
         </select>
       </div>
 
+      <!-- Global Inventory Settings -->
+      <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          Global Inventory Settings
+        </h2>
+        
+        <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <h3 class="font-medium text-blue-800 dark:text-blue-200 mb-2">Minimum Inventory Management:</h3>
+          <p class="text-sm text-blue-700 dark:text-blue-300">
+            Set minimum inventory levels for all belt types at once. This will update the reorder level for all products across all sections.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Minimum Inventory Setting -->
+          <div class="border rounded-lg p-4">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Global Minimum Inventory Level
+            </label>
+            <div class="flex items-center gap-3">
+              <input 
+                v-model.number="globalMinInventory" 
+                type="number" 
+                step="0.01" 
+                min="0"
+                class="flex-1 p-3 border rounded bg-white dark:bg-gray-700 dark:text-white"
+                placeholder="Enter minimum inventory level (e.g., 5.00)"
+              />
+              <button 
+                @click="updateGlobalMinInventory" 
+                class="px-4 py-3 bg-orange-600 text-white rounded hover:bg-orange-700"
+                :disabled="loading || !globalMinInventory"
+              >
+                Apply to All
+              </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">
+              This will set the reorder level for all products in all belt types (Vee, Cogged, Poly, TPU)
+            </p>
+          </div>
+
+          <!-- Current Statistics -->
+          <div class="border rounded-lg p-4">
+            <h3 class="font-medium text-gray-900 dark:text-white mb-3">Current Inventory Status</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-600 dark:text-gray-400">Total Products:</span>
+                <span class="font-medium">{{ globalStats.totalProducts }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600 dark:text-gray-400">Low Stock Items:</span>
+                <span class="font-medium text-yellow-600">{{ globalStats.lowStock }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600 dark:text-gray-400">Out of Stock:</span>
+                <span class="font-medium text-red-600">{{ globalStats.outOfStock }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600 dark:text-gray-400">Well Stocked:</span>
+                <span class="font-medium text-green-600">{{ globalStats.wellStocked }}</span>
+              </div>
+            </div>
+            <button 
+              @click="loadGlobalStats" 
+              class="mt-3 w-full px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
+              :disabled="loading"
+            >
+              Refresh Stats
+            </button>
+          </div>
+        </div>
+
+        <!-- Belt Type Specific Min Inventory -->
+        <div class="mt-6 border-t pt-4">
+          <h3 class="font-medium text-gray-900 dark:text-white mb-3">Belt Type Specific Settings</h3>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div v-for="(config, beltType) in beltTypeConfig" :key="beltType" class="border rounded p-3">
+              <h4 class="font-medium text-sm mb-2">{{ config.name }}</h4>
+              <div class="flex items-center gap-2">
+                <input 
+                  v-model.number="specificMinInventory[beltType]" 
+                  type="number" 
+                  step="0.01" 
+                  min="0"
+                  class="flex-1 p-2 border rounded text-sm"
+                  :placeholder="globalMinInventory || '5.00'"
+                />
+                <button 
+                  @click="updateSpecificMinInventory(beltType)" 
+                  class="px-2 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
+                  :disabled="loading"
+                >
+                  Set
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">
+                Products: {{ beltTypeStats[beltType]?.total || 0 }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Rate Formula Management -->
       <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
@@ -342,6 +445,17 @@ const beltTypeConfig = {
 const formulas = ref<Record<string, number>>({})
 const divisors = ref<Record<string, number>>({})
 
+// Global inventory settings
+const globalMinInventory = ref<number>(5)
+const specificMinInventory = ref<Record<string, number>>({})
+const globalStats = ref({
+  totalProducts: 0,
+  lowStock: 0,
+  outOfStock: 0,
+  wellStocked: 0
+})
+const beltTypeStats = ref<Record<string, { total: number; lowStock: number; outOfStock: number }>>({})
+
 // Section counts and statistics
 const sectionCounts = ref<Record<string, number>>({})
 const totalProducts = ref(0)
@@ -633,10 +747,137 @@ const exportAllData = async () => {
   }
 }
 
+// Global minimum inventory functions
+const updateGlobalMinInventory = async () => {
+  if (!globalMinInventory.value || globalMinInventory.value < 0) {
+    showNotification('error', 'Invalid Value', 'Minimum inventory must be 0 or greater')
+    return
+  }
+
+  if (!confirm(`Set minimum inventory level to ${globalMinInventory.value} for ALL belt types? This will update reorder levels for all products.`)) {
+    return
+  }
+
+  loading.value = true
+  try {
+    // Update all belt types
+    const beltTypes = ['vee', 'cogged', 'poly', 'tpu']
+    let totalUpdated = 0
+
+    for (const beltType of beltTypes) {
+      const endpoint = beltTypeConfig[beltType].apiEndpoint
+      const response = await axios.post(`${endpoint}/update-global-min-inventory`, {
+        min_inventory: globalMinInventory.value
+      })
+      totalUpdated += response.data.updated_count || 0
+    }
+
+    showNotification('success', 'Global Update Complete', `Updated minimum inventory for ${totalUpdated} products across all belt types`)
+    await loadGlobalStats()
+    
+  } catch (err: any) {
+    showNotification('error', 'Update Failed', err.response?.data?.message || 'Failed to update global minimum inventory')
+  } finally {
+    loading.value = false
+  }
+}
+
+const updateSpecificMinInventory = async (beltType: string) => {
+  const minValue = specificMinInventory.value[beltType]
+  if (!minValue || minValue < 0) {
+    showNotification('error', 'Invalid Value', 'Minimum inventory must be 0 or greater')
+    return
+  }
+
+  if (!confirm(`Set minimum inventory level to ${minValue} for ${beltTypeConfig[beltType].name}?`)) {
+    return
+  }
+
+  loading.value = true
+  try {
+    const endpoint = beltTypeConfig[beltType].apiEndpoint
+    const response = await axios.post(`${endpoint}/update-global-min-inventory`, {
+      min_inventory: minValue
+    })
+
+    showNotification('success', 'Update Complete', `Updated minimum inventory for ${response.data.updated_count || 0} ${beltTypeConfig[beltType].name} products`)
+    await loadGlobalStats()
+    
+  } catch (err: any) {
+    showNotification('error', 'Update Failed', err.response?.data?.message || 'Failed to update minimum inventory')
+  } finally {
+    loading.value = false
+  }
+}
+
+const loadGlobalStats = async () => {
+  try {
+    const beltTypes = ['vee', 'cogged', 'poly', 'tpu']
+    let totalProducts = 0
+    let totalLowStock = 0
+    let totalOutOfStock = 0
+    let totalWellStocked = 0
+
+    // Reset belt type stats
+    beltTypeStats.value = {}
+
+    for (const beltType of beltTypes) {
+      try {
+        const endpoint = beltTypeConfig[beltType].apiEndpoint
+        const response = await axios.get(`${endpoint}?per_page=10000`)
+        
+        // Handle different response formats
+        let products = []
+        if (beltType === 'tpu') {
+          products = response.data || []
+        } else {
+          products = response.data.data || []
+        }
+
+        // Calculate stats for this belt type
+        const outOfStock = products.filter((p: any) => (p.balance_stock || p.meter || 0) === 0).length
+        const lowStock = products.filter((p: any) => {
+          const stock = p.balance_stock || p.meter || 0
+          const reorderLevel = p.reorder_level || 5
+          return stock > 0 && stock <= reorderLevel
+        }).length
+        const wellStocked = products.length - outOfStock - lowStock
+
+        beltTypeStats.value[beltType] = {
+          total: products.length,
+          lowStock,
+          outOfStock
+        }
+
+        totalProducts += products.length
+        totalLowStock += lowStock
+        totalOutOfStock += outOfStock
+        totalWellStocked += wellStocked
+
+      } catch (err) {
+        console.error(`Error loading stats for ${beltType}:`, err)
+        beltTypeStats.value[beltType] = { total: 0, lowStock: 0, outOfStock: 0 }
+      }
+    }
+
+    globalStats.value = {
+      totalProducts,
+      lowStock: totalLowStock,
+      outOfStock: totalOutOfStock,
+      wellStocked: totalWellStocked
+    }
+
+  } catch (err: any) {
+    console.error('Error loading global stats:', err)
+    showNotification('error', 'Stats Error', 'Failed to load global statistics')
+  }
+}
+
 onMounted(() => {
   // Initialize with default formulas and divisors for TPU belts
   formulas.value = { ...currentDefaultFormulas.value }
   divisors.value = { ...currentDefaultDivisors.value }
   loadStatistics()
+  loadGlobalStats()
 })
 </script>

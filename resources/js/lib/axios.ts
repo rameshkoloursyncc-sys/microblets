@@ -21,15 +21,11 @@ axios.interceptors.request.use((config) => {
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Only clear user data on 401 if it's not the initial auth check
-      const isAuthCheck = error.config?.url?.includes('/api/user')
-      if (!isAuthCheck) {
-        console.log('Got 401 on protected route, clearing user')
-        localStorage.removeItem('user')
-        // Force page reload to show login
-        window.location.reload()
-      }
+    // Handle session expiration specifically
+    if (error.response?.status === 401 && error.response?.data?.error === 'session_expired') {
+      console.log('Session expired detected, user needs to re-login')
+      // Don't automatically clear user data, let the auth system handle it
+      // The user will see they need to login again
     }
     return Promise.reject(error)
   }

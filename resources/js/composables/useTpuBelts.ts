@@ -65,7 +65,9 @@ export function useTpuBelts(section?: string) {
     
     try {
       const url = section ? `${baseURL}/section/${section}` : baseURL
+      console.log('Fetching TPU belts from:', url)
       const response = await axios.get(url)
+      console.log('TPU belts fetched:', response.data.length, 'products')
       products.value = response.data
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Failed to fetch TPU belts'
@@ -153,10 +155,7 @@ export function useTpuBelts(section?: string) {
 
     try {
       const response = await axios.post(`${baseURL}/in-out`, data)
-      
-      // Refresh the products list to get updated values
-      await fetchProducts()
-      
+      // Don't auto-refresh here, let the component handle it
       return response.data
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Failed to perform operation'

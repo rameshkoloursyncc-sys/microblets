@@ -19,7 +19,7 @@
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
           <div class="text-sm text-gray-600 dark:text-gray-400">Total Ribs</div>
-          <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ totalRibs }}</div>
+          <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ totalRibs }}</div>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
           <div class="text-sm text-gray-600 dark:text-gray-400">Total Value</div>
@@ -659,7 +659,7 @@ const saveCell = async (product: PolyBelt, field: keyof PolyBelt) => {
 const getRibsClass = (p: PolyBelt) => { 
   if (p.ribs <= 0) return 'text-red-600'
   if (p.ribs <= p.reorder_level) return 'text-yellow-600'
-  return 'text-blue-600'
+  return 'text-green-600'
 }
 
 const createProduct = async () => {

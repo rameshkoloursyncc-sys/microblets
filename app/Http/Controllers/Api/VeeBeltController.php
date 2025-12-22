@@ -43,10 +43,8 @@ class VeeBeltController extends Controller
             });
         }
 
-        // Sort
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        // Sort by size (width) in ascending order
+        $query->orderByRaw('CAST(size AS UNSIGNED) ASC');
 
         // Paginate or get all
         if ($request->boolean('paginate', true)) {
@@ -62,7 +60,7 @@ class VeeBeltController extends Controller
     public function bySection(string $section)
     {
         return VeeBelt::bySection($section)
-            ->orderBy('size')
+            ->orderByRaw('CAST(size AS UNSIGNED) ASC')
             ->get();
     }
 
@@ -740,6 +738,45 @@ class VeeBeltController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Failed to recalculate all rates',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update global minimum inventory (reorder level) for all products
+     */
+    public function updateGlobalMinInventory(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'min_inventory' => 'required|numeric|min:0'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $updated = VeeBelt::query()->update([
+                'reorder_level' => $request->min_inventory
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => "Updated minimum inventory level to {$request->min_inventory} for {$updated} Vee belt products",
+                'updated_count' => $updated
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to update global minimum inventory',
                 'error' => $e->getMessage()
             ], 500);
         }

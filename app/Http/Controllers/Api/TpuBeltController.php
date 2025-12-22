@@ -42,8 +42,7 @@ class TpuBeltController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        $tpuBelts = $query->orderBy('section')
-                         ->orderBy('width')
+        $tpuBelts = $query->orderByRaw('CAST(width AS UNSIGNED) ASC')
                          ->get();
 
         return response()->json($tpuBelts);
@@ -55,7 +54,7 @@ class TpuBeltController extends Controller
     public function getBySection($section)
     {
         $tpuBelts = TpuBelt::bySection($section)
-                          ->orderBy('width')
+                          ->orderByRaw('CAST(width AS UNSIGNED) ASC')
                           ->get();
 
         return response()->json($tpuBelts);
@@ -233,16 +232,24 @@ class TpuBeltController extends Controller
      */
     public function inOutOperation(Request $request)
     {
+        \Log::info('TPU IN/OUT operation started', [
+            'request_data' => $request->all(),
+            'user' => session('user')
+        ]);
+
         $validator = Validator::make($request->all(), [
             'ids' => 'required|array',
             'ids.*' => 'exists:tpu_belts,id',
             'action' => 'required|in:IN,OUT',
             'quantity' => 'required|numeric|min:0.01',
-            'unit_type' => 'required|in:width,meter', // New: choice of unit
+            'unit_type' => 'required|in:width,meter',
             'remark' => 'nullable|string'
         ]);
 
         if ($validator->fails()) {
+            \Log::error('TPU IN/OUT validation failed', [
+                'errors' => $validator->errors()
+            ]);
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => $validator->errors()
@@ -250,60 +257,80 @@ class TpuBeltController extends Controller
         }
 
         try {
+            \Log::info('TPU IN/OUT transaction started');
             DB::beginTransaction();
 
             $results = [];
             foreach ($request->ids as $id) {
+                \Log::info('Processing TPU belt', ['id' => $id]);
                 $tpuBelt = TpuBelt::findOrFail($id);
                 $oldMeter = $tpuBelt->meter;
+                $oldWidth = $tpuBelt->width;
 
-                // Calculate meter change based on unit type
-                $meterChange = 0;
+                // Calculate change based on unit type
                 if ($request->unit_type === 'meter') {
+                    // Change meter field
                     $meterChange = $request->quantity;
-                } else { // width
-                    // If adding width, we need to know how many meters per width unit
-                    // For simplicity, assume 1 width unit = 1 meter (can be adjusted)
-                    $meterChange = $request->quantity;
-                }
-
-                if ($request->action === 'IN') {
-                    $tpuBelt->meter += $meterChange;
-                    $tpuBelt->in_meter += $meterChange;
-                } else { // OUT
-                    if ($tpuBelt->meter < $meterChange) {
-                        throw new \Exception("Insufficient meter for {$tpuBelt->section}-{$tpuBelt->width}. Available: {$tpuBelt->meter}, Requested: {$meterChange}");
+                    
+                    if ($request->action === 'IN') {
+                        $tpuBelt->meter += $meterChange;
+                        $tpuBelt->in_meter += $meterChange;
+                    } else { // OUT
+                        if ($tpuBelt->meter < $meterChange) {
+                            throw new \Exception("Insufficient meter for {$tpuBelt->section}-{$tpuBelt->width}. Available: {$tpuBelt->meter}, Requested: {$meterChange}");
+                        }
+                        $tpuBelt->meter -= $meterChange;
+                        $tpuBelt->out_meter += $meterChange;
                     }
-                    $tpuBelt->meter -= $meterChange;
-                    $tpuBelt->out_meter += $meterChange;
+                    
+                    $changeDescription = "{$request->action} {$meterChange} meter";
+                    
+                } else { // width
+                    // Change width field
+                    $widthChange = $request->quantity;
+                    
+                    if ($request->action === 'IN') {
+                        $tpuBelt->width += $widthChange;
+                    } else { // OUT
+                        if ($tpuBelt->width < $widthChange) {
+                            throw new \Exception("Insufficient width for {$tpuBelt->section}-{$tpuBelt->width}. Available: {$tpuBelt->width}, Requested: {$widthChange}");
+                        }
+                        $tpuBelt->width -= $widthChange;
+                    }
+                    
+                    $meterChange = 0; // No meter change for width operations
+                    $changeDescription = "{$request->action} {$widthChange} width (from {$oldWidth} to {$tpuBelt->width})";
                 }
-
                 $tpuBelt->save();
 
                 // Create transaction record
                 InventoryTransaction::create([
-                    'product_type' => 'tpu_belt',
+                    'category' => 'tpu_belts',
                     'product_id' => $tpuBelt->id,
                     'type' => $request->action,
-                    'quantity' => $meterChange,
-                    'stock_before' => $oldMeter,
-                    'stock_after' => $tpuBelt->meter,
-                    'description' => $request->remark ?: "{$request->action} {$meterChange} {$request->unit_type} for {$tpuBelt->section}-{$tpuBelt->width}",
-                    'created_by' => auth()->id(),
+                    'quantity' => $request->quantity,
+                    'stock_before' => $request->unit_type === 'meter' ? $oldMeter : $oldWidth,
+                    'stock_after' => $request->unit_type === 'meter' ? $tpuBelt->meter : $tpuBelt->width,
+                    'rate' => $tpuBelt->rate,
+                    'description' => $changeDescription,
+                    'user_id' => session('user')['id'] ?? null,
                 ]);
 
                 $results[] = [
                     'id' => $tpuBelt->id,
                     'section' => $tpuBelt->section,
                     'width' => $tpuBelt->width,
-                    'old_meter' => $oldMeter,
-                    'new_meter' => $tpuBelt->meter,
-                    'change' => $meterChange,
-                    'unit_type' => $request->unit_type
+                    'meter' => $tpuBelt->meter,
+                    'change' => $request->quantity,
+                    'unit_type' => $request->unit_type,
+                    'field_changed' => $request->unit_type === 'meter' ? 'meter' : 'width'
                 ];
             }
 
             DB::commit();
+            \Log::info('TPU IN/OUT operation completed successfully', [
+                'results_count' => count($results)
+            ]);
 
             return response()->json([
                 'message' => "Successfully processed {$request->action} operation for " . count($request->ids) . " TPU belts",
@@ -312,6 +339,10 @@ class TpuBeltController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('TPU IN/OUT operation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'message' => 'Operation failed',
                 'error' => $e->getMessage()
@@ -324,7 +355,7 @@ class TpuBeltController extends Controller
      */
     public function getTransactions(TpuBelt $tpuBelt)
     {
-        $transactions = InventoryTransaction::where('product_type', 'tpu_belt')
+        $transactions = InventoryTransaction::where('category', 'tpu_belts')
                                           ->where('product_id', $tpuBelt->id)
                                           ->with('user')
                                           ->orderBy('created_at', 'desc')
@@ -564,6 +595,45 @@ class TpuBeltController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Failed to recalculate section rates',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update global minimum inventory (reorder level) for all products
+     */
+    public function updateGlobalMinInventory(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'min_inventory' => 'required|numeric|min:0'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $updated = TpuBelt::query()->update([
+                'reorder_level' => $request->min_inventory
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => "Updated minimum inventory level to {$request->min_inventory} for {$updated} TPU belt products",
+                'updated_count' => $updated
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to update global minimum inventory',
                 'error' => $e->getMessage()
             ], 500);
         }

@@ -22,9 +22,9 @@ class InventoryTransaction extends Model
     ];
 
     protected $casts = [
-        'quantity' => 'integer',
-        'stock_before' => 'integer',
-        'stock_after' => 'integer',
+        'quantity' => 'decimal:2',
+        'stock_before' => 'decimal:2',
+        'stock_after' => 'decimal:2',
         'rate' => 'decimal:2',
     ];
 

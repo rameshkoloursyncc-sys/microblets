@@ -4,6 +4,7 @@ import { useAuth } from '../../composables/useAuth'
 
 const sidebarCollapsed = ref(false)
 const mobileMenuOpen = ref(false)
+const userDropdownOpen = ref(false)
 const sectionSearch = ref('')
 const sizeSearch = ref('')
 const expandedInventory = ref(false)
@@ -56,6 +57,7 @@ const closeMobileMenu = () => {
 // Handle navigation and close mobile menu
 const handleNavigation = (view: string) => {
   closeMobileMenu()
+  userDropdownOpen.value = false
   clearSearchFields()
   emit('navigate', view)
 }
@@ -237,14 +239,24 @@ const sidebarStyle = computed(() => {
       </div>
       
       <div class="flex items-center">
-          <div class="flex items-center ms-3">
+          <div class="flex items-center ms-3 relative">
             <div>
-              <button type="button" class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" aria-expanded="false" data-dropdown-toggle="dropdown-user">
+              <button 
+                type="button" 
+                @click="userDropdownOpen = !userDropdownOpen"
+                class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" 
+                aria-expanded="false"
+              >
                 <span class="sr-only">Open user menu</span>
                 <img class="w-8 h-8 rounded-full" src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="user photo">
               </button>
             </div>
-            <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600" id="dropdown-user">
+            
+            <!-- Dropdown Menu -->
+            <div 
+              v-if="userDropdownOpen"
+              class="absolute right-0 top-12 z-50 w-48 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow-lg dark:bg-gray-700 dark:divide-gray-600"
+            >
               <div class="px-4 py-3" role="none">
                 <p class="text-sm text-gray-900 dark:text-white" role="none">
                   {{ user?.name }}
@@ -255,21 +267,28 @@ const sidebarStyle = computed(() => {
               </div>
               <ul class="py-1" role="none">
                 <li>
-                  <button @click="handleNavigation('dashboard')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Dashboard</button>
+                  <button @click="handleNavigation('dashboard'); userDropdownOpen = false" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Dashboard</button>
                 </li>
                 <li v-if="isAdmin">
-                  <button @click="handleNavigation('user-management')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">User Management</button>
+                  <button @click="handleNavigation('user-management'); userDropdownOpen = false" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">User Management</button>
                 </li>
                 <li v-if="isAdmin">
-                  <button @click="handleNavigation('settings')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Settings</button>
+                  <button @click="handleNavigation('settings'); userDropdownOpen = false" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Settings</button>
                 </li>
                 <li>
-                  <button @click="$emit('logout')" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Sign out</button>
+                  <button @click="$emit('logout'); userDropdownOpen = false" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem">Sign out</button>
                 </li>
               </ul>
             </div>
           </div>
         </div>
+        
+        <!-- Dropdown Overlay (click outside to close) -->
+        <div 
+          v-if="userDropdownOpen"
+          @click="userDropdownOpen = false"
+          class="fixed inset-0 z-40"
+        ></div>
     </div>
   </div>
 </nav>

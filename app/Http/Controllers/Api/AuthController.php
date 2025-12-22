@@ -23,25 +23,39 @@ class AuthController extends Controller
 
         // Check for hardcoded admin first
         if ($request->name === 'koloursyncc' && $request->password === 'kolorsync1010') {
-            // Create a virtual admin user object for session
-            $adminUser = new User([
-                'id' => 0,
-                'name' => 'koloursyncc',
-                'role' => 'admin',
-            ]);
+            // Find the actual user in database
+            $adminUser = User::where('name', 'koloursyncc11')->first();
+            if (!$adminUser) {
+                throw ValidationException::withMessages([
+                    'name' => ['Admin user not found in database.'],
+                ]);
+            }
+            
+            // Start session if not already started
+            if (!$request->hasSession()) {
+                $request->setLaravelSession(app('session.store'));
+            }
             
             // Regenerate session ID for security and store user
             session()->regenerate();
             session(['user' => [
-                'id' => 0,
+                'id' => $adminUser->id,
                 'name' => 'koloursyncc',
                 'role' => 'admin',
             ]]);
+            
+            // Save session immediately
+            session()->save();
+            
+            \Log::info('Admin login successful', [
+                'session_id' => session()->getId(),
+                'user_data' => session('user')
+            ]);
 
             return response()->json([
                 'message' => 'Login successful',
                 'user' => [
-                    'id' => 0,
+                    'id' => $adminUser->id,
                     'name' => 'koloursyncc',
                     'role' => 'admin',
                 ]
@@ -57,6 +71,11 @@ class AuthController extends Controller
             ]);
         }
 
+        // Start session if not already started
+        if (!$request->hasSession()) {
+            $request->setLaravelSession(app('session.store'));
+        }
+
         // Regenerate session ID for security and store user
         session()->regenerate();
         session(['user' => [
@@ -64,6 +83,14 @@ class AuthController extends Controller
             'name' => $user->name,
             'role' => $user->role,
         ]]);
+        
+        // Save session immediately
+        session()->save();
+        
+        \Log::info('User login successful', [
+            'session_id' => session()->getId(),
+            'user_data' => session('user')
+        ]);
 
         return response()->json([
             'message' => 'Login successful',
@@ -93,7 +120,19 @@ class AuthController extends Controller
      */
     public function user(Request $request)
     {
+        // Start session if not already started
+        if (!$request->hasSession()) {
+            $request->setLaravelSession(app('session.store'));
+        }
+        
         $user = session('user');
+        
+        \Log::info('User check', [
+            'session_id' => session()->getId(),
+            'user_exists' => !is_null($user),
+            'user_data' => $user,
+            'all_session_data' => session()->all()
+        ]);
 
         if (!$user) {
             return response()->json([

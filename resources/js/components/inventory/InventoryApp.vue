@@ -92,6 +92,7 @@ onMounted(async () => {
     if (isAuthenticated.value) {
       startSessionKeepAlive()
       // Load dashboard stats
+      console.log('🚀 App mounted, loading dashboard stats...')
       await loadDashboardStats()
     }
   } catch (error) {
@@ -105,6 +106,7 @@ onMounted(async () => {
 // Watch for view changes to load stats when dashboard is accessed
 watch(currentView, async (newView) => {
   if (newView === 'dashboard' && isAuthenticated.value) {
+    console.log('📊 Dashboard view accessed, loading stats...')
     await loadDashboardStats()
   }
 })
@@ -117,6 +119,8 @@ const handleSidebarToggle = (collapsed: boolean) => {
 // Load dashboard statistics
 const loadDashboardStats = async () => {
   try {
+    console.log('🔄 Loading dashboard stats...')
+    
     // Load all inventory data and calculate totals
     const [veeResponse, coggedResponse, polyResponse, tpuResponse] = await Promise.all([
       axios.get('/api/vee-belts'),
@@ -125,20 +129,58 @@ const loadDashboardStats = async () => {
       axios.get('/api/tpu-belts')
     ])
 
+    console.log('📊 Raw API Responses:', {
+      vee: veeResponse.data,
+      cogged: coggedResponse.data,
+      poly: polyResponse.data,
+      tpu: tpuResponse.data
+    })
+
+    // Handle different response structures
+    const getArrayFromResponse = (response) => {
+      if (Array.isArray(response.data)) {
+        return response.data
+      }
+      if (response.data && Array.isArray(response.data.data)) {
+        return response.data.data
+      }
+      return []
+    }
+
+    const veeData = getArrayFromResponse(veeResponse)
+    const coggedData = getArrayFromResponse(coggedResponse)
+    const polyData = getArrayFromResponse(polyResponse)
+    const tpuData = getArrayFromResponse(tpuResponse)
+
+    console.log('📊 Processed API Responses:', {
+      vee: veeData.length,
+      cogged: coggedData.length,
+      poly: polyData.length,
+      tpu: tpuData.length
+    })
+
     const allFinishedGoods = [
-      ...(veeResponse.data || []),
-      ...(coggedResponse.data || []),
-      ...(polyResponse.data || []),
-      ...(tpuResponse.data || [])
+      ...veeData,
+      ...coggedData,
+      ...polyData,
+      ...tpuData
     ]
 
-    // Calculate finished goods stats
-    finishedGoodsStats.value = {
-      totalProducts: allFinishedGoods.length,
-      inStock: allFinishedGoods.filter(p => (p.stock || 0) > 0).length,
-      lowStock: allFinishedGoods.filter(p => (p.stock || 0) > 0 && (p.stock || 0) <= (p.reorder_level || 5)).length,
-      outOfStock: allFinishedGoods.filter(p => (p.stock || 0) === 0).length
+    console.log('📦 Total finished goods:', allFinishedGoods.length)
+    if (allFinishedGoods.length > 0) {
+      console.log('📋 Sample product:', allFinishedGoods[0])
     }
+
+    // Calculate finished goods stats
+    const stats = {
+      totalProducts: allFinishedGoods.length,
+      inStock: allFinishedGoods.filter(p => (p.balance_stock || 0) > 0).length,
+      lowStock: allFinishedGoods.filter(p => (p.balance_stock || 0) > 0 && (p.balance_stock || 0) <= (p.reorder_level || 5)).length,
+      outOfStock: allFinishedGoods.filter(p => (p.balance_stock || 0) === 0).length
+    }
+
+    console.log('📈 Calculated stats:', stats)
+    finishedGoodsStats.value = stats
 
     // For now, set raw materials to placeholder (no API available yet)
     rawMaterialsStats.value = {
@@ -149,7 +191,8 @@ const loadDashboardStats = async () => {
     }
 
   } catch (error) {
-    console.error('Error loading dashboard stats:', error)
+    console.error('❌ Error loading dashboard stats:', error)
+    console.error('Error details:', error.response?.data || error.message)
     // Set error state
     finishedGoodsStats.value = { totalProducts: 0, inStock: 0, lowStock: 0, outOfStock: 0 }
     rawMaterialsStats.value = { totalProducts: 0, inStock: 0, lowStock: 0, outOfStock: 0 }

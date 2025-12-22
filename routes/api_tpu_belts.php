@@ -29,6 +29,7 @@ Route::prefix('tpu-belts')->group(function () {
 
     // Settings page endpoints
     Route::post('/update-section-rate', [TpuBeltController::class, 'updateSectionRate']);
+    Route::post('/update-global-min-inventory', [TpuBeltController::class, 'updateGlobalMinInventory']);
     Route::post('/seed-section', [TpuBeltController::class, 'seedSection']);
     Route::delete('/clear-section/{section}', [TpuBeltController::class, 'clearSection']);
     Route::delete('/clear-all', [TpuBeltController::class, 'clearAll']);

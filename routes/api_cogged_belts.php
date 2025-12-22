@@ -27,4 +27,7 @@ Route::prefix('cogged-belts')->group(function () {
     // Rate recalculation endpoints
     Route::post('/recalculate-section-rates', [CoggedBeltController::class, 'recalculateSectionRates']);
     Route::post('/recalculate-all-rates', [CoggedBeltController::class, 'recalculateAllRates']);
+    
+    // Global inventory management
+    Route::post('/update-global-min-inventory', [CoggedBeltController::class, 'updateGlobalMinInventory']);
 });

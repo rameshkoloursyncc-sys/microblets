@@ -27,4 +27,7 @@ Route::prefix('poly-belts')->group(function () {
     // Rate recalculation endpoints
     Route::post('/recalculate-section-rates', [PolyBeltController::class, 'recalculateSectionRates']);
     Route::post('/recalculate-all-rates', [PolyBeltController::class, 'recalculateAllRates']);
+    
+    // Global inventory management
+    Route::post('/update-global-min-inventory', [PolyBeltController::class, 'updateGlobalMinInventory']);
 });
