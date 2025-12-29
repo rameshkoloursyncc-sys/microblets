@@ -378,12 +378,12 @@ const sidebarStyle = computed(() => {
                <span v-if="!sidebarCollapsed" class="ms-3">Dashboard</span>
             </a>
          </li>
-      <li>
+  <!--    <li>
         <button @click="handleNavigation('create-product')" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full" :title="sidebarCollapsed ? 'Add Product' : ''">
           <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-900 dark:group-hover:text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"/></svg>
           <span v-if="!sidebarCollapsed" class="ms-3">Add Product</span>
         </button>
-      </li>
+      </li>  --> 
       
       <!-- Admin Only Sections -->
       <li v-if="isAdmin">
@@ -875,7 +875,7 @@ const sidebarStyle = computed(() => {
                         <button
                           type="button"
                           class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-commercial-xl')"
+                          @click="$emit('navigate', 'timing-belts-xl')"
                         >
                           
                           <span>XL</span>
@@ -885,7 +885,7 @@ const sidebarStyle = computed(() => {
                         <button
                           type="button"
                           class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-commercial-l')"
+                          @click="$emit('navigate', 'timing-belts-l')"
                         >
                           
                           <span>L</span>
@@ -895,7 +895,7 @@ const sidebarStyle = computed(() => {
                         <button
                           type="button"
                           class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-commercial-h')"
+                          @click="$emit('navigate', 'timing-belts-h')"
                         >
                           
                           <span>H</span>
@@ -905,7 +905,7 @@ const sidebarStyle = computed(() => {
                         <button
                           type="button"
                           class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-commercial-xh')"
+                          @click="$emit('navigate', 'timing-belts-xh')"
                         >
                           
                           <span>XH</span>
@@ -915,7 +915,7 @@ const sidebarStyle = computed(() => {
                         <button
                           type="button"
                           class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-commercial-t5')"
+                          @click="$emit('navigate', 'timing-belts-t5')"
                         >
                           
                           <span>T5</span>
@@ -925,18 +925,28 @@ const sidebarStyle = computed(() => {
                         <button
                           type="button"
                           class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-commercial-t10')"
+                          @click="$emit('navigate', 'timing-belts-t10')"
                         >
                           
                           <span>T10</span>
                         </button>
                       </li>
                       <!-- HTD Timing Belts: 5M, 8M, 14M -->
+                        <li>
+                        <button
+                          type="button"
+                          class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                          @click="$emit('navigate', 'timing-belts-commercial-3m')"
+                        >
+                          
+                          <span>3M</span>
+                        </button>
+                      </li>
                       <li>
                         <button
                           type="button"
                           class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-commercial-5m')"
+                          @click="$emit('navigate', 'timing-belts-5m')"
                         >
                           
                           <span>5M</span>
@@ -946,7 +956,7 @@ const sidebarStyle = computed(() => {
                         <button
                           type="button"
                           class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-commercial-8m')"
+                          @click="$emit('navigate', 'timing-belts-8m')"
                         >
                           
                           <span>8M</span>
@@ -956,7 +966,7 @@ const sidebarStyle = computed(() => {
                         <button
                           type="button"
                           class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-commercial-14m')"
+                          @click="$emit('navigate', 'timing-belts-14m')"
                         >
                           
                           <span>14M</span>
@@ -967,7 +977,7 @@ const sidebarStyle = computed(() => {
                         <button
                           type="button"
                           class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-commercial-dl')"
+                          @click="$emit('navigate', 'timing-belts-dl')"
                         >
                           
                           <span>DL</span>
@@ -977,7 +987,7 @@ const sidebarStyle = computed(() => {
                         <button
                           type="button"
                           class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-commercial-dh')"
+                          @click="$emit('navigate', 'timing-belts-dh')"
                         >
                           
                           <span>DH</span>
@@ -987,7 +997,7 @@ const sidebarStyle = computed(() => {
                         <button
                           type="button"
                           class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-commercial-d5m')"
+                          @click="$emit('navigate', 'timing-belts-d5m')"
                         >
                           
                           <span>D5M</span>
@@ -997,22 +1007,13 @@ const sidebarStyle = computed(() => {
                         <button
                           type="button"
                           class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-commercial-d8m')"
+                          @click="$emit('navigate', 'timing-belts-d8m')"
                         >
                           
                           <span>D8M</span>
                         </button>
                       </li>
-                       <li>
-                        <button
-                          type="button"
-                          class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-commercial-3m')"
-                        >
-                          
-                          <span>3M</span>
-                        </button>
-                      </li>
+                     
                     </ul>
                   </li>
                   <!-- Neoprene Folder -->
@@ -1046,7 +1047,7 @@ const sidebarStyle = computed(() => {
                         <button
                           type="button"
                           class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-neoprene-xl')"
+                          @click="$emit('navigate', 'timing-belts-xl')"
                         >
                           
                           <span>XL</span>
@@ -1103,6 +1104,16 @@ const sidebarStyle = computed(() => {
                         </button>
                       </li>
                       <!-- HTD Timing Belts: 5M, 8M, 14M -->
+                        <li>
+                        <button
+                          type="button"
+                          class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                          @click="$emit('navigate', 'timing-belts-commercial-3m')"
+                        >
+                          
+                          <span>3M</span>
+                        </button>
+                      </li>
                       <li>
                         <button
                           type="button"
@@ -1174,16 +1185,7 @@ const sidebarStyle = computed(() => {
                           <span>D8M</span>
                         </button>
                       </li>
-                       <li>
-                        <button
-                          type="button"
-                          class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                          @click="$emit('navigate', 'timing-belts-commercial-3m')"
-                        >
-                          
-                          <span>3M</span>
-                        </button>
-                      </li>
+                     
                     </ul>
                   </li>
                 </ul>

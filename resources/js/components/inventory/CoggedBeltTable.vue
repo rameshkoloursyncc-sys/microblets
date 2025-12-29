@@ -1,6 +1,7 @@
 <template>
   <div class="transition-all duration-300" :class="props.sidebarCollapsed ? 'sm:ml-16' : 'sm:ml-80'">
-    <div class="p-6 mt-14 min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="p-6 mt-14 min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+     <div class="sticky top-14 z-30 bg-gray-50 dark:bg-gray-900 pb-4">
       <!-- Header -->
       <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
@@ -10,7 +11,7 @@
           Click a cell to edit. All changes are saved to the database.
         </p>
       </div>
-
+ 
       <!-- Summary Stats -->
       <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
@@ -91,7 +92,7 @@
           </div>
         </div>
       </div>
-
+</div>
       <!-- Error State -->
       <div v-if="error && !loading" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
         <div class="flex items-center">
@@ -115,12 +116,15 @@
       </div>
 
       <!-- Table -->
-      <div v-else class="bg-white dark:bg-gray-800 shadow rounded overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
-            <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase">
-              <tr>
-                <th class="py-3 px-3">Section</th>
+      <!-- NEW -->
+<div class="flex-1 bg-white dark:bg-gray-800 shadow rounded overflow-hidden">
+  <!-- Sticky Table Header -->
+  <div class="flex-1 bg-white dark:bg-gray-800 shadow rounded overflow-hidden">
+  <div class="overflow-y-auto max-h-[calc(100vh-400px)]">
+    <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
+      <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase sticky top-0 z-20">
+        <tr>
+           <th class="py-3 px-3">Section</th>
                 <th class="py-3 px-3">Size</th>
                 <th class="py-3 px-3 text-center">Balance Stock</th>
                 <th class="py-3 px-3 text-center">IN Stock</th>
@@ -130,30 +134,30 @@
                 <th class="py-3 px-3 text-right">Value</th>
                 <th class="py-3 px-3">Remark</th>
                 <th class="py-3 px-3 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="p in visibleProducts" :key="p.id" class="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="p in visibleProducts" :key="p.id" class="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-section`">
                     <input v-model="editValue" @blur="saveCell(p, 'section')" @keyup.enter="saveCell(p, 'section')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
-                  <div v-else @click="startEdit(p, 'section')" class="cursor-pointer">{{ p.section }}</div>
+                  <div v-else @click="startEdit(p, 'section')" class="cursor-pointer font-bold text-black dark:text-white">{{ p.section }}</div>
                 </td>
 
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-size`">
                     <input v-model="editValue" @blur="saveCell(p, 'size')" @keyup.enter="saveCell(p, 'size')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
-                  <div v-else @click="startEdit(p, 'size')" class="cursor-pointer">{{ p.size }}</div>
+                  <div v-else @click="startEdit(p, 'size')" class="cursor-pointer font-bold text-black dark:text-white">{{ p.size }}</div>
                 </td>
 
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p.id}-balance_stock`">
                     <input v-model.number="editValue" type="number" @blur="saveCell(p, 'balance_stock')" @keyup.enter="saveCell(p, 'balance_stock')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
                   </div>
-                  <div v-else @click="startEdit(p, 'balance_stock')" class="cursor-pointer">
-                    <span :class="getStockClass(p)">{{ p.balance_stock }}</span>
+                  <div v-else @click="startEdit(p, 'balance_stock')" class="cursor-pointer ">
+                    <span  class="font-bold" :class="getStockClass(p)">{{ p.balance_stock }}</span>
                   </div>
                 </td>
 
@@ -227,10 +231,12 @@
                   </div>
                 </td>
               </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
 
       <!-- Notifications -->
       <div class="fixed right-4 top-4 space-y-3 z-50">

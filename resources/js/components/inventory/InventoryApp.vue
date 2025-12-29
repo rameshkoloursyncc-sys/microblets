@@ -26,6 +26,8 @@ import T8MTable from './tables/tpubelts/T8M_table.vue'
 import T8MRPPTable from './tables/tpubelts/T8m_RPP_table.vue'
 import TS8MTable from './tables/tpubelts/TS8M_table.vue'
 import TpuBeltTable from './TpuBeltTable.vue'
+import TimingBeltTable from './TimingBeltTable.vue'
+import SpecialBeltTable from './SpecialBeltTable.vue'
 import T14MTable from './tables/tpubelts/T14M_table.vue'
 import TXLTable from './tables/tpubelts/XL_table.vue'
 import TLTable from './tables/tpubelts/L_table.vue'
@@ -55,7 +57,16 @@ const finishedGoodsStats = ref({
   totalProducts: 0,
   inStock: 0,
   lowStock: 0,
-  outOfStock: 0
+  outOfStock: 0,
+  totalValue: 0,
+  beltTypeValues: {
+    vee: 0,
+    cogged: 0,
+    poly: 0,
+    tpu: 0,
+    timing: 0,
+    special: 0
+  }
 })
 
 const rawMaterialsStats = ref({
@@ -119,68 +130,48 @@ const handleSidebarToggle = (collapsed: boolean) => {
 // Load dashboard statistics
 const loadDashboardStats = async () => {
   try {
-    console.log('🔄 Loading dashboard stats...')
+    console.log('🔄 Loading dashboard stats from backend API...')
     
-    // Load all inventory data and calculate totals
-    const [veeResponse, coggedResponse, polyResponse, tpuResponse] = await Promise.all([
-      axios.get('/api/vee-belts'),
-      axios.get('/api/cogged-belts'), 
-      axios.get('/api/poly-belts'),
-      axios.get('/api/tpu-belts')
-    ])
-
-    console.log('📊 Raw API Responses:', {
-      vee: veeResponse.data,
-      cogged: coggedResponse.data,
-      poly: polyResponse.data,
-      tpu: tpuResponse.data
-    })
-
-    // Handle different response structures
-    const getArrayFromResponse = (response) => {
-      if (Array.isArray(response.data)) {
-        return response.data
+    // Use the new backend API for accurate calculations
+    const response = await axios.get('/api/dashboard/inventory-stats')
+    
+    if (response.data.success) {
+      const data = response.data.data
+      
+      console.log('📊 Backend calculated stats:', data)
+      
+      // Set the stats from backend response
+      finishedGoodsStats.value = {
+        totalProducts: data.totals.total_products,
+        inStock: data.totals.in_stock,
+        lowStock: data.totals.low_stock,
+        outOfStock: data.totals.out_of_stock,
+        totalValue: data.totals.total_value,
+        beltTypeValues: {
+          vee: data.belt_types.vee,
+          cogged: data.belt_types.cogged,
+          poly: data.belt_types.poly,
+          tpu: data.belt_types.tpu,
+          timing: data.belt_types.timing,
+          special: data.belt_types.special
+        }
       }
-      if (response.data && Array.isArray(response.data.data)) {
-        return response.data.data
+      
+      console.log('✅ Dashboard stats loaded successfully:', finishedGoodsStats.value)
+      
+      // If poly or TPU belts show zero, check table structures for debugging
+      if (data.belt_types.poly === 0 || data.belt_types.tpu === 0) {
+        console.log('🔍 Poly or TPU belts showing zero, checking table structures...')
+        try {
+          const structureResponse = await axios.get('/api/dashboard/check-tables')
+          console.log('📋 Table structures:', structureResponse.data)
+        } catch (structureError) {
+          console.error('❌ Failed to get table structures:', structureError)
+        }
       }
-      return []
+    } else {
+      throw new Error(response.data.message || 'Failed to load stats')
     }
-
-    const veeData = getArrayFromResponse(veeResponse)
-    const coggedData = getArrayFromResponse(coggedResponse)
-    const polyData = getArrayFromResponse(polyResponse)
-    const tpuData = getArrayFromResponse(tpuResponse)
-
-    console.log('📊 Processed API Responses:', {
-      vee: veeData.length,
-      cogged: coggedData.length,
-      poly: polyData.length,
-      tpu: tpuData.length
-    })
-
-    const allFinishedGoods = [
-      ...veeData,
-      ...coggedData,
-      ...polyData,
-      ...tpuData
-    ]
-
-    console.log('📦 Total finished goods:', allFinishedGoods.length)
-    if (allFinishedGoods.length > 0) {
-      console.log('📋 Sample product:', allFinishedGoods[0])
-    }
-
-    // Calculate finished goods stats
-    const stats = {
-      totalProducts: allFinishedGoods.length,
-      inStock: allFinishedGoods.filter(p => (p.balance_stock || 0) > 0).length,
-      lowStock: allFinishedGoods.filter(p => (p.balance_stock || 0) > 0 && (p.balance_stock || 0) <= (p.reorder_level || 5)).length,
-      outOfStock: allFinishedGoods.filter(p => (p.balance_stock || 0) === 0).length
-    }
-
-    console.log('📈 Calculated stats:', stats)
-    finishedGoodsStats.value = stats
 
     // For now, set raw materials to placeholder (no API available yet)
     rawMaterialsStats.value = {
@@ -193,8 +184,47 @@ const loadDashboardStats = async () => {
   } catch (error) {
     console.error('❌ Error loading dashboard stats:', error)
     console.error('Error details:', error.response?.data || error.message)
+    
+    // Fallback: try to get debug info for all belt types
+    try {
+      console.log('🔍 Fetching debug info for all belt types...')
+      const debugResponse = await axios.get('/api/dashboard/all-belts-debug')
+      console.log('🔍 All belts debug info:', debugResponse.data)
+      
+      // Also get individual debug info
+      const individualDebugPromises = [
+        axios.get('/api/dashboard/vee-belts-debug').then(r => ({ type: 'vee', data: r.data })),
+        axios.get('/api/dashboard/cogged-belts-debug').then(r => ({ type: 'cogged', data: r.data })),
+        axios.get('/api/dashboard/poly-belts-debug').then(r => ({ type: 'poly', data: r.data })),
+        axios.get('/api/dashboard/tpu-belts-debug').then(r => ({ type: 'tpu', data: r.data })),
+        axios.get('/api/dashboard/timing-belts-debug').then(r => ({ type: 'timing', data: r.data })),
+        axios.get('/api/dashboard/special-belts-debug').then(r => ({ type: 'special', data: r.data }))
+      ]
+      
+      const individualDebugResults = await Promise.allSettled(individualDebugPromises)
+      individualDebugResults.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          console.log(`🔍 ${result.value.type} belts debug:`, result.value.data)
+        } else {
+          console.error(`❌ Failed to get ${['vee', 'cogged', 'poly', 'tpu', 'timing', 'special'][index]} debug:`, result.reason)
+        }
+      })
+      
+    } catch (debugError) {
+      console.error('❌ Debug requests failed:', debugError)
+    }
+    
     // Set error state
-    finishedGoodsStats.value = { totalProducts: 0, inStock: 0, lowStock: 0, outOfStock: 0 }
+    finishedGoodsStats.value = { 
+      totalProducts: 0, 
+      inStock: 0, 
+      lowStock: 0, 
+      outOfStock: 0,
+      totalValue: 0,
+      beltTypeValues: {
+        vee: 0, cogged: 0, poly: 0, tpu: 0, timing: 0, special: 0
+      }
+    }
     rawMaterialsStats.value = { totalProducts: 0, inStock: 0, lowStock: 0, outOfStock: 0 }
   }
 }
@@ -299,34 +329,7 @@ const navigationMapping: Record<string, { title: string; categories: string[] }>
   // Individual Poly Belt Types - Double Sided
   'poly-belts-dpl': { title: 'DPL Section Inventory', categories: ['DPL Section'] },
   'poly-belts-dpk': { title: 'DPK Section Inventory', categories: ['DPK Section'] },
-  // Individual Timing Belt Types - Commercial
-  'timing-belts-commercial-xl': { title: 'Commercial XL Timing Belts Inventory', categories: ['XL Section'] },
-  'timing-belts-commercial-l': { title: 'Commercial L Timing Belts Inventory', categories: ['L Section'] },
-  'timing-belts-commercial-h': { title: 'Commercial H Timing Belts Inventory', categories: ['H Section'] },
-  'timing-belts-commercial-xh': { title: 'Commercial XH Timing Belts Inventory', categories: ['XH Section'] },
-  'timing-belts-commercial-t5': { title: 'Commercial T5 Timing Belts Inventory', categories: ['T5 Section'] },
-  'timing-belts-commercial-t10': { title: 'Commercial T10 Timing Belts Inventory', categories: ['T10 Section'] },
-  'timing-belts-commercial-5m': { title: 'Commercial 5M Timing Belts Inventory', categories: ['5M Section'] },
-  'timing-belts-commercial-8m': { title: 'Commercial 8M Timing Belts Inventory', categories: ['8M Section'] },
-  'timing-belts-commercial-14m': { title: 'Commercial 14M Timing Belts Inventory', categories: ['14M Section'] },
-  'timing-belts-commercial-dl': { title: 'Commercial DL Timing Belts Inventory', categories: ['DL Section'] },
-  'timing-belts-commercial-dh': { title: 'Commercial DH Timing Belts Inventory', categories: ['DH Section'] },
-  'timing-belts-commercial-d5m': { title: 'Commercial D5M Timing Belts Inventory', categories: ['D5M Section'] },
-  'timing-belts-commercial-d8m': { title: 'Commercial D8M Timing Belts Inventory', categories: ['D8M Section'] },
-  // Individual Timing Belt Types - Neoprene
-  'timing-belts-neoprene-xl': { title: 'Neoprene XL Timing Belts Inventory', categories: ['XL Section'] },
-  'timing-belts-neoprene-l': { title: 'Neoprene L Timing Belts Inventory', categories: ['L Section'] },
-  'timing-belts-neoprene-h': { title: 'Neoprene H Timing Belts Inventory', categories: ['H Section'] },
-  'timing-belts-neoprene-xh': { title: 'Neoprene XH Timing Belts Inventory', categories: ['XH Section'] },
-  'timing-belts-neoprene-t5': { title: 'Neoprene T5 Timing Belts Inventory', categories: ['T5 Section'] },
-  'timing-belts-neoprene-t10': { title: 'Neoprene T10 Timing Belts Inventory', categories: ['T10 Section'] },
-  'timing-belts-neoprene-5m': { title: 'Neoprene 5M Timing Belts Inventory', categories: ['5M Section'] },
-  'timing-belts-neoprene-8m': { title: 'Neoprene 8M Timing Belts Inventory', categories: ['8M Section'] },
-  'timing-belts-neoprene-14m': { title: 'Neoprene 14M Timing Belts Inventory', categories: ['14M Section'] },
-  'timing-belts-neoprene-dl': { title: 'Neoprene DL Timing Belts Inventory', categories: ['DL Section'] },
-  'timing-belts-neoprene-dh': { title: 'Neoprene DH Timing Belts Inventory', categories: ['DH Section'] },
-  'timing-belts-neoprene-d5m': { title: 'Neoprene D5M Timing Belts Inventory', categories: ['D5M Section'] },
-  'timing-belts-neoprene-d8m': { title: 'Neoprene D8M Timing Belts Inventory', categories: ['D8M Section'] },
+  
   // Individual TPU Belt Types
   'tpu-belts-5m': { title: 'TPU 5M Belt Inventory', categories: ['5M Section'] },
   'tpu-belts-8m': { title: 'TPU 8M Belt Inventory', categories: ['8M Section'] },
@@ -466,6 +469,49 @@ const customViewMapping = computed(() => {
   'tpu-belts-at20m-page': { component: TpuBeltTable, props: { section: 'AT20', title: 'AT20 Section Inventory' } },
   'tpu-belts-t10M-page': { component: TpuBeltTable, props: { section: 'T10', title: 'T10 Section Inventory' } },
   
+  // Timing Belts - Using new backend-connected TimingBeltTable
+  'timing-belts-search': { 
+    component: TimingBeltTable, 
+    props: { 
+      title: 'Timing Belts Search Results', 
+      section: globalSectionQuery.value,
+      globalSearch: globalSizeQuery.value,
+      key: `timing-search-${globalSectionQuery.value}-${globalSizeQuery.value}` // Force re-render on change
+    } 
+  },
+  'timing-belts-xl': { component: TimingBeltTable, props: { section: 'XL', title: 'XL Section Inventory' } },
+  'timing-belts-l': { component: TimingBeltTable, props: { section: 'L', title: 'L Section Inventory' } },
+  'timing-belts-h': { component: TimingBeltTable, props: { section: 'H', title: 'H Section Inventory' } },
+  'timing-belts-xh': { component: TimingBeltTable, props: { section: 'XH', title: 'XH Section Inventory' } },
+  'timing-belts-t5': { component: TimingBeltTable, props: { section: 'T5', title: 'T5 Section Inventory' } },
+  'timing-belts-t10': { component: TimingBeltTable, props: { section: 'T10', title: 'T10 Section Inventory' } },
+  'timing-belts-5m': { component: TimingBeltTable, props: { section: '5M', title: '5M Section Inventory' } },
+  'timing-belts-8m': { component: TimingBeltTable, props: { section: '8M', title: '8M Section Inventory' } },
+  'timing-belts-14m': { component: TimingBeltTable, props: { section: '14M', title: '14M Section Inventory' } },
+  'timing-belts-dl': { component: TimingBeltTable, props: { section: 'DL', title: 'DL Section Inventory' } },
+  'timing-belts-dh': { component: TimingBeltTable, props: { section: 'DH', title: 'DH Section Inventory' } },
+  'timing-belts-d5m': { component: TimingBeltTable, props: { section: 'D5M', title: 'D5M Section Inventory' } },
+  'timing-belts-d8m': { component: TimingBeltTable, props: { section: 'D8M', title: 'D8M Section Inventory' } },
+  
+  // Special Belts - Using new backend-connected SpecialBeltTable
+  'special-belts-search': { 
+    component: SpecialBeltTable, 
+    props: { 
+      title: 'Special Belts Search Results', 
+      section: globalSectionQuery.value,
+      globalSearch: globalSizeQuery.value,
+      key: `special-search-${globalSectionQuery.value}-${globalSizeQuery.value}` // Force re-render on change
+    } 
+  },
+  'special-belts-conical-c': { component: SpecialBeltTable, props: { section: 'Conical C', title: 'Conical C Section Inventory' } },
+  'special-belts-harvester': { component: SpecialBeltTable, props: { section: 'Harvester', title: 'Harvester Section Inventory' } },
+  'special-belts-rax': { component: SpecialBeltTable, props: { section: 'RAX', title: 'RAX Section Inventory' } },
+  'special-belts-rbx': { component: SpecialBeltTable, props: { section: 'RBX', title: 'RBX Section Inventory' } },
+  'special-belts-r3vx': { component: SpecialBeltTable, props: { section: 'R3VX', title: 'R3VX Section Inventory' } },
+  'special-belts-r5vx': { component: SpecialBeltTable, props: { section: 'R5VX', title: 'R5VX Section Inventory' } },
+  'special-belts-8m-pk': { component: SpecialBeltTable, props: { section: '8M PK', title: '8M PK Section Inventory' } },
+  'special-belts-8m-pl': { component: SpecialBeltTable, props: { section: '8M PL', title: '8M PL Section Inventory' } },
+  
   // Settings page (admin only)
   'settings': { component: SettingsPage, props: {} },
   
@@ -491,7 +537,7 @@ const handleNavigation = (view: string) => {
   currentView.value = view
   
   // Clear global search when navigating to specific sections (except search views)
-  const searchViews = ['vee-belts-search', 'cogged-belts-search', 'poly-belts-search', 'tpu-belts-search']
+  const searchViews = ['vee-belts-search', 'cogged-belts-search', 'poly-belts-search', 'tpu-belts-search', 'timing-belts-search', 'special-belts-search']
   if (view !== 'inventory' && !searchViews.includes(view)) {
     globalSectionQuery.value = ''
     globalSizeQuery.value = ''
@@ -749,14 +795,126 @@ onMounted(() => {
             </div>
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
               <div class="flex items-center">
-                <div class="p-3 rounded-full bg-purple-100 dark:bg-purple-900">
-                  <svg class="w-6 h-6 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                <div class="p-3 rounded-full bg-red-100 dark:bg-red-900">
+                  <svg class="w-6 h-6 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                   </svg>
                 </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Out of Stock</p>
                   <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ finishedGoodsStats.outOfStock.toLocaleString() }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Value Section -->
+          <div class="mt-8">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Inventory Value</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              <!-- Total Combined Value -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-green-100 dark:bg-green-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Total Value</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(finishedGoodsStats.totalValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Vee Belts Value -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-purple-100 dark:bg-purple-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Vee Belts</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(finishedGoodsStats.beltTypeValues.vee || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Cogged Belts Value -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-indigo-100 dark:bg-indigo-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Cogged Belts</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(finishedGoodsStats.beltTypeValues.cogged || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Poly Belts Value -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-pink-100 dark:bg-pink-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-pink-600 dark:text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Poly Belts</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(finishedGoodsStats.beltTypeValues.poly || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TPU Belts Value -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-orange-100 dark:bg-orange-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 dark:text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">TPU Belts</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(finishedGoodsStats.beltTypeValues.tpu || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Timing Belts Value -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-teal-100 dark:bg-teal-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-teal-600 dark:text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Timing Belts</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(finishedGoodsStats.beltTypeValues.timing || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Special Belts Value -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-cyan-100 dark:bg-cyan-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-cyan-600 dark:text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Special Belts</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(finishedGoodsStats.beltTypeValues.special || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
                 </div>
               </div>
             </div>

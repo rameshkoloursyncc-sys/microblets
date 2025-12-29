@@ -4,7 +4,7 @@ import axios from '../lib/axios'
 export interface PolyBelt {
   id: number
   section: string
-  size: string
+  size: number
   ribs: number
   in_ribs?: number
   out_ribs?: number
@@ -59,12 +59,13 @@ export function usePolyBelts(section?: string) {
       // Transform data to ensure numeric types
       products.value = response.data.map((item: any) => ({
         ...item,
-        ribs: Number(item.ribs),
+        size: Number(item.size || 0),
+        ribs: Number(item.ribs || 0),
         in_ribs: Number(item.in_ribs || 0),
         out_ribs: Number(item.out_ribs || 0),
-        reorder_level: Number(item.reorder_level),
-        rate_per_rib: Number(item.rate_per_rib),
-        value: Number(item.value),
+        reorder_level: Number(item.reorder_level || 0),
+        rate_per_rib: Number(item.rate_per_rib || 0),
+        value: Number(item.value || 0),
       }))
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Failed to fetch products'
@@ -96,11 +97,34 @@ export function usePolyBelts(section?: string) {
     loading.value = true
     error.value = null
     try {
+      console.log('🔄 Updating product:', id, 'with data:', data)
       const response = await axios.put(`/api/poly-belts/${id}`, data)
-      await fetchProducts() // Refresh list
-      return response.data
+      console.log('✅ Update response:', response.data)
+      
+      // Extract the product data from the response (it's nested under 'product')
+      const productData = response.data.product || response.data
+      console.log('📦 Product data extracted:', productData)
+      
+      // Update the specific product in the local array instead of refetching all
+      const index = products.value.findIndex(p => p.id === id)
+      if (index !== -1) {
+        const updatedProduct = {
+          ...products.value[index],
+          ...productData,
+          // Ensure numeric types with fallbacks
+          size: Number(productData.size || products.value[index].size || 0),
+          ribs: Number(productData.ribs || products.value[index].ribs || 0),
+          rate_per_rib: Number(productData.rate_per_rib || products.value[index].rate_per_rib || 0),
+          value: Number(productData.value || products.value[index].value || 0),
+        }
+        console.log('📊 Updated product in local array:', updatedProduct)
+        products.value[index] = updatedProduct
+      }
+      
+      return productData
     } catch (err: any) {
       error.value = err.response?.data?.message || 'Failed to update product'
+      console.error('❌ Update error:', err)
       throw err
     } finally {
       loading.value = false

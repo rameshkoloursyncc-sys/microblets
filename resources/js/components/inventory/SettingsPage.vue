@@ -25,6 +25,8 @@
           <option value="cogged">Cogged Belts</option>
           <option value="poly">Poly Belts</option>
           <option value="tpu">TPU Belts</option>
+          <option value="timing">Timing Belts</option>
+          <option value="special">Special Belts</option>
         </select>
       </div>
 
@@ -54,18 +56,18 @@
                 step="0.01" 
                 min="0"
                 class="flex-1 p-3 border rounded bg-white dark:bg-gray-700 dark:text-white"
-                placeholder="Enter minimum inventory level (e.g., 5.00)"
+                placeholder="Enter minimum inventory level (e.g., 0 or 5.00)"
               />
               <button 
                 @click="updateGlobalMinInventory" 
                 class="px-4 py-3 bg-orange-600 text-white rounded hover:bg-orange-700"
-                :disabled="loading || !globalMinInventory"
+                :disabled="loading || globalMinInventory === null || globalMinInventory === undefined"
               >
                 Apply to All
               </button>
             </div>
             <p class="text-xs text-gray-500 mt-2">
-              This will set the reorder level for all products in all belt types (Vee, Cogged, Poly, TPU)
+              This will set the reorder level for all products in all belt types (Vee, Cogged, Poly, TPU, Timing, Special). You can set this to 0 to disable low stock warnings.
             </p>
           </div>
 
@@ -113,7 +115,7 @@
                   step="0.01" 
                   min="0"
                   class="flex-1 p-2 border rounded text-sm"
-                  :placeholder="globalMinInventory || '5.00'"
+                  :placeholder="globalMinInventory !== null && globalMinInventory !== undefined ? globalMinInventory.toString() : '0'"
                 />
                 <button 
                   @click="updateSpecificMinInventory(beltType)" 
@@ -294,7 +296,7 @@
           </div>
         </div>
       </div>
-
+        
       <!-- System Information -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">System Information</h2>
@@ -438,6 +440,44 @@ const beltTypeConfig = {
       'H': 'TPUHProducts.json', 'AT10': 'TPUAT10Products.json', 'T10': 'TPUT10Products.json',
       'AT20': 'TPUAT20Products.json'
     }
+  },
+  timing: {
+    name: 'Timing Belts',
+    apiEndpoint: '/api/timing-belts',
+    sections: ['XL', 'L', 'H', 'XH', 'T5', 'T10', '5M', '8M', '14M', 'DL', 'DH', 'D5M', 'D8M'],
+    formulaType: 'size_divide_multiply', // rate = (size ÷ divisor) × multiplier
+    defaultFormulas: {
+      'XL': 2.80, 'L': 3.00, 'H': 3.20, 'XH': 3.50, 'T5': 2.00, 'T10': 4.00,
+      '5M': 2.50, '8M': 3.20, '14M': 5.50, 'DL': 3.50, 'DH': 3.80, 'D5M': 3.00, 'D8M': 3.80
+    },
+    defaultDivisors: {
+      'XL': 1, 'L': 1, 'H': 1, 'XH': 1, 'T5': 1, 'T10': 1,
+      '5M': 1, '8M': 1, '14M': 1, 'DL': 1, 'DH': 1, 'D5M': 1, 'D8M': 1
+    },
+    sectionsWithDivisor: ['XL', 'L', 'H', 'XH', 'T5', 'T10', '5M', '8M', '14M', 'DL', 'DH', 'D5M', 'D8M'],
+    jsonFiles: {
+      'XL': 'TimingXLProducts.json', 'L': 'TimingLProducts.json', 'H': 'TimingHProducts.json',
+      '5M': 'Timing5MProducts.json', '8M': 'Timing8MProducts.json', 'T10': 'TimingT10Products.json'
+    }
+  },
+  special: {
+    name: 'Special Belts',
+    apiEndpoint: '/api/special-belts',
+    sections: ['Conical C', 'Harvester', 'RAX', 'RBX', 'R3VX', 'R5VX', '8M PK', '8M PL'],
+    formulaType: 'size_divide_multiply', // rate = (size ÷ divisor) × multiplier
+    defaultFormulas: {
+      'Conical C': 4.50, 'Harvester': 5.20, 'RAX': 3.80, 'RBX': 4.20,
+      'R3VX': 3.50, 'R5VX': 4.80, '8M PK': 3.20, '8M PL': 3.60
+    },
+    defaultDivisors: {
+      'Conical C': 1, 'Harvester': 1, 'RAX': 1, 'RBX': 1,
+      'R3VX': 1, 'R5VX': 1, '8M PK': 1, '8M PL': 1
+    },
+    sectionsWithDivisor: ['Conical C', 'Harvester', 'RAX', 'RBX', 'R3VX', 'R5VX', '8M PK', '8M PL'],
+    jsonFiles: {
+      'Conical C': 'ConicalCProducts.json', 'Harvester': 'HarvesterProducts.json',
+      'RAX': 'RAXProducts.json', 'RBX': 'RBXProducts.json'
+    }
   }
 }
 
@@ -446,7 +486,7 @@ const formulas = ref<Record<string, number>>({})
 const divisors = ref<Record<string, number>>({})
 
 // Global inventory settings
-const globalMinInventory = ref<number>(5)
+const globalMinInventory = ref<number>(0)
 const specificMinInventory = ref<Record<string, number>>({})
 const globalStats = ref({
   totalProducts: 0,
@@ -512,8 +552,8 @@ const loadStatistics = async () => {
     
     // Handle different response formats
     let products = []
-    if (selectedBeltType.value === 'tpu') {
-      // TPU belts return simple array
+    if (selectedBeltType.value === 'tpu' || selectedBeltType.value === 'timing' || selectedBeltType.value === 'special') {
+      // TPU, Timing, and Special belts return simple array
       products = response.data
     } else {
       // Other belt types return paginated response
@@ -528,6 +568,12 @@ const loadStatistics = async () => {
     if (selectedBeltType.value === 'poly') {
       // Poly belts use ribs × rate_per_rib
       totalValue.value = products.reduce((sum: number, p: any) => sum + Number(p.value), 0)
+    } else if (selectedBeltType.value === 'timing') {
+      // Timing belts use value
+      totalValue.value = products.reduce((sum: number, p: any) => sum + Number(p.value || 0), 0)
+    } else if (selectedBeltType.value === 'special') {
+      // Special belts use value
+      totalValue.value = products.reduce((sum: number, p: any) => sum + Number(p.value || 0), 0)
     } else {
       // Other belt types use standard value calculation
       totalValue.value = products.reduce((sum: number, p: any) => sum + Number(p.value), 0)
@@ -572,7 +618,9 @@ const updateSectionFormula = async (section: string) => {
     const response = await axios.post('/api/rate-formulas/update', {
       category: selectedBeltType.value === 'vee' ? 'vee_belts' : 
                 selectedBeltType.value === 'cogged' ? 'cogged_belts' :
-                selectedBeltType.value === 'poly' ? 'poly_belts' : 'tpu_belts',
+                selectedBeltType.value === 'poly' ? 'poly_belts' : 
+                selectedBeltType.value === 'timing' ? 'timing_belts' :
+                selectedBeltType.value === 'special' ? 'special_belts' : 'tpu_belts',
       section,
       formula: formulaString
     })
@@ -722,7 +770,7 @@ const exportAllData = async () => {
     
     // Handle different response formats
     let data = []
-    if (selectedBeltType.value === 'tpu') {
+    if (selectedBeltType.value === 'tpu' || selectedBeltType.value === 'timing' || selectedBeltType.value === 'special') {
       data = response.data
     } else {
       data = response.data.data || []
@@ -749,7 +797,7 @@ const exportAllData = async () => {
 
 // Global minimum inventory functions
 const updateGlobalMinInventory = async () => {
-  if (!globalMinInventory.value || globalMinInventory.value < 0) {
+  if (globalMinInventory.value === null || globalMinInventory.value === undefined || globalMinInventory.value < 0) {
     showNotification('error', 'Invalid Value', 'Minimum inventory must be 0 or greater')
     return
   }
@@ -761,7 +809,7 @@ const updateGlobalMinInventory = async () => {
   loading.value = true
   try {
     // Update all belt types
-    const beltTypes = ['vee', 'cogged', 'poly', 'tpu']
+    const beltTypes = ['vee', 'cogged', 'poly', 'tpu', 'timing', 'special']
     let totalUpdated = 0
 
     for (const beltType of beltTypes) {
@@ -784,7 +832,7 @@ const updateGlobalMinInventory = async () => {
 
 const updateSpecificMinInventory = async (beltType: string) => {
   const minValue = specificMinInventory.value[beltType]
-  if (!minValue || minValue < 0) {
+  if (minValue === null || minValue === undefined || minValue < 0) {
     showNotification('error', 'Invalid Value', 'Minimum inventory must be 0 or greater')
     return
   }
@@ -812,7 +860,7 @@ const updateSpecificMinInventory = async (beltType: string) => {
 
 const loadGlobalStats = async () => {
   try {
-    const beltTypes = ['vee', 'cogged', 'poly', 'tpu']
+    const beltTypes = ['vee', 'cogged', 'poly', 'tpu', 'timing', 'special']
     let totalProducts = 0
     let totalLowStock = 0
     let totalOutOfStock = 0
@@ -828,16 +876,35 @@ const loadGlobalStats = async () => {
         
         // Handle different response formats
         let products = []
-        if (beltType === 'tpu') {
+        if (beltType === 'tpu' || beltType === 'timing' || beltType === 'special') {
           products = response.data || []
         } else {
           products = response.data.data || []
         }
 
         // Calculate stats for this belt type
-        const outOfStock = products.filter((p: any) => (p.balance_stock || p.meter || 0) === 0).length
+        const outOfStock = products.filter((p: any) => {
+          if (beltType === 'timing') {
+            // Timing belts: use total_mm
+            return (p.total_mm || 0) === 0
+          } else if (beltType === 'special') {
+            // Special belts: use balance_stock
+            return (p.balance_stock || 0) === 0
+          } else {
+            // Other belt types: use balance_stock or meter
+            return (p.balance_stock || p.meter || 0) === 0
+          }
+        }).length
+        
         const lowStock = products.filter((p: any) => {
-          const stock = p.balance_stock || p.meter || 0
+          let stock = 0
+          if (beltType === 'timing') {
+            stock = p.category === 'Commercial' ? (p.total_mm || 0) : (p.full_sleeve || 0)
+          } else if (beltType === 'special') {
+            stock = p.balance_stock || 0
+          } else {
+            stock = p.balance_stock || p.meter || 0
+          }
           const reorderLevel = p.reorder_level || 5
           return stock > 0 && stock <= reorderLevel
         }).length

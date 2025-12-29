@@ -74,8 +74,7 @@ class PolyBeltController extends Controller
     {
         $validated = $request->validate([
             'section' => 'required|string|max:10',
-            'size' => 'required|string|max:20',
-            'ribs' => 'required|integer|min:1',
+            'size' => 'required|numeric|min:0',
             'ribs' => 'required|integer|min:0',
             'reorder_level' => 'nullable|integer|min:0',
             'rate_per_rib' => 'nullable|numeric|min:0',
@@ -138,8 +137,7 @@ class PolyBeltController extends Controller
 
         $validated = $request->validate([
             'section' => 'sometimes|string|max:10',
-            'size' => 'sometimes|string|max:20',
-            'ribs' => 'sometimes|integer|min:1',
+            'size' => 'sometimes|numeric|min:0',
             'ribs' => 'sometimes|integer|min:0',
             'reorder_level' => 'sometimes|integer|min:0',
             'rate_per_rib' => 'sometimes|numeric|min:0',
@@ -240,8 +238,7 @@ class PolyBeltController extends Controller
         $validated = $request->validate([
             'products' => 'required|array',
             'products.*.section' => 'required|string|max:10',
-            'products.*.size' => 'required|string|max:20',
-            'products.*.ribs' => 'required|integer|min:1',
+            'products.*.size' => 'required|numeric|min:0',
             'products.*.ribs' => 'required|integer|min:0',
             'products.*.reorder_level' => 'nullable|integer|min:0',
             'products.*.rate_per_rib' => 'nullable|numeric|min:0',
@@ -605,9 +602,13 @@ class PolyBeltController extends Controller
                 $multiplier = (float) ($formulaData['multiplier'] ?? 1);
                 $divisor = (float) ($formulaData['divisor'] ?? 25.4);
             } else {
-                // New string format: "ribs/25.4*0.59" or "ribs/30*0.59"
+                // New string format: "size/25.4*0.59" or "size/30*0.59"
                 $formulaStr = $formulaData;
-                if (preg_match('/ribs\/([0-9.]+)\*([0-9.]+)/', $formulaStr, $matches)) {
+                if (preg_match('/size\/([0-9.]+)\*([0-9.]+)/', $formulaStr, $matches)) {
+                    $divisor = (float) $matches[1];
+                    $multiplier = (float) $matches[2];
+                } elseif (preg_match('/ribs\/([0-9.]+)\*([0-9.]+)/', $formulaStr, $matches)) {
+                    // Backward compatibility with old format
                     $divisor = (float) $matches[1];
                     $multiplier = (float) $matches[2];
                 } else {
@@ -622,7 +623,7 @@ class PolyBeltController extends Controller
             $updated = 0;
 
             foreach ($products as $product) {
-                $newRatePerRib = ($product->ribs / $divisor) * $multiplier;
+                $newRatePerRib = ($product->size / $divisor) * $multiplier;
                 $product->update([
                     'rate_per_rib' => $newRatePerRib
                 ]);
@@ -684,7 +685,11 @@ class PolyBeltController extends Controller
                 } else {
                     // New string format
                     $formulaStr = $formulaData;
-                    if (preg_match('/ribs\/([0-9.]+)\*([0-9.]+)/', $formulaStr, $matches)) {
+                    if (preg_match('/size\/([0-9.]+)\*([0-9.]+)/', $formulaStr, $matches)) {
+                        $divisor = (float) $matches[1];
+                        $multiplier = (float) $matches[2];
+                    } elseif (preg_match('/ribs\/([0-9.]+)\*([0-9.]+)/', $formulaStr, $matches)) {
+                        // Backward compatibility
                         $divisor = (float) $matches[1];
                         $multiplier = (float) $matches[2];
                     } else {
@@ -696,7 +701,7 @@ class PolyBeltController extends Controller
                 $products = \App\Models\PolyBelt::where('section', $section)->get();
 
                 foreach ($products as $product) {
-                    $newRatePerRib = ($product->ribs / $divisor) * $multiplier;
+                    $newRatePerRib = ($product->size / $divisor) * $multiplier;
                     $product->update([
                         'rate_per_rib' => $newRatePerRib
                     ]);
@@ -757,5 +762,38 @@ class PolyBeltController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Test rate calculation for debugging
+     */
+    public function testRateCalculation(Request $request, $id)
+    {
+        $polyBelt = PolyBelt::findOrFail($id);
+        
+        $formula = RateFormula::where('category', 'poly_belts')
+            ->where('section', $polyBelt->section)
+            ->first();
+            
+        $calculatedRate = $polyBelt->calculateRatePerRib();
+        
+        return response()->json([
+            'product' => [
+                'id' => $polyBelt->id,
+                'section' => $polyBelt->section,
+                'size' => $polyBelt->size,
+                'ribs' => $polyBelt->ribs,
+                'current_rate_per_rib' => $polyBelt->rate_per_rib,
+                'current_value' => $polyBelt->value,
+            ],
+            'formula' => $formula ? $formula->formula : 'No formula found',
+            'calculated_rate' => $calculatedRate,
+            'calculated_value' => $polyBelt->ribs * $calculatedRate,
+            'formula_breakdown' => $formula ? [
+                'formula_string' => $formula->formula,
+                'size' => $polyBelt->size,
+                'calculation' => "({$polyBelt->size} ÷ divisor) × multiplier = {$calculatedRate}"
+            ] : null
+        ]);
     }
 }

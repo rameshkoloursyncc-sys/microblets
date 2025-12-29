@@ -26,6 +26,7 @@ class PolyBelt extends Model
     ];
 
     protected $casts = [
+        'size' => 'decimal:2',
         'ribs' => 'integer',
         'in_ribs' => 'integer',
         'out_ribs' => 'integer',
@@ -47,8 +48,12 @@ class PolyBelt extends Model
                 $polyBelt->sku = $polyBelt->section . '-' . $polyBelt->size . '-' . $polyBelt->ribs . 'R';
             }
 
-            // Auto-calculate rate_per_rib if not provided (only if not manually set)
-            if (empty($polyBelt->rate_per_rib)) {
+            // Check if size or section changed - if so, recalculate rate
+            $sizeChanged = $polyBelt->isDirty('size');
+            $sectionChanged = $polyBelt->isDirty('section');
+            
+            // Auto-calculate rate_per_rib if not provided OR if size/section changed
+            if (empty($polyBelt->rate_per_rib) || $sizeChanged || $sectionChanged) {
                 $polyBelt->rate_per_rib = $polyBelt->calculateRatePerRib();
             }
 
@@ -67,19 +72,36 @@ class PolyBelt extends Model
             ->first();
 
         if (!$formula) {
+            \Log::info("No formula found for poly belt section: {$this->section}");
             return 0.0;
         }
 
         // Parse formula and calculate
-        // Formula format: "ribs/25.4*0.59" for PK, "ribs/25.4*0.36" for PJ, etc.
+        // Formula format: "size/25.4*0.59" for PK, "size/25.4*0.36" for PJ, etc.
+        // Correct formula: rate_per_rib = (size ÷ divisor) × multiplier
         $formulaStr = $formula->formula;
         
-        // Extract the multiplier from formula (e.g., 0.59 from "ribs/25.4*0.59")
-        if (preg_match('/ribs\/25\.4\*([0-9.]+)/', $formulaStr, $matches)) {
-            $multiplier = (float) $matches[1];
-            return $this->ribs / 25.4 * $multiplier;
+        // Extract the divisor and multiplier from formula (e.g., 25.4 and 0.59 from "size/25.4*0.59")
+        if (preg_match('/size\/([0-9.]+)\*([0-9.]+)/', $formulaStr, $matches)) {
+            $divisor = (float) $matches[1];
+            $multiplier = (float) $matches[2];
+            $result = $this->size / $divisor * $multiplier;
+            
+            \Log::info("Rate calculation for {$this->section}-{$this->size}: ({$this->size} ÷ {$divisor}) × {$multiplier} = {$result}");
+            return $result;
+        }
+        
+        // Fallback: try old format with ribs (for backward compatibility)
+        if (preg_match('/ribs\/([0-9.]+)\*([0-9.]+)/', $formulaStr, $matches)) {
+            $divisor = (float) $matches[1];
+            $multiplier = (float) $matches[2];
+            $result = $this->size / $divisor * $multiplier; // Still use size, not ribs
+            
+            \Log::info("Rate calculation (fallback) for {$this->section}-{$this->size}: ({$this->size} ÷ {$divisor}) × {$multiplier} = {$result}");
+            return $result;
         }
 
+        \Log::warning("Invalid formula format for {$this->section}: {$formulaStr}");
         return 0.0;
     }
 

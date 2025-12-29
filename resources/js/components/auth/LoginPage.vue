@@ -74,12 +74,12 @@
           </button>
         </div>
 
-        <div class="text-center">
-          <div class="text-sm text-gray-600 dark:text-gray-400">
+          <div class="text-center">
+       <!--   <div class="text-sm text-gray-600 dark:text-gray-400">
             <p class="font-medium">Default Admin:</p>
             <p>Username: <span class="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">koloursyncc</span></p>
             <p>Password: <span class="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">kolorsync1010</span></p>
-          </div>
+          </div> -->
         </div>
       </form>
     </div>

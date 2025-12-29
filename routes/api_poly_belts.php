@@ -30,4 +30,7 @@ Route::prefix('poly-belts')->group(function () {
     
     // Global inventory management
     Route::post('/update-global-min-inventory', [PolyBeltController::class, 'updateGlobalMinInventory']);
+    
+    // Debug endpoint
+    Route::get('/{id}/test-rate', [PolyBeltController::class, 'testRateCalculation']);
 });

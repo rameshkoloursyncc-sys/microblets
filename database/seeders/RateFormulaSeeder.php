@@ -152,31 +152,31 @@ class RateFormulaSeeder extends Seeder
             [
                 'category' => 'poly_belts',
                 'section' => 'PJ',
-                'formula' => 'ribs/25.4*0.36',
+                'formula' => 'size/25.4*0.36',
                 'is_active' => true,
             ],
             [
                 'category' => 'poly_belts',
                 'section' => 'PK',
-                'formula' => 'ribs/25.4*0.59',
+                'formula' => 'size/25.4*0.59',
                 'is_active' => true,
             ],
             [
                 'category' => 'poly_belts',
                 'section' => 'PL',
-                'formula' => 'ribs/25.4*0.85',
+                'formula' => 'size/25.4*0.85',
                 'is_active' => true,
             ],
             [
                 'category' => 'poly_belts',
                 'section' => 'PM',
-                'formula' => 'ribs/25.4*1.25',
+                'formula' => 'size/25.4*1.25',
                 'is_active' => true,
             ],
             [
                 'category' => 'poly_belts',
                 'section' => 'PH',
-                'formula' => 'ribs/25.4*1.85',
+                'formula' => 'size/25.4*1.85',
                 'is_active' => true,
             ],
             
@@ -184,13 +184,13 @@ class RateFormulaSeeder extends Seeder
             [
                 'category' => 'poly_belts',
                 'section' => 'DPL',
-                'formula' => 'ribs/25.4*1.15',
+                'formula' => 'size/25.4*1.15',
                 'is_active' => true,
             ],
             [
                 'category' => 'poly_belts',
                 'section' => 'DPK',
-                'formula' => 'ribs/25.4*0.89',
+                'formula' => 'size/25.4*0.89',
                 'is_active' => true,
             ],
             

@@ -1,6 +1,8 @@
 <template>
   <div class="transition-all duration-300" :class="props.sidebarCollapsed ? 'sm:ml-16' : 'sm:ml-80'">
-    <div class="p-6 mt-14 min-h-screen bg-gray-50 dark:bg-gray-900">
+   <div class="p-6 mt-14 min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+      <div class="sticky top-14 z-30 bg-gray-50 dark:bg-gray-900 pb-4">
+      
       <!-- Header -->
       <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
@@ -97,7 +99,7 @@
           </div>
         </div>
       </div>
-
+ </div>
       <!-- Error State -->
       <div v-if="error && !loading" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
         <div class="flex items-center">
@@ -121,12 +123,14 @@
       </div>
 
       <!-- Table -->
-      <div v-else class="bg-white dark:bg-gray-800 shadow rounded overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
-            <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase">
-              <tr>
-                <th class="py-3 px-3">Section</th>
+<!-- NEW -->
+
+<div class="flex-1 bg-white dark:bg-gray-800 shadow rounded overflow-hidden">
+  <div class="overflow-y-auto max-h-[calc(100vh-400px)]">
+    <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
+      <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase sticky top-0 z-20">
+        <tr>
+          <th class="py-3 px-3">Section</th>
                 <th class="py-3 px-3">Size</th>
                 <th class="py-3 px-3 text-center">Ribs</th>
                 <th class="py-3 px-3 text-center">IN Ribs</th>
@@ -136,37 +140,52 @@
                 <th class="py-3 px-3 text-right">Value</th>
                 <th class="py-3 px-3">Remark</th>
                 <th class="py-3 px-3 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="p in visibleProducts" :key="p.id" class="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="p in visibleProducts" :key="p.id" class="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-section`">
                     <input v-model="editValue" @blur="saveCell(p, 'section')" @keyup.enter="saveCell(p, 'section')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
-                  <div v-else @click="startEdit(p, 'section')" class="cursor-pointer">{{ p.section }}</div>
+                  <div v-else @click="startEdit(p, 'section')" class="cursor-pointer font-bold text-black dark:text-white">{{ p.section }}</div>
                 </td>
 
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-size`">
-                    <input v-model="editValue" @blur="saveCell(p, 'size')" @keyup.enter="saveCell(p, 'size')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input 
+                      v-model="editValue" 
+                      type="number" 
+                      step="0.01" 
+                      min="0.01" 
+                      @blur="saveCell(p, 'size')" 
+                      @keyup.enter="saveCell(p, 'size')" 
+                      @keyup.esc="cancelEdit" 
+                      class="w-full p-1 border rounded" 
+                      placeholder="Enter size"
+                      @focus="$event.target.select()"
+                      :disabled="savingCell === `${p.id}-size`"
+                    />
                   </div>
-                  <div v-else @click="startEdit(p, 'size')" class="cursor-pointer">{{ p.size }}</div>
+                  <div v-else @click="startEdit(p, 'size')" class="cursor-pointer font-bold text-black dark:text-white">
+                    {{ p.size }}
+                    <span v-if="savingCell === `${p.id}-size`" class="text-xs text-blue-500 ml-1">(saving...)</span>
+                  </div>
                 </td>
 
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p.id}-ribs`">
-                    <input v-model.number="editValue" type="number" min="0" @blur="saveCell(p, 'ribs')" @keyup.enter="saveCell(p, 'ribs')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
+                    <input v-model="editValue" type="number" min="0" @blur="saveCell(p, 'ribs')" @keyup.enter="saveCell(p, 'ribs')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
                   </div>
                   <div v-else @click="startEdit(p, 'ribs')" class="cursor-pointer">
-                    <span :class="getRibsClass(p)" class="font-medium">{{ p.ribs }}</span>
+                    <span :class="getRibsClass(p)" class="font-bold">{{ p.ribs }}</span>
                   </div>
                 </td>
 
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p.id}-in_qty`">
                     <input 
-                      v-model.number="editValue" 
+                      v-model="editValue" 
                       type="number" 
                       min="0"
                       @blur="performInOut(p, 'IN')" 
@@ -184,7 +203,7 @@
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p.id}-out_qty`">
                     <input 
-                      v-model.number="editValue" 
+                      v-model="editValue" 
                       type="number" 
                       min="0"
                       @blur="performInOut(p, 'OUT')" 
@@ -201,7 +220,7 @@
 
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p.id}-reorder_level`">
-                    <input v-model.number="editValue" type="number" min="0" 
+                    <input v-model="editValue" type="number" min="0" 
                            @blur="saveCell(p, 'reorder_level')" 
                            @keyup.enter="saveCell(p, 'reorder_level')" 
                            @keyup.esc="cancelEdit" 
@@ -212,12 +231,18 @@
 
                 <td class="py-2 px-3 text-right">
                   <div v-if="editingCell === `${p.id}-rate_per_rib`">
-                    <input v-model.number="editValue" type="number" step="0.01" @blur="saveCell(p, 'rate_per_rib')" @keyup.enter="saveCell(p, 'rate_per_rib')" @keyup.esc="cancelEdit" class="w-24 p-1 border rounded text-right" />
+                    <input v-model="editValue" type="number" step="0.01" @blur="saveCell(p, 'rate_per_rib')" @keyup.enter="saveCell(p, 'rate_per_rib')" @keyup.esc="cancelEdit" class="w-24 p-1 border rounded text-right" />
                   </div>
-                  <div v-else @click="startEdit(p, 'rate_per_rib')" class="cursor-pointer">₹{{ Number(p.rate_per_rib).toFixed(2) }}</div>
+                  <div v-else @click="startEdit(p, 'rate_per_rib')" class="cursor-pointer">
+                    ₹{{ (Number(p.rate_per_rib) || 0).toFixed(2) }}
+                    <span v-if="editingCell && editingCell.startsWith(`${p.id}-size`)" class="text-xs text-blue-500 ml-1">(updating...)</span>
+                  </div>
                 </td>
 
-                <td class="py-2 px-3 text-right font-medium text-green-600">₹{{ Number(p.value).toFixed(2) }}</td>
+                <td class="py-2 px-3 text-right font-medium text-green-600">
+                  ₹{{ (Number(p.value) || 0).toFixed(2) }}
+                  <span v-if="editingCell && editingCell.startsWith(`${p.id}-size`)" class="text-xs text-blue-500 ml-1">(updating...)</span>
+                </td>
 
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-remark`">
@@ -233,10 +258,14 @@
                   </div>
                 </td>
               </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+
 
       <!-- Notifications -->
       <div class="fixed right-4 top-4 space-y-3 z-50">
@@ -328,7 +357,7 @@
             </label>
 
             <label>Size
-              <input v-model="createForm.size" class="w-full p-2 border rounded" placeholder="Enter size" />
+              <input v-model.number="createForm.size" type="number" step="0.01" class="w-full p-2 border rounded" placeholder="Enter size (e.g., 1600)" />
             </label>
 
             <label>Ribs (Inventory Quantity)
@@ -449,11 +478,12 @@ const showLowStockOnly = ref(false)
 const showOutOfStockOnly = ref(false)
 const editingCell = ref<string|null>(null)
 const editValue = ref<any>('')
+const savingCell = ref<string|null>(null)
 
 const showCreateModal = ref(false)
 const createForm = ref({ 
   section: props.section || '',
-  size: '', 
+  size: 0, 
   ribs: 0,
   reorder_level: 5, 
   rate_per_rib: undefined as number | undefined,
@@ -577,7 +607,7 @@ const totalRibs = computed(() => {
 })
 
 const totalValue = computed(() => {
-  return visibleProducts.value.reduce((sum, p) => sum + Number(p.value), 0)
+  return visibleProducts.value.reduce((sum, p) => sum + (Number(p.value) || 0), 0)
 })
 
 const lowRibsCount = computed(() => {
@@ -641,19 +671,91 @@ const startEdit = (product: PolyBelt, field: keyof PolyBelt | 'in_qty' | 'out_qt
 const cancelEdit = () => { 
   editingCell.value = null
   editValue.value = ''
+  savingCell.value = null
 }
 
 const saveCell = async (product: PolyBelt, field: keyof PolyBelt) => {
-  const val = ['ribs', 'reorder_level', 'rate_per_rib'].includes(field) ? Number(editValue.value) : editValue.value
+  const cellId = `${product.id}-${String(field)}`
   
-  try {
-    await apiUpdateProduct(product.id, { [field]: val })
-    showNotification('success', 'Updated', `Updated ${String(field)}`)
-  } catch (err: any) {
-    showNotification('error', 'Error', err.response?.data?.message || 'Update failed')
+  console.log(`🔄 saveCell called for ${cellId}, editingCell: ${editingCell.value}, savingCell: ${savingCell.value}`)
+  
+  // Prevent multiple saves for the same cell
+  if (!editingCell.value || editingCell.value !== cellId || savingCell.value === cellId) {
+    console.log(`❌ saveCell blocked for ${cellId}`)
+    return
   }
   
+  let val: any
+  
+  // Handle different field types
+  if (['ribs', 'reorder_level', 'rate_per_rib', 'size'].includes(field)) {
+    // Check if the input is empty or just whitespace
+    const inputValue = String(editValue.value).trim()
+    console.log(`📝 Input value for ${field}: "${inputValue}"`)
+    
+    if (inputValue === '' || inputValue === 'NaN') {
+      console.log(`❌ Empty input detected for ${field}`)
+      showNotification('error', 'Invalid Input', `${field} cannot be empty`)
+      cancelEdit()
+      return
+    }
+    
+    val = Number(inputValue)
+    
+    // Validation for specific fields
+    if (field === 'size' && (val <= 0 || isNaN(val))) {
+      showNotification('error', 'Invalid Size', 'Size must be a positive number greater than 0')
+      cancelEdit()
+      return
+    }
+    
+    if (field === 'ribs' && (val < 0 || isNaN(val))) {
+      showNotification('error', 'Invalid Ribs', 'Ribs must be a non-negative number')
+      cancelEdit()
+      return
+    }
+    
+    if (field === 'rate_per_rib' && (val < 0 || isNaN(val))) {
+      showNotification('error', 'Invalid Rate', 'Rate must be a non-negative number')
+      cancelEdit()
+      return
+    }
+    
+  } else if (['section', 'remark'].includes(field)) {
+    val = String(editValue.value).trim()
+    
+    // Validation for section
+    if (field === 'section' && !val) {
+      showNotification('error', 'Invalid Section', 'Section cannot be empty')
+      cancelEdit()
+      return
+    }
+  } else {
+    val = editValue.value
+  }
+  
+  // Set saving state and clear editing state immediately to prevent double saves
+  console.log(`💾 Starting save for ${cellId} with value: ${val}`)
+  savingCell.value = cellId
   cancelEdit()
+  
+  try {
+    const response = await apiUpdateProduct(product.id, { [field]: val })
+    
+    // Show different messages based on what was updated
+    if (field === 'size') {
+      showNotification('success', 'Size Updated', `Size updated to ${val}. Rate and value recalculated automatically.`)
+    } else if (field === 'section') {
+      showNotification('success', 'Section Updated', `Section updated to ${val}. Rate and value recalculated automatically.`)
+    } else {
+      showNotification('success', 'Updated', `Updated ${String(field)}`)
+    }
+  } catch (err: any) {
+    showNotification('error', 'Error', err.response?.data?.message || 'Update failed')
+  } finally {
+    console.log(`✅ Save completed for ${cellId}`)
+    savingCell.value = null
+  }
 }
 
 const getRibsClass = (p: PolyBelt) => { 
@@ -669,7 +771,7 @@ const createProduct = async () => {
     showCreateModal.value = false
     createForm.value = { 
       section: props.section || '',
-      size: '', 
+      size: 0, 
       ribs: 0,
       reorder_level: 5, 
       rate_per_rib: undefined,
@@ -692,9 +794,18 @@ const onDelete = async (id: number) => {
 }
 
 const performInOut = async (product: PolyBelt, action: 'IN' | 'OUT') => {
-  const qty = Number(editValue.value)
+  const inputValue = String(editValue.value).trim()
   
-  if (!qty || qty <= 0) {
+  if (inputValue === '' || inputValue === 'NaN') {
+    showNotification('error', 'Invalid Input', 'Quantity cannot be empty')
+    cancelEdit()
+    return
+  }
+  
+  const qty = Number(inputValue)
+  
+  if (isNaN(qty) || qty <= 0) {
+    showNotification('error', 'Invalid Quantity', 'Quantity must be a positive number')
     cancelEdit()
     return
   }
@@ -737,7 +848,7 @@ const importJSONData = async () => {
     // Transform data to match our model structure
     const transformedData = data.map((item: any) => ({
       section: item.section,
-      size: String(item.size),
+      size: Number(item.size),
       ribs: Number(item.ribs),
       rate_per_rib: Number(item.ratePerRib || item.rate_per_rib || 0),
       remark: item.remark || '',

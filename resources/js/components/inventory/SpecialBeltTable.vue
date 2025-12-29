@@ -1,15 +1,13 @@
 <template>
   <div class="transition-all duration-300" :class="props.sidebarCollapsed ? 'sm:ml-16' : 'sm:ml-80'">
-    <div class="p-6 mt-14 min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-     <div class="sticky top-14 z-30 bg-gray-50 dark:bg-gray-900 pb-4">
-
+    <div class="p-6 mt-14 min-h-screen bg-gray-50 dark:bg-gray-900">
       <!-- Header -->
       <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
           {{ title }}
         </h1>
         <p class="text-gray-600 dark:text-gray-400">
-          Click a cell to edit. Value = (rate × width ÷ 150) × meter
+          Special belts inventory management - pieces-based stock tracking
         </p>
       </div>
 
@@ -20,16 +18,16 @@
           <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ visibleProducts.length }}</div>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <div class="text-sm text-gray-600 dark:text-gray-400">Total Meter</div>
-          <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ totalMeter.toFixed(2) }}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">Total Stock</div>
+          <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ totalStock }}</div>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
           <div class="text-sm text-gray-600 dark:text-gray-400">Total Value</div>
           <div class="text-2xl font-bold text-green-600 dark:text-green-400">₹{{ totalValue.toFixed(2) }}</div>
         </div>
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <div class="text-sm text-gray-600 dark:text-gray-400">Zero Meter Items</div>
-          <div class="text-2xl font-bold text-red-600 dark:text-red-400">{{ zeroMeterCount }}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">Out of Stock</div>
+          <div class="text-2xl font-bold text-red-600 dark:text-red-400">{{ outOfStockCount }}</div>
         </div>
       </div>
 
@@ -39,51 +37,38 @@
           <!-- Search -->
           <input 
             v-model="searchTerm" 
-            placeholder="Search section / width / meter" 
+            placeholder="Search section / size / type" 
             class="px-3 py-1.5 text-sm border rounded bg-white dark:bg-gray-700 dark:text-white"
           />
           
+          <!-- Type Filter -->
+          <select v-model="typeFilter" class="px-3 py-1.5 text-sm border rounded bg-white dark:bg-gray-700 dark:text-white">
+            <option value="">All Types</option>
+            <option value="Special">Special</option>
+            <option value="Banded Cogged">Banded Cogged</option>
+            <option value="Hybrid">Hybrid</option>
+            <option value="Coating">Coating</option>
+          </select>
+
           <!-- Quick Filter Buttons -->
           <button 
-            @click="toggleZeroMeterFilter" 
-            :class="showZeroMeterOnly ? 'bg-red-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
+            @click="toggleOutOfStockFilter" 
+            :class="showOutOfStockOnly ? 'bg-red-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
             class="px-3 py-1.5 text-sm rounded hover:opacity-80 transition-colors"
           >
-            {{ showZeroMeterOnly ? '✓ Zero Meter' : 'Zero Meter' }}
+            {{ showOutOfStockOnly ? '✓ Out of Stock' : 'Out of Stock' }}
           </button>
-
-          <!-- Date Range Filter -->
-          <div class="flex items-center gap-1.5 ml-2">
-            <label class="text-xs text-gray-600 dark:text-gray-400">From:</label>
-            <input 
-              v-model="dateFrom" 
-              type="date" 
-              class="px-2 py-1 border rounded bg-white dark:bg-gray-700 dark:text-white text-xs"
-              :class="dateFrom ? 'border-blue-500' : ''"
-            />
-            <label class="text-xs text-gray-600 dark:text-gray-400">To:</label>
-            <input 
-              v-model="dateTo" 
-              type="date" 
-              class="px-2 py-1 border rounded bg-white dark:bg-gray-700 dark:text-white text-xs"
-              :class="dateTo ? 'border-blue-500' : ''"
-            />
-            <button 
-              v-if="dateFrom || dateTo"
-              @click="clearDateFilter" 
-              class="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-            >
-              Clear
-            </button>
-          </div>
           
           <!-- JSON Import/Export Buttons -->
           <div class="ml-auto flex items-center gap-2">
             <button @click="showImportModal = true" class="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700">
-              Import JSON
+              Import Data
             </button>
             <button @click="downloadJSON" class="px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700">
               Download JSON
+            </button>
+            <button @click="downloadExcel" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+              Download Excel
             </button>
             <button @click="showCreateModal = true" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
               Create Product
@@ -91,7 +76,7 @@
           </div>
         </div>
       </div>
-     </div>
+
       <!-- Error State -->
       <div v-if="error && !loading" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
         <div class="flex items-center">
@@ -113,44 +98,62 @@
         <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         <p class="mt-2 text-gray-600 dark:text-gray-400">Loading...</p>
       </div>
-<!-- NEW -->
-<div class="flex-1 bg-white dark:bg-gray-800 shadow rounded overflow-hidden">
-  <div class="overflow-y-auto max-h-[calc(100vh-400px)]">
-    <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
-      <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase sticky top-0 z-20">
-        <tr>
-          <th class="py-3 px-3">Section</th>
-                <th class="py-3 px-3">Width</th>
-                <th class="py-3 px-3 text-center">Meter</th>
+
+      <!-- Table -->
+      <div v-else class="bg-white dark:bg-gray-800 shadow rounded overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
+            <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase">
+              <tr>
+                <th class="py-3 px-3">Section</th>
+                <th class="py-3 px-3">Size</th>
+                <th class="py-3 px-3">Type</th>
+                <th class="py-3 px-3 text-center">Balance Stock</th>
                 <th class="py-3 px-3 text-right">Rate</th>
                 <th class="py-3 px-3 text-right">Value</th>
                 <th class="py-3 px-3">Remark</th>
                 <th class="py-3 px-3 text-center">IN/OUT</th>
                 <th class="py-3 px-3 text-center">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-   <tr v-for="p in visibleProducts" :key="p.id" class="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="p in visibleProducts" :key="p.id" class="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-section`">
                     <input v-model="editValue" @blur="saveCell(p, 'section')" @keyup.enter="saveCell(p, 'section')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
-                  <div v-else @click="startEdit(p, 'section')" class="cursor-pointer font-bold text-black dark:text-white">{{ p.section }}</div>
+                  <div v-else @click="startEdit(p, 'section')" class="cursor-pointer">{{ p.section }}</div>
                 </td>
 
                 <td class="py-2 px-3">
-                  <div v-if="editingCell === `${p.id}-width`">
-                    <input v-model="editValue" @blur="saveCell(p, 'width')" @keyup.enter="saveCell(p, 'width')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                  <div v-if="editingCell === `${p.id}-size`">
+                    <input v-model="editValue" @blur="saveCell(p, 'size')" @keyup.enter="saveCell(p, 'size')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
-                  <div v-else @click="startEdit(p, 'width')" class="cursor-pointer font-bold text-black dark:text-white">{{ p.width }}</div>
+                  <div v-else @click="startEdit(p, 'size')" class="cursor-pointer">{{ p.size }}</div>
+                </td>
+
+                <td class="py-2 px-3">
+                  <div v-if="editingCell === `${p.id}-type`">
+                    <select v-model="editValue" @blur="saveCell(p, 'type')" @keyup.enter="saveCell(p, 'type')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded">
+                      <option value="Special">Special</option>
+                      <option value="Banded Cogged">Banded Cogged</option>
+                      <option value="Hybrid">Hybrid</option>
+                      <option value="Coating">Coating</option>
+                    </select>
+                  </div>
+                  <div v-else @click="startEdit(p, 'type')" class="cursor-pointer">
+                    <span class="px-2 py-1 text-xs rounded" :class="getTypeClass(p.type)">
+                      {{ p.type }}
+                    </span>
+                  </div>
                 </td>
 
                 <td class="py-2 px-3 text-center">
-                  <div v-if="editingCell === `${p.id}-meter`">
-                    <input v-model.number="editValue" type="number" step="0.01" min="0" @blur="saveCell(p, 'meter')" @keyup.enter="saveCell(p, 'meter')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
+                  <div v-if="editingCell === `${p.id}-balance_stock`">
+                    <input v-model.number="editValue" type="number" min="0" @blur="saveCell(p, 'balance_stock')" @keyup.enter="saveCell(p, 'balance_stock')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
                   </div>
-                  <div v-else @click="startEdit(p, 'meter')" class="cursor-pointer font-bold text-black dark:text-white">
-                    <span :class="getMeterClass(p)" class="font-bold">{{ Number(p.meter).toFixed(2) }}</span>
+                  <div v-else @click="startEdit(p, 'balance_stock')" class="cursor-pointer">
+                    <span :class="getStockClass(p)" class="font-medium">{{ p.balance_stock }}</span>
                   </div>
                 </td>
 
@@ -188,12 +191,10 @@
                   </div>
                 </td>
               </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <!-- Notifications -->
       <div class="fixed right-4 top-4 space-y-3 z-50">
@@ -208,22 +209,32 @@
       <div v-if="showCreateModal" class="fixed inset-0 z-40 flex items-center justify-center">
         <div class="absolute inset-0 bg-black/40" @click="showCreateModal = false"></div>
         <div class="relative bg-white dark:bg-gray-800 rounded p-4 w-full max-w-lg z-50">
-          <h3 class="font-semibold mb-2">Create TPU Belt</h3>
+          <h3 class="font-semibold mb-2">Create Special Belt</h3>
           <div class="grid grid-cols-1 gap-2">
             <label>Section
-              <input v-model="createForm.section" class="w-full p-2 border rounded" :placeholder="section || 'e.g., TS8M'" />
+              <input v-model="createForm.section" class="w-full p-2 border rounded" placeholder="e.g., Conical C, Harvester, RAX" />
             </label>
 
-            <label>Width
-              <input v-model="createForm.width" class="w-full p-2 border rounded" placeholder="e.g., 150" />
+            <label>Size
+              <input v-model="createForm.size" class="w-full p-2 border rounded" placeholder="e.g., 150, 200" />
             </label>
 
-            <label>Meter (Inventory Quantity)
-              <input v-model.number="createForm.meter" type="number" step="0.01" class="w-full p-2 border rounded" min="0" placeholder="Meter quantity in stock" />
+            <label>Type
+              <select v-model="createForm.type" class="w-full p-2 border rounded">
+                <option value="">Select Type</option>
+                <option value="Special">Special</option>
+                <option value="Banded Cogged">Banded Cogged</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="Coating">Coating</option>
+              </select>
+            </label>
+
+            <label>Balance Stock (Pieces)
+              <input v-model.number="createForm.balance_stock" type="number" class="w-full p-2 border rounded" min="0" placeholder="Stock quantity in pieces" />
             </label>
 
             <label>Rate
-              <input v-model.number="createForm.rate" type="number" step="0.01" class="w-full p-2 border rounded" placeholder="Rate per unit" />
+              <input v-model.number="createForm.rate" type="number" step="0.01" class="w-full p-2 border rounded" placeholder="Rate per piece" />
             </label>
 
             <label>Remark
@@ -247,34 +258,19 @@
           <h3 class="font-semibold mb-4">{{ inOutAction }} Operation</h3>
           
           <div v-if="selectedProduct" class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded">
-            <div class="font-medium">{{ selectedProduct.section }} - {{ selectedProduct.width }}</div>
-            <div class="text-sm text-gray-600 dark:text-gray-400">Current: {{ selectedProduct.meter }}</div>
+            <div class="font-medium">{{ selectedProduct.section }} - {{ selectedProduct.size }} ({{ selectedProduct.type }})</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">Current Stock: {{ selectedProduct.balance_stock }} pieces</div>
           </div>
 
           <div class="space-y-3">
             <div>
-              <label class="block text-sm font-medium mb-1">Unit Type</label>
-              <div class="flex gap-2">
-                <label class="flex items-center">
-                  <input v-model="inOutForm.unit_type" type="radio" value="meter" class="mr-2" />
-                  Meter
-                </label>
-                <label class="flex items-center">
-                  <input v-model="inOutForm.unit_type" type="radio" value="width" class="mr-2" />
-                  Width
-                </label>
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium mb-1">Quantity</label>
+              <label class="block text-sm font-medium mb-1">Quantity (Pieces)</label>
               <input 
                 v-model.number="inOutForm.quantity" 
                 type="number" 
-                step="0.01" 
-                min="0.01"
+                min="1"
                 class="w-full p-2 border rounded" 
-                placeholder="Enter quantity"
+                placeholder="Enter number of pieces"
               />
             </div>
 
@@ -308,7 +304,7 @@
             <div>
               <h3 class="font-semibold text-lg">Transaction History</h3>
               <p class="text-sm text-gray-600 dark:text-gray-400" v-if="selectedProduct">
-                {{ selectedProduct.section }} - {{ selectedProduct.width }} ({{ selectedProduct.meter }})
+                {{ selectedProduct.section }} - {{ selectedProduct.size }} ({{ selectedProduct.type }})
               </p>
             </div>
             <button @click="showHistoryModal = false" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
@@ -337,7 +333,7 @@
                   </span>
                 </div>
                 <div class="text-sm font-medium">
-                  Meter: {{ transaction.stock_after }}
+                  Stock: {{ transaction.stock_after }}
                 </div>
               </div>
               <div class="mt-1 text-sm text-gray-600">
@@ -348,24 +344,85 @@
         </div>
       </div>
 
-      <!-- Import JSON Modal -->
+      <!-- Import Data Modal -->
       <div v-if="showImportModal" class="fixed inset-0 z-40 flex items-center justify-center">
         <div class="absolute inset-0 bg-black/40" @click="showImportModal = false"></div>
-        <div class="relative bg-white dark:bg-gray-800 rounded p-4 w-full max-w-2xl z-50">
-          <h3 class="font-semibold mb-4">Import TPU Belts JSON</h3>
+        <div class="relative bg-white dark:bg-gray-800 rounded p-4 w-full max-w-4xl z-50 max-h-[90vh] overflow-y-auto">
+          <h3 class="font-semibold mb-4">Import Special Belts Data</h3>
           
+          <!-- Import Type Selector -->
           <div class="mb-4">
-            <label class="block text-sm font-medium mb-2">Expected JSON Format:</label>
-            <pre class="bg-gray-100 dark:bg-gray-700 p-3 rounded text-xs overflow-x-auto">{{ sampleJSONFormat }}</pre>
+            <label class="block text-sm font-medium mb-2">Import Type:</label>
+            <div class="flex gap-4">
+              <label class="flex items-center">
+                <input v-model="importType" type="radio" value="json" class="mr-2" />
+                JSON Data
+              </label>
+              <label class="flex items-center">
+                <input v-model="importType" type="radio" value="excel" class="mr-2" />
+                Excel/CSV Data
+              </label>
+            </div>
           </div>
 
-          <div class="mb-4">
+          <!-- JSON Import -->
+          <div v-if="importType === 'json'" class="mb-4">
+            <label class="block text-sm font-medium mb-2">Expected JSON Format:</label>
+            <pre class="bg-gray-100 dark:bg-gray-700 p-3 rounded text-xs overflow-x-auto mb-4">{{ sampleJSONFormat }}</pre>
+            
             <label class="block text-sm font-medium mb-2">Paste JSON Data:</label>
             <textarea 
               v-model="importJSON" 
               class="w-full p-3 border rounded h-40 font-mono text-sm" 
               placeholder="Paste your JSON array here..."
             ></textarea>
+          </div>
+
+          <!-- Excel Import -->
+          <div v-if="importType === 'excel'" class="mb-4">
+            <label class="block text-sm font-medium mb-2">Expected Excel/CSV Format:</label>
+            <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded text-xs overflow-x-auto mb-4">
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="border-b">
+                    <th class="text-left p-1">section</th>
+                    <th class="text-left p-1">size</th>
+                    <th class="text-left p-1">type</th>
+                    <th class="text-left p-1">balance_stock</th>
+                    <th class="text-left p-1">rate</th>
+                    <th class="text-left p-1">remark</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="p-1">Conical C</td>
+                    <td class="p-1">150</td>
+                    <td class="p-1">Special</td>
+                    <td class="p-1">25</td>
+                    <td class="p-1">450.00</td>
+                    <td class="p-1">Sample</td>
+                  </tr>
+                  <tr>
+                    <td class="p-1">Harvester</td>
+                    <td class="p-1">200</td>
+                    <td class="p-1">Banded Cogged</td>
+                    <td class="p-1">15</td>
+                    <td class="p-1">650.00</td>
+                    <td class="p-1">Sample</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <label class="block text-sm font-medium mb-2">Paste Excel/CSV Data:</label>
+            <textarea 
+              v-model="importExcel" 
+              class="w-full p-3 border rounded h-40 font-mono text-sm" 
+              placeholder="Paste your Excel data here (tab-separated or comma-separated)..."
+            ></textarea>
+            <p class="text-xs text-gray-500 mt-1">
+              Copy from Excel and paste here. Headers should match the format above.
+            </p>
           </div>
 
           <div class="mb-4">
@@ -383,7 +440,7 @@
             <button @click="showImportModal = false" class="px-4 py-2 text-gray-600 hover:text-gray-800">
               Cancel
             </button>
-            <button @click="importJSONData" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" :disabled="loading">
+            <button @click="importData" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" :disabled="loading">
               Import
             </button>
           </div>
@@ -395,14 +452,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import { useTpuBelts, type TpuBelt, type Transaction } from '../../composables/useTpuBelts'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useSpecialBelts, type SpecialBelt, type Transaction } from '../../composables/useSpecialBelts'
 
 const props = defineProps<{
-  section?: string  // Optional: filter by specific section (TS8M, etc.)
+  section?: string
   title?: string
   sidebarCollapsed?: boolean
-  globalSearch?: string  // Universal search from sidebar
+  globalSearch?: string
 }>()
 
 const {
@@ -416,7 +473,11 @@ const {
   bulkImport,
   inOutOperation,
   getTransactions,
-} = useTpuBelts(props.section)
+  totalProducts,
+  totalStock,
+  totalValue,
+  outOfStockCount
+} = useSpecialBelts(props.section)
 
 interface Notification { id: number; type: 'success'|'error'|'warning'; title: string; message: string }
 
@@ -434,28 +495,26 @@ const removeNotification = (id: number) => {
 }
 
 const searchTerm = ref('')
-const dateFrom = ref('')
-const dateTo = ref('')
-const showZeroMeterOnly = ref(false)
+const typeFilter = ref('')
+const showOutOfStockOnly = ref(false)
 const editingCell = ref<string|null>(null)
 const editValue = ref<any>('')
-const tableKey = ref(0) // Force re-render key
 
 const showCreateModal = ref(false)
 const createForm = ref({ 
   section: props.section || '',
-  width: '', 
-  meter: 0,
+  size: '', 
+  type: '',
+  balance_stock: 0,
   rate: 0,
   remark: ''
 })
 
 // IN/OUT Modal
 const showInOutModalFlag = ref(false)
-const selectedProduct = ref<TpuBelt | null>(null)
+const selectedProduct = ref<SpecialBelt | null>(null)
 const inOutAction = ref<'IN' | 'OUT'>('IN')
 const inOutForm = ref({
-  unit_type: 'meter' as 'width' | 'meter',
   quantity: 0,
   remark: ''
 })
@@ -466,37 +525,26 @@ const transactionHistory = ref<Transaction[]>([])
 // Import/Export functionality
 const showImportModal = ref(false)
 const importJSON = ref('')
+const importExcel = ref('')
+const importType = ref('json')
 const importMode = ref('append')
 
-const sampleJSONFormat = `Import Format (Simple):
-[
+const sampleJSONFormat = `[
   {
-    "section": "5M",
-    "width": 150,
-    "meters": 31,
-    "rate": 300,
-    "remark": "Old Material"
-  }
-]
-
-Download Format (Complete DB):
-[
+    "section": "Conical C",
+    "size": "150",
+    "type": "Special",
+    "balance_stock": 25,
+    "rate": 450.00,
+    "remark": "Sample special belt"
+  },
   {
-    "id": 1,
-    "section": "TS8M",
-    "width": "150",
-    "meter": 7.00,
-    "in_meter": 0.00,
-    "out_meter": 0.00,
-    "rate": 500.00,
-    "value": 2333.33,
-    "remark": "Sample product",
-    "sku": "TS8M-150-7.00M",
-    "category": "TPU Belts",
-    "created_by": null,
-    "updated_by": null,
-    "created_at": "2025-12-17T...",
-    "updated_at": "2025-12-17T..."
+    "section": "Harvester",
+    "size": "200", 
+    "type": "Banded Cogged",
+    "balance_stock": 15,
+    "rate": 650.00,
+    "remark": "Sample harvester belt"
   }
 ]`
 
@@ -506,82 +554,41 @@ const visibleProducts = computed(() => {
   // Search filter
   if (searchTerm.value) {
     const q = searchTerm.value.toLowerCase().trim()
-    
-    // Check if search contains both section and width (space-separated)
-    const searchParts = q.split(' ').filter(part => part.length > 0)
-    
-    if (searchParts.length >= 2) {
-      // Combined search: exact match for section AND width
-      const [sectionPart, widthPart] = searchParts
-      list = list.filter(p => 
-        p.section.toLowerCase() === sectionPart && 
-        p.width.toLowerCase().includes(widthPart)
-      )
-    } else {
-      // Single search term: match section OR width OR meter
-      list = list.filter(p => 
-        p.section.toLowerCase().includes(q) || 
-        p.width.toLowerCase().includes(q) ||
-        p.meter.toString().includes(q)
-      )
-    }
+    list = list.filter(p => 
+      p.section.toLowerCase().includes(q) || 
+      p.size.toLowerCase().includes(q) ||
+      p.type.toLowerCase().includes(q)
+    )
   }
   
-  // Zero meter filter
-  if (showZeroMeterOnly.value) {
-    list = list.filter(p => p.meter === 0)
+  // Type filter
+  if (typeFilter.value) {
+    list = list.filter(p => p.type === typeFilter.value)
   }
   
-  // Date filter
-  if (dateFrom.value || dateTo.value) {
-    list = list.filter(p => {
-      const dateStr = p.updated_at || p.created_at
-      if (!dateStr) return false
-      
-      const itemDate = new Date(dateStr)
-      
-      if (dateFrom.value) {
-        const fromDate = new Date(dateFrom.value)
-        fromDate.setHours(0, 0, 0, 0)
-        if (itemDate < fromDate) return false
-      }
-      
-      if (dateTo.value) {
-        const toDate = new Date(dateTo.value)
-        toDate.setHours(23, 59, 59, 999)
-        if (itemDate > toDate) return false
-      }
-      
-      return true
-    })
+  // Out of stock filter
+  if (showOutOfStockOnly.value) {
+    list = list.filter(p => p.balance_stock <= 0)
   }
   
   return list
 })
 
-// Summary statistics
-const totalMeter = computed(() => {
-  return visibleProducts.value.reduce((sum, p) => sum + Number(p.meter), 0)
-})
-
-const totalValue = computed(() => {
-  return visibleProducts.value.reduce((sum, p) => sum + Number(p.value), 0)
-})
-
-const zeroMeterCount = computed(() => {
-  return visibleProducts.value.filter(p => p.meter === 0).length
-})
-
-const clearDateFilter = () => {
-  dateFrom.value = ''
-  dateTo.value = ''
+const toggleOutOfStockFilter = () => {
+  showOutOfStockOnly.value = !showOutOfStockOnly.value
 }
 
-const toggleZeroMeterFilter = () => {
-  showZeroMeterOnly.value = !showZeroMeterOnly.value
+const getTypeClass = (type: string) => {
+  switch (type) {
+    case 'Special': return 'bg-blue-100 text-blue-800'
+    case 'Banded Cogged': return 'bg-green-100 text-green-800'
+    case 'Hybrid': return 'bg-purple-100 text-purple-800'
+    case 'Coating': return 'bg-orange-100 text-orange-800'
+    default: return 'bg-gray-100 text-gray-800'
+  }
 }
 
-const startEdit = (product: TpuBelt, field: keyof TpuBelt) => { 
+const startEdit = (product: SpecialBelt, field: keyof SpecialBelt) => { 
   editingCell.value = `${product.id}-${String(field)}`
   editValue.value = String((product as any)[field] ?? '')
 }
@@ -591,8 +598,8 @@ const cancelEdit = () => {
   editValue.value = ''
 }
 
-const saveCell = async (product: TpuBelt, field: keyof TpuBelt) => {
-  const val = ['meter', 'rate'].includes(field) ? Number(editValue.value) : editValue.value
+const saveCell = async (product: SpecialBelt, field: keyof SpecialBelt) => {
+  const val = ['balance_stock', 'rate'].includes(field) ? Number(editValue.value) : editValue.value
   
   try {
     await apiUpdateProduct(product.id, { [field]: val })
@@ -604,20 +611,22 @@ const saveCell = async (product: TpuBelt, field: keyof TpuBelt) => {
   cancelEdit()
 }
 
-const getMeterClass = (p: TpuBelt) => { 
-  if (p.meter <= 0) return 'text-red-600'
-  return 'text-green-600'
+const getStockClass = (p: SpecialBelt) => { 
+  if (p.balance_stock <= 0) return 'text-red-600'
+  if (p.balance_stock <= p.reorder_level) return 'text-yellow-600'
+  return 'text-blue-600'
 }
 
 const createProduct = async () => {
   try {
     await apiCreateProduct(createForm.value)
-    showNotification('success', 'Created', 'TPU belt created successfully')
+    showNotification('success', 'Created', 'Special belt created successfully')
     showCreateModal.value = false
     createForm.value = { 
       section: props.section || '',
-      width: '', 
-      meter: 0,
+      size: '', 
+      type: '',
+      balance_stock: 0,
       rate: 0,
       remark: ''
     }
@@ -627,21 +636,20 @@ const createProduct = async () => {
 }
 
 const onDelete = async (id: number) => { 
-  if (!confirm('Delete TPU belt?')) return
+  if (!confirm('Delete special belt?')) return
   
   try {
     await apiDeleteProduct(id)
-    showNotification('success', 'Deleted', 'TPU belt removed')
+    showNotification('success', 'Deleted', 'Special belt removed')
   } catch (err: any) {
     showNotification('error', 'Error', err.response?.data?.message || 'Deletion failed')
   }
 }
 
-const showInOutModal = (product: TpuBelt, action: 'IN' | 'OUT') => {
+const showInOutModal = (product: SpecialBelt, action: 'IN' | 'OUT') => {
   selectedProduct.value = product
   inOutAction.value = action
   inOutForm.value = {
-    unit_type: 'meter',
     quantity: 0,
     remark: ''
   }
@@ -656,24 +664,11 @@ const performInOut = async () => {
       ids: [selectedProduct.value.id],
       action: inOutAction.value,
       quantity: inOutForm.value.quantity,
-      unit_type: inOutForm.value.unit_type,
       remark: inOutForm.value.remark
     })
     
-    // Force immediate data refresh
-    await fetchProducts()
-    
-    // Force table re-render
-    tableKey.value++
-    
-    // Update selected product with fresh data
-    const updatedProduct = products.value.find(p => p.id === selectedProduct.value?.id)
-    if (updatedProduct) {
-      selectedProduct.value = updatedProduct
-    }
-    
     showNotification('success', `${inOutAction.value} Complete`, 
-      `${inOutAction.value} ${inOutForm.value.quantity} ${inOutForm.value.unit_type} for ${selectedProduct.value.section}-${selectedProduct.value.width}`)
+      `${inOutAction.value} ${inOutForm.value.quantity} pieces for ${selectedProduct.value.section}-${selectedProduct.value.size}`)
     
     showInOutModalFlag.value = false
     
@@ -682,7 +677,7 @@ const performInOut = async () => {
   }
 }
 
-const showHistory = async (product: TpuBelt) => {
+const showHistory = async (product: SpecialBelt) => {
   selectedProduct.value = product
   try {
     transactionHistory.value = await getTransactions(product.id)
@@ -692,7 +687,15 @@ const showHistory = async (product: TpuBelt) => {
   }
 }
 
-// Import JSON data
+// Import data
+const importData = async () => {
+  if (importType.value === 'json') {
+    await importJSONData()
+  } else {
+    await importExcelData()
+  }
+}
+
 const importJSONData = async () => {
   if (!importJSON.value.trim()) {
     showNotification('error', 'Error', 'Please paste JSON data')
@@ -707,18 +710,9 @@ const importJSONData = async () => {
       return
     }
 
-    // Transform data to match our model structure
-    const transformedData = data.map((item: any) => ({
-      section: item.section,
-      width: String(item.width),
-      meter: Number(item.meters || item.meter), // Handle both "meters" and "meter"
-      rate: Number(item.rate || 0),
-      remark: item.remark || '',
-    }))
-
-    await bulkImport(transformedData, importMode.value as 'append' | 'replace')
+    await bulkImport(data, importMode.value as 'append' | 'replace')
     
-    showNotification('success', 'Success', `Imported ${transformedData.length} products`)
+    showNotification('success', 'Success', `Imported ${data.length} products`)
     showImportModal.value = false
     importJSON.value = ''
     
@@ -728,6 +722,114 @@ const importJSONData = async () => {
   }
 }
 
+const importExcelData = async () => {
+  if (!importExcel.value.trim()) {
+    showNotification('error', 'Error', 'Please paste Excel data')
+    return
+  }
+
+  try {
+    const lines = importExcel.value.trim().split('\n')
+    if (lines.length < 2) {
+      showNotification('error', 'Error', 'Excel data must have at least a header row and one data row')
+      return
+    }
+
+    // Parse header row
+    const headers = lines[0].split('\t').length > 1 ? 
+      lines[0].split('\t').map(h => h.trim()) : 
+      lines[0].split(',').map(h => h.trim())
+
+    // Parse data rows
+    const data = []
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split('\t').length > 1 ? 
+        lines[i].split('\t').map(v => v.trim()) : 
+        lines[i].split(',').map(v => v.trim())
+      
+      if (values.length !== headers.length) continue
+
+      const row: any = {}
+      headers.forEach((header, index) => {
+        const value = values[index]
+        
+        // Convert specific fields to appropriate types
+        if (['rate'].includes(header)) {
+          row[header] = value ? parseFloat(value) : 0
+        } else if (['balance_stock'].includes(header)) {
+          row[header] = value ? parseInt(value) : 0
+        } else {
+          row[header] = value || ''
+        }
+      })
+
+      // Validate required fields
+      if (row.section && row.size && row.type) {
+        data.push(row)
+      }
+    }
+
+    if (data.length === 0) {
+      showNotification('error', 'Error', 'No valid data rows found')
+      return
+    }
+
+    await bulkImport(data, importMode.value as 'append' | 'replace')
+    
+    showNotification('success', 'Success', `Imported ${data.length} products from Excel data`)
+    showImportModal.value = false
+    importExcel.value = ''
+    
+  } catch (err: any) {
+    console.error('Excel import error:', err)
+    showNotification('error', 'Import Error', err.response?.data?.message || err.message || 'Failed to parse Excel data')
+  }
+}
+
+// Download Excel data
+const downloadExcel = () => {
+  if (products.value.length === 0) {
+    showNotification('warning', 'No Data', 'No products to download')
+    return
+  }
+
+  // Create Excel-compatible CSV data
+  const headers = [
+    'section', 'size', 'type', 'balance_stock', 'in_stock', 'out_stock',
+    'reorder_level', 'rate', 'value', 'remark', 'created_at', 'updated_at'
+  ]
+
+  const csvData = [
+    headers.join(','),
+    ...products.value.map(product => [
+      product.section || '',
+      product.size || '',
+      product.type || '',
+      product.balance_stock || '',
+      product.in_stock || '',
+      product.out_stock || '',
+      product.reorder_level || '',
+      product.rate || '',
+      product.value || '',
+      product.remark || '',
+      product.created_at || '',
+      product.updated_at || ''
+    ].map(field => `"${field}"`).join(','))
+  ].join('\n')
+
+  const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `special-belts-${props.section || 'all'}-${new Date().toISOString().split('T')[0]}.csv`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+
+  showNotification('success', 'Downloaded', `Downloaded ${products.value.length} products as Excel file`)
+}
+
 // Download JSON data
 const downloadJSON = () => {
   if (products.value.length === 0) {
@@ -735,31 +837,29 @@ const downloadJSON = () => {
     return
   }
 
-  // Export complete database records
   const exportData = products.value.map(product => ({
     id: product.id,
     section: product.section,
-    width: product.width,
-    meter: Number(product.meter),
-    in_meter: Number(product.in_meter || 0),
-    out_meter: Number(product.out_meter || 0),
-    rate: Number(product.rate),
-    value: Number(product.value),
+    size: product.size,
+    type: product.type,
+    balance_stock: product.balance_stock,
+    in_stock: product.in_stock,
+    out_stock: product.out_stock,
+    reorder_level: product.reorder_level,
+    rate: product.rate,
+    value: product.value,
     remark: product.remark,
-    sku: product.sku,
-    category: product.category,
     created_by: product.created_by,
     updated_by: product.updated_by,
     created_at: product.created_at,
     updated_at: product.updated_at
   }))
 
-  // Create and download file
   const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = `tpu-belts-${props.section || 'all'}-${new Date().toISOString().split('T')[0]}.json`
+  link.download = `special-belts-${props.section || 'all'}-${new Date().toISOString().split('T')[0]}.json`
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
@@ -769,16 +869,16 @@ const downloadJSON = () => {
 }
 
 onMounted(async () => {
-  console.log('TpuBeltTable mounted, section:', props.section, 'title:', props.title)
+  console.log('SpecialBeltTable mounted, section:', props.section, 'title:', props.title)
   try {
     await fetchProducts()
-    console.log('TPU belts loaded:', products.value.length)
+    console.log('Special belts loaded:', products.value.length)
     
     if (props.globalSearch) {
       searchTerm.value = props.globalSearch
     }
   } catch (err) {
-    console.error('Error loading TPU belts:', err)
+    console.error('Error loading special belts:', err)
   }
 })
 
@@ -790,7 +890,6 @@ watch(() => props.section, async (newSection) => {
 
 // Watch for globalSearch changes
 watch(() => props.globalSearch, (newGlobalSearch) => {
-  console.log('GlobalSearch changed to:', newGlobalSearch)
   if (newGlobalSearch) {
     searchTerm.value = newGlobalSearch
   } else {
