@@ -138,21 +138,21 @@
               <tr v-for="p in visibleProducts" :key="p.id" class="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-section`">
-                    <input v-model="editValue" @blur="saveCell(p, 'section')" @keyup.enter="saveCell(p, 'section')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue"  @keyup.enter="saveCell(p, 'section')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
                   <div v-else @click="startEdit(p, 'section')" class="cursor-pointer font-bold text-black dark:text-white">{{ p.section }}</div>
                 </td>
 
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-size`">
-                    <input v-model="editValue" @blur="saveCell(p, 'size')" @keyup.enter="saveCell(p, 'size')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue"  @keyup.enter="saveCell(p, 'size')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
                   <div v-else @click="startEdit(p, 'size')" class="cursor-pointer font-bold text-black dark:text-white">{{ p.size }}</div>
                 </td>
 
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p.id}-balance_stock`">
-                    <input v-model.number="editValue" type="number" @blur="saveCell(p, 'balance_stock')" @keyup.enter="saveCell(p, 'balance_stock')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
+                    <input v-model.number="editValue" type="number" @keyup.enter="saveCell(p, 'balance_stock')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
                   </div>
                   <div v-else @click="startEdit(p, 'balance_stock')" class="cursor-pointer">
                     <span class="font-bold" :class="getStockClass(p)">{{ p.balance_stock }}</span>
@@ -162,14 +162,13 @@
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p.id}-in_qty`">
                     <input 
-                      v-model.number="editValue" 
+                      v-model="editValue" 
                       type="number" 
                       min="0"
-                      @blur="performInOut(p, 'IN')" 
                       @keyup.enter="performInOut(p, 'IN')" 
                       @keyup.esc="cancelEdit" 
                       class="w-20 p-1 border rounded text-center bg-green-50" 
-                      placeholder="IN qty"
+                      placeholder="IN qty (Press Enter)"
                     />
                   </div>
                   <div v-else @click="startEdit(p, 'in_qty')" class="cursor-pointer hover:bg-green-50 px-2 py-1 rounded">
@@ -180,14 +179,13 @@
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p.id}-out_qty`">
                     <input 
-                      v-model.number="editValue" 
+                      v-model="editValue" 
                       type="number" 
                       min="0"
-                      @blur="performInOut(p, 'OUT')" 
                       @keyup.enter="performInOut(p, 'OUT')" 
                       @keyup.esc="cancelEdit" 
                       class="w-20 p-1 border rounded text-center bg-red-50" 
-                      placeholder="OUT qty"
+                      placeholder="OUT qty (Press Enter)"
                     />
                   </div>
                   <div v-else @click="startEdit(p, 'out_qty')" class="cursor-pointer hover:bg-red-50 px-2 py-1 rounded">
@@ -198,7 +196,7 @@
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p.id}-reorder_level`">
                     <input v-model.number="editValue" type="number" min="0" 
-                           @blur="saveCell(p, 'reorder_level')" 
+                          
                            @keyup.enter="saveCell(p, 'reorder_level')" 
                            @keyup.esc="cancelEdit" 
                            class="w-20 p-1 border rounded text-center" />
@@ -208,7 +206,7 @@
 
                 <td class="py-2 px-3 text-right">
                   <div v-if="editingCell === `${p.id}-rate`">
-                    <input v-model.number="editValue" type="number" step="0.01" @blur="saveCell(p, 'rate')" @keyup.enter="saveCell(p, 'rate')" @keyup.esc="cancelEdit" class="w-24 p-1 border rounded text-right" />
+                    <input v-model.number="editValue" type="number" step="0.01" @keyup.enter="saveCell(p, 'rate')" @keyup.esc="cancelEdit" class="w-24 p-1 border rounded text-right" />
                   </div>
                   <div v-else @click="startEdit(p, 'rate')" class="cursor-pointer">₹{{ Number(p.rate).toFixed(2) }}</div>
                 </td>
@@ -217,7 +215,7 @@
 
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-remark`">
-                    <input v-model="editValue" @blur="saveCell(p, 'remark')" @keyup.enter="saveCell(p, 'remark')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue" @keyup.enter="saveCell(p, 'remark')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
                   <div v-else @click="startEdit(p, 'remark')" class="cursor-pointer">{{ p.remark || '-' }}</div>
                 </td>
@@ -403,6 +401,7 @@ const showLowStockOnly = ref(false)
 const showOutOfStockOnly = ref(false)
 const editingCell = ref<string|null>(null)
 const editValue = ref<any>('')
+const savingCell = ref<string|null>(null)
 
 const showCreateModal = ref(false)
 const createForm = ref({ 
@@ -561,19 +560,31 @@ const startEdit = (product: VeeBelt, field: keyof VeeBelt | 'in_qty' | 'out_qty'
 const cancelEdit = () => { 
   editingCell.value = null
   editValue.value = ''
+  savingCell.value = null
 }
 
 const saveCell = async (product: VeeBelt, field: keyof VeeBelt) => {
+  const cellId = `${product.id}-${String(field)}`
+  
+  // Prevent multiple saves for the same cell
+  if (!editingCell.value || editingCell.value !== cellId || savingCell.value === cellId) {
+    return
+  }
+  
   const val = ['balance_stock', 'reorder_level', 'rate'].includes(field) ? Number(editValue.value) : editValue.value
+  
+  // Set saving state and clear editing state immediately to prevent double saves
+  savingCell.value = cellId
+  cancelEdit()
   
   try {
     await apiUpdateProduct(product.id, { [field]: val })
     showNotification('success', 'Updated', `Updated ${String(field)}`)
   } catch (err: any) {
     showNotification('error', 'Error', err.response?.data?.message || 'Update failed')
+  } finally {
+    savingCell.value = null
   }
-  
-  cancelEdit()
 }
 
 const getStockClass = (p: VeeBelt) => { 
@@ -616,20 +627,40 @@ const onDelete = async (id: number) => {
 
 
 const performInOut = async (product: VeeBelt, action: 'IN' | 'OUT') => {
-  const qty = Number(editValue.value)
+  const cellId = `${product.id}-${action.toLowerCase()}_qty`
   
-  if (!qty || qty <= 0) {
+  // Prevent multiple saves for the same cell (Chrome fix)
+  if (!editingCell.value || editingCell.value !== cellId || savingCell.value === cellId) {
+    return
+  }
+  
+  const inputValue = String(editValue.value).trim()
+  
+  if (inputValue === '' || inputValue === 'NaN') {
+    showNotification('error', 'Invalid Input', 'Quantity cannot be empty')
+    cancelEdit()
+    return
+  }
+  
+  const qty = Number(inputValue)
+  
+  if (isNaN(qty) || qty <= 0) {
+    showNotification('error', 'Invalid Quantity', 'Quantity must be a positive number')
     cancelEdit()
     return
   }
 
+  // Set saving state and clear editing state immediately to prevent double saves
+  savingCell.value = cellId
+  cancelEdit()
+
   try {
     await inOutOperation([product.id], action, qty)
     showNotification('success', `${action} Complete`, `${action} ${qty} units for ${product.section}-${product.size}`)
-    cancelEdit()
   } catch (err: any) {
     showNotification('error', 'Error', err.response?.data?.message || 'Operation failed')
-    cancelEdit()
+  } finally {
+    savingCell.value = null
   }
 }
 

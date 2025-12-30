@@ -164,14 +164,13 @@
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p.id}-in_qty`">
                     <input 
-                      v-model.number="editValue" 
+                      v-model="editValue" 
                       type="number" 
                       min="0"
-                      @blur="performInOut(p, 'IN')" 
                       @keyup.enter="performInOut(p, 'IN')" 
                       @keyup.esc="cancelEdit" 
                       class="w-20 p-1 border rounded text-center bg-green-50" 
-                      placeholder="IN qty"
+                      placeholder="IN qty (Press Enter)"
                     />
                   </div>
                   <div v-else @click="startEdit(p, 'in_qty')" class="cursor-pointer hover:bg-green-50 px-2 py-1 rounded">
@@ -182,14 +181,13 @@
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p.id}-out_qty`">
                     <input 
-                      v-model.number="editValue" 
+                      v-model="editValue" 
                       type="number" 
                       min="0"
-                      @blur="performInOut(p, 'OUT')" 
                       @keyup.enter="performInOut(p, 'OUT')" 
                       @keyup.esc="cancelEdit" 
                       class="w-20 p-1 border rounded text-center bg-red-50" 
-                      placeholder="OUT qty"
+                      placeholder="OUT qty (Press Enter)"
                     />
                   </div>
                   <div v-else @click="startEdit(p, 'out_qty')" class="cursor-pointer hover:bg-red-50 px-2 py-1 rounded">
@@ -407,6 +405,7 @@ const showLowStockOnly = ref(false)
 const showOutOfStockOnly = ref(false)
 const editingCell = ref<string|null>(null)
 const editValue = ref<any>('')
+const savingCell = ref<string|null>(null)
 
 const showCreateModal = ref(false)
 const createForm = ref({ 
@@ -564,19 +563,31 @@ const startEdit = (product: CoggedBelt, field: keyof CoggedBelt | 'in_qty' | 'ou
 const cancelEdit = () => { 
   editingCell.value = null
   editValue.value = ''
+  savingCell.value = null
 }
 
 const saveCell = async (product: CoggedBelt, field: keyof CoggedBelt) => {
+  const cellId = `${product.id}-${String(field)}`
+  
+  // Prevent multiple saves for the same cell
+  if (!editingCell.value || editingCell.value !== cellId || savingCell.value === cellId) {
+    return
+  }
+  
   const val = ['balance_stock', 'reorder_level', 'rate'].includes(field) ? Number(editValue.value) : editValue.value
+  
+  // Set saving state and clear editing state immediately to prevent double saves
+  savingCell.value = cellId
+  cancelEdit()
   
   try {
     await apiUpdateProduct(product.id, { [field]: val })
     showNotification('success', 'Updated', `Updated ${String(field)}`)
   } catch (err: any) {
     showNotification('error', 'Error', err.response?.data?.message || 'Update failed')
+  } finally {
+    savingCell.value = null
   }
-  
-  cancelEdit()
 }
 
 const getStockClass = (p: CoggedBelt) => { 
@@ -619,20 +630,40 @@ const onDelete = async (id: number) => {
 
 
 const performInOut = async (product: CoggedBelt, action: 'IN' | 'OUT') => {
-  const qty = Number(editValue.value)
+  const cellId = `${product.id}-${action.toLowerCase()}_qty`
   
-  if (!qty || qty <= 0) {
+  // Prevent multiple saves for the same cell (Chrome fix)
+  if (!editingCell.value || editingCell.value !== cellId || savingCell.value === cellId) {
+    return
+  }
+  
+  const inputValue = String(editValue.value).trim()
+  
+  if (inputValue === '' || inputValue === 'NaN') {
+    showNotification('error', 'Invalid Input', 'Quantity cannot be empty')
+    cancelEdit()
+    return
+  }
+  
+  const qty = Number(inputValue)
+  
+  if (isNaN(qty) || qty <= 0) {
+    showNotification('error', 'Invalid Quantity', 'Quantity must be a positive number')
     cancelEdit()
     return
   }
 
+  // Set saving state and clear editing state immediately to prevent double saves
+  savingCell.value = cellId
+  cancelEdit()
+
   try {
     await inOutOperation([product.id], action, qty)
     showNotification('success', `${action} Complete`, `${action} ${qty} units for ${product.section}-${product.size}`)
-    cancelEdit()
   } catch (err: any) {
     showNotification('error', 'Error', err.response?.data?.message || 'Operation failed')
-    cancelEdit()
+  } finally {
+    savingCell.value = null
   }
 }
 

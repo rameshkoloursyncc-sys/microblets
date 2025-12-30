@@ -108,7 +108,7 @@ class PolyBeltController extends Controller
                     'stock_after' => $validated['ribs'],
                     'rate' => $polyBelt->rate_per_rib,
                     'description' => 'Initial ribs',
-                    'user_id' => Auth::id(),
+                    'user_id' => session('user')['id'] ?? null,
                 ]);
             }
 
@@ -165,7 +165,7 @@ class PolyBeltController extends Controller
                     'stock_after' => $validated['ribs'],
                     'rate' => $polyBelt->rate_per_rib,
                     'description' => "Ribs updated from {$oldRibs} to {$validated['ribs']}",
-                    'user_id' => Auth::id(),
+                    'user_id' => session('user')['id'] ?? null,
                 ]);
             }
 
@@ -179,7 +179,7 @@ class PolyBeltController extends Controller
                     'stock_after' => $polyBelt->ribs,
                     'rate' => $polyBelt->rate_per_rib,
                     'description' => "Rate per rib updated from ₹{$oldRatePerRib} to ₹{$validated['rate_per_rib']}",
-                    'user_id' => Auth::id(),
+                    'user_id' => session('user')['id'] ?? null,
                 ]);
             }
 
@@ -274,7 +274,7 @@ class PolyBeltController extends Controller
                             'stock_after' => $productData['ribs'],
                             'rate' => $existing->rate_per_rib,
                             'description' => 'Bulk import update',
-                            'user_id' => Auth::id(),
+                            'user_id' => session('user')['id'] ?? null,
                         ]);
                     }
 
@@ -293,7 +293,7 @@ class PolyBeltController extends Controller
                             'stock_after' => $productData['ribs'],
                             'rate' => $polyBelt->rate_per_rib,
                             'description' => 'Bulk import',
-                            'user_id' => Auth::id(),
+                            'user_id' => session('user')['id'] ?? null,
                         ]);
                     }
 
@@ -342,6 +342,13 @@ class PolyBeltController extends Controller
      */
     public function inOut(Request $request)
     {
+        // Debug session data
+        \Log::info('IN/OUT Operation Debug', [
+            'session_id' => session()->getId(),
+            'session_user' => session('user'),
+            'request_data' => $request->all()
+        ]);
+
         $validated = $request->validate([
             'product_ids' => 'required|array',
             'product_ids.*' => 'required|integer|exists:poly_belts,id',
@@ -385,7 +392,7 @@ class PolyBeltController extends Controller
                     'stock_after' => $polyBelt->ribs,
                     'rate' => $polyBelt->rate_per_rib,
                     'description' => "{$validated['type']} operation: {$validated['quantity']} ribs",
-                    'user_id' => null, // Will be set when auth is enabled
+                    'user_id' => session('user')['id'] ?? null,
                 ]);
 
                 $results[] = [

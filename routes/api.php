@@ -16,6 +16,15 @@ Route::get('/test-poly-debug', [DashboardController::class, 'getPolyBeltTotalDeb
 Route::get('/test-tpu-debug', [DashboardController::class, 'getTpuBeltTotalDebug']);
 Route::get('/test-poly-rate/{id}', [PolyBeltController::class, 'testRateCalculation']);
 
+// Test session endpoint
+Route::get('/test-session', function () {
+    return response()->json([
+        'session_id' => session()->getId(),
+        'session_user' => session('user'),
+        'all_session_data' => session()->all()
+    ]);
+});
+
 
 // Protected Product Routes
 Route::middleware(['App\Http\Middleware\CheckSession'])->group(function () {

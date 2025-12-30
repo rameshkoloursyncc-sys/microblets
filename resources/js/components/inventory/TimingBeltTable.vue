@@ -493,6 +493,7 @@ const searchTerm = ref('')
 const showOutOfStockOnly = ref(false)
 const editingCell = ref<string|null>(null)
 const editValue = ref<any>('')
+const savingCell = ref<string|null>(null)
 
 const showCreateModal = ref(false)
 const createForm = ref({ 
@@ -572,6 +573,7 @@ const startEdit = (product: TimingBelt | null | undefined, field: keyof TimingBe
 const cancelEdit = () => { 
   editingCell.value = null
   editValue.value = ''
+  savingCell.value = null
 }
 
 const saveCell = async (product: TimingBelt | null | undefined, field: keyof TimingBelt) => {
@@ -580,16 +582,27 @@ const saveCell = async (product: TimingBelt | null | undefined, field: keyof Tim
     return
   }
   
+  const cellId = `${product.id}-${String(field)}`
+  
+  // Prevent multiple saves for the same cell
+  if (!editingCell.value || editingCell.value !== cellId || savingCell.value === cellId) {
+    return
+  }
+  
   const val = ['mm', 'total_mm', 'rate'].includes(field) ? Number(editValue.value) : editValue.value
+  
+  // Set saving state and clear editing state immediately to prevent double saves
+  savingCell.value = cellId
+  cancelEdit()
   
   try {
     await apiUpdateProduct(product.id, { [field]: val })
     showNotification('success', 'Updated', `Updated ${String(field)}`)
   } catch (err: any) {
     showNotification('error', 'Error', err.response?.data?.message || 'Update failed')
+  } finally {
+    savingCell.value = null
   }
-  
-  cancelEdit()
 }
 
 const getStockClass = (p: TimingBelt | null | undefined) => { 
@@ -644,6 +657,11 @@ const showInOutModal = (product: TimingBelt | null | undefined, action: 'IN' | '
 
 const performInOut = async () => {
   if (!selectedProduct.value || !inOutForm.value.quantity) return
+  
+  // Prevent double clicks
+  if (savingCell.value === 'modal-in-out') return
+  
+  savingCell.value = 'modal-in-out'
 
   try {
     const result = await inOutOperation({
@@ -660,6 +678,8 @@ const performInOut = async () => {
     
   } catch (err: any) {
     showNotification('error', 'Error', err.response?.data?.message || 'Operation failed')
+  } finally {
+    savingCell.value = null
   }
 }
 

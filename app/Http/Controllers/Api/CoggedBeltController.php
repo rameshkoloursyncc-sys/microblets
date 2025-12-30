@@ -115,7 +115,7 @@ class CoggedBeltController extends Controller
                     'stock_after' => $validated['balance_stock'],
                     'rate' => $validated['rate'],
                     'description' => 'Initial stock',
-                    'user_id' => Auth::id(),
+                    'user_id' => session('user')['id'] ?? null,
                 ]);
             }
 
@@ -172,7 +172,7 @@ class CoggedBeltController extends Controller
                     'stock_after' => $validated['balance_stock'],
                     'rate' => $veeBelt->rate,
                     'description' => "Stock updated from {$oldStock} to {$validated['balance_stock']}",
-                    'user_id' => Auth::id(),
+                    'user_id' => session('user')['id'] ?? null,
                 ]);
             }
 
@@ -186,7 +186,7 @@ class CoggedBeltController extends Controller
                     'stock_after' => $veeBelt->balance_stock,
                     'rate' => $validated['rate'],
                     'description' => "Rate updated from ₹{$oldRate} to ₹{$validated['rate']}",
-                    'user_id' => Auth::id(),
+                    'user_id' => session('user')['id'] ?? null,
                 ]);
             }
 
@@ -278,7 +278,7 @@ class CoggedBeltController extends Controller
                             'stock_after' => $productData['balance_stock'],
                             'rate' => $existing->rate,
                             'description' => 'Bulk import update',
-                            'user_id' => Auth::id(),
+                            'user_id' => session('user')['id'] ?? null,
                         ]);
                     }
 
@@ -303,7 +303,7 @@ class CoggedBeltController extends Controller
                             'stock_after' => $productData['balance_stock'],
                             'rate' => $productData['rate'],
                             'description' => 'Bulk import',
-                            'user_id' => Auth::id(),
+                            'user_id' => session('user')['id'] ?? null,
                         ]);
                     }
 
@@ -395,7 +395,7 @@ class CoggedBeltController extends Controller
                     'stock_after' => $veeBelt->balance_stock,
                     'rate' => $veeBelt->rate,
                     'description' => "{$validated['type']} operation: {$validated['quantity']} units",
-                    'user_id' => null, // Will be set when auth is enabled
+                    'user_id' => session('user')['id'] ?? null,
                 ]);
 
                 $results[] = [

@@ -146,7 +146,7 @@
         <tr v-for="p in visibleProducts" :key="p.id" class="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-section`">
-                    <input v-model="editValue" @blur="saveCell(p, 'section')" @keyup.enter="saveCell(p, 'section')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue"  @keyup.enter="saveCell(p, 'section')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
                   <div v-else @click="startEdit(p, 'section')" class="cursor-pointer font-bold text-black dark:text-white">{{ p.section }}</div>
                 </td>
@@ -188,11 +188,10 @@
                       v-model="editValue" 
                       type="number" 
                       min="0"
-                      @blur="performInOut(p, 'IN')" 
                       @keyup.enter="performInOut(p, 'IN')" 
                       @keyup.esc="cancelEdit" 
                       class="w-20 p-1 border rounded text-center bg-green-50" 
-                      placeholder="IN ribs"
+                      placeholder="IN ribs (Press Enter)"
                     />
                   </div>
                   <div v-else @click="startEdit(p, 'in_qty')" class="cursor-pointer hover:bg-green-50 px-2 py-1 rounded">
@@ -206,11 +205,10 @@
                       v-model="editValue" 
                       type="number" 
                       min="0"
-                      @blur="performInOut(p, 'OUT')" 
                       @keyup.enter="performInOut(p, 'OUT')" 
                       @keyup.esc="cancelEdit" 
                       class="w-20 p-1 border rounded text-center bg-red-50" 
-                      placeholder="OUT ribs"
+                      placeholder="OUT ribs (Press Enter)"
                     />
                   </div>
                   <div v-else @click="startEdit(p, 'out_qty')" class="cursor-pointer hover:bg-red-50 px-2 py-1 rounded">
@@ -794,6 +792,16 @@ const onDelete = async (id: number) => {
 }
 
 const performInOut = async (product: PolyBelt, action: 'IN' | 'OUT') => {
+  const cellId = `${product.id}-${action.toLowerCase()}_qty`
+  
+  console.log(`🔄 performInOut called for ${cellId}, editingCell: ${editingCell.value}, savingCell: ${savingCell.value}`)
+  
+  // Prevent multiple saves for the same cell
+  if (!editingCell.value || editingCell.value !== cellId || savingCell.value === cellId) {
+    console.log(`❌ performInOut blocked for ${cellId}`)
+    return
+  }
+  
   const inputValue = String(editValue.value).trim()
   
   if (inputValue === '' || inputValue === 'NaN') {
@@ -810,13 +818,19 @@ const performInOut = async (product: PolyBelt, action: 'IN' | 'OUT') => {
     return
   }
 
+  // Set saving state and clear editing state immediately to prevent double saves
+  console.log(`💾 Starting IN/OUT for ${cellId} with quantity: ${qty}`)
+  savingCell.value = cellId
+  cancelEdit()
+
   try {
     await inOutOperation([product.id], action, qty)
     showNotification('success', `${action} Complete`, `${action} ${qty} units for ${product.section}-${product.size} (${product.ribs}R)`)
-    cancelEdit()
   } catch (err: any) {
     showNotification('error', 'Error', err.response?.data?.message || 'Operation failed')
-    cancelEdit()
+  } finally {
+    console.log(`✅ IN/OUT completed for ${cellId}`)
+    savingCell.value = null
   }
 }
 
