@@ -133,21 +133,21 @@
    <tr v-for="p in visibleProducts" :key="p.id" class="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-section`">
-                    <input v-model="editValue" @blur="saveCell(p, 'section')" @keyup.enter="saveCell(p, 'section')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue" @keyup.enter="saveCell(p, 'section')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
                   <div v-else @click="startEdit(p, 'section')" class="cursor-pointer font-bold text-black dark:text-white">{{ p.section }}</div>
                 </td>
 
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-width`">
-                    <input v-model="editValue" @blur="saveCell(p, 'width')" @keyup.enter="saveCell(p, 'width')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue"  @keyup.enter="saveCell(p, 'width')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
                   <div v-else @click="startEdit(p, 'width')" class="cursor-pointer font-bold text-black dark:text-white">{{ p.width }}</div>
                 </td>
 
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p.id}-meter`">
-                    <input v-model.number="editValue" type="number" step="0.01" min="0" @blur="saveCell(p, 'meter')" @keyup.enter="saveCell(p, 'meter')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
+                    <input v-model.number="editValue" type="number" step="0.01" min="0"  @keyup.enter="saveCell(p, 'meter')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
                   </div>
                   <div v-else @click="startEdit(p, 'meter')" class="cursor-pointer font-bold text-black dark:text-white">
                     <span :class="getMeterClass(p)" class="font-bold">{{ Number(p.meter).toFixed(2) }}</span>
@@ -156,7 +156,7 @@
 
                 <td class="py-2 px-3 text-right">
                   <div v-if="editingCell === `${p.id}-rate`">
-                    <input v-model.number="editValue" type="number" step="0.01" @blur="saveCell(p, 'rate')" @keyup.enter="saveCell(p, 'rate')" @keyup.esc="cancelEdit" class="w-24 p-1 border rounded text-right" />
+                    <input v-model.number="editValue" type="number" step="0.01"  @keyup.enter="saveCell(p, 'rate')" @keyup.esc="cancelEdit" class="w-24 p-1 border rounded text-right" />
                   </div>
                   <div v-else @click="startEdit(p, 'rate')" class="cursor-pointer">₹{{ Number(p.rate).toFixed(2) }}</div>
                 </td>
@@ -165,7 +165,7 @@
 
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-remark`">
-                    <input v-model="editValue" @blur="saveCell(p, 'remark')" @keyup.enter="saveCell(p, 'remark')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue" @keyup.enter="saveCell(p, 'remark')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
                   <div v-else @click="startEdit(p, 'remark')" class="cursor-pointer">{{ p.remark || '-' }}</div>
                 </td>

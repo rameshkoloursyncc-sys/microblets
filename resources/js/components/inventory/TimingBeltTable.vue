@@ -56,15 +56,15 @@
           
           <!-- JSON Import/Export Buttons -->
           <div class="ml-auto flex items-center gap-2">
-            <button @click="showImportModal = true" class="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700">
-              Import Data
+           <!-- <button @click="showImportModal = true" class="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700">
+              Imporrt JSON
+            </button>
+            <button @click="showExcelImportModal = true" class="px-3 py-1.5 text-sm bg-orange-600 text-white rounded hover:bg-orange-700">
+              Import Excel
             </button>
             <button @click="downloadJSON" class="px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700">
               Download JSON
-            </button>
-            <button @click="downloadExcel" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
-              Download Excel
-            </button>
+            </button> -->
             <button @click="showCreateModal = true" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
               Create Product
             </button>
@@ -102,8 +102,7 @@
         <tr>
          <th class="py-3 px-3">Section</th>
                 <th class="py-3 px-3">Size</th>
-                <th class="py-3 px-3">TYPE 1 (FULL SLEEVE)</th>
-                <th class="py-3 px-3 text-center">MM</th>
+                <th class="py-3 px-3">{{ props.section?.startsWith('NEOPRENE') ? 'FULL SLEEVE' : 'TYPE 1 (FULL SLEEVE)' }}</th>
                 <th class="py-3 px-3 text-center">Total MM</th>
                 <th class="py-3 px-3 text-right">Value</th>
                 <th class="py-3 px-3">Remark</th>
@@ -115,42 +114,31 @@
           <tr v-for="p in visibleProducts" :key="p?.id || 'unknown'" class="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p?.id}-section`">
-                    <input v-model="editValue" @blur="saveCell(p, 'section')" @keyup.enter="saveCell(p, 'section')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue" @keyup.enter="saveCell(p, 'section')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
                   <div v-else @click="startEdit(p, 'section')" class="cursor-pointer font-bold text-black dark:text-white">{{ p?.section || '-' }}</div>
                 </td>
 
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p?.id}-size`">
-                    <input v-model="editValue" @blur="saveCell(p, 'size')" @keyup.enter="saveCell(p, 'size')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue"  @keyup.enter="saveCell(p, 'size')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
                   <div v-else @click="startEdit(p, 'size')" class="cursor-pointer font-bold text-black dark:text-white">{{ p?.size || '-' }}</div>
                 </td>
 
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p?.id}-type`">
-                    <select v-model="editValue" @blur="saveCell(p, 'type')" @keyup.enter="saveCell(p, 'type')" @keyup.esc="cancelEdit" class="w-full p-1 border font-bold rounded">
-                      <option value="1 (FULL SLEEVE)">1 (FULL SLEEVE)</option>
-                      <option value="2 (HALF SLEEVE)">2 (HALF SLEEVE)</option>
-                    </select>
+                    <input v-model="editValue" @keyup.enter="saveCell(p, 'type')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
                   </div>
-                  <div v-else @click="startEdit(p, 'type')" class="cursor-pointer font-bold text-black dark:text-white">{{ p?.type || '1 (FULL SLEEVE)' }}</div>
-                </td>
-
-                <!-- MM -->
-                <td class="py-2 px-3 text-center">
-                  <div v-if="editingCell === `${p?.id}-mm`">
-                    <input v-model.number="editValue" type="number" step="0.01" min="0" @blur="saveCell(p, 'mm')" @keyup.enter="saveCell(p, 'mm')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
-                  </div>
-                  <div v-else @click="startEdit(p, 'mm')" class="cursor-pointer">
-                    <span class="font-medium">{{ Number(p?.mm || 0).toFixed(2) }}mm</span>
+                  <div v-else @click="startEdit(p, 'type')" class="cursor-pointer font-bold text-black dark:text-white text-center">
+                    {{ p?.type || '' }}
                   </div>
                 </td>
 
                 <!-- Total MM -->
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p?.id}-total_mm`">
-                    <input v-model.number="editValue" type="number" step="0.01" min="0" @blur="saveCell(p, 'total_mm')" @keyup.enter="saveCell(p, 'total_mm')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
+                    <input v-model.number="editValue" type="number" step="0.01" min="0"  @keyup.enter="saveCell(p, 'total_mm')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
                   </div>
                   <div v-else @click="startEdit(p, 'total_mm')" class="cursor-pointer">
                     <span :class="getStockClass(p)" class="font-medium">{{ Number(p?.total_mm || 0).toFixed(2) }}mm</span>
@@ -162,7 +150,7 @@
 
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p?.id}-remark`">
-                    <input v-model="editValue" @blur="saveCell(p, 'remark')" @keyup.enter="saveCell(p, 'remark')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue" @keyup.enter="saveCell(p, 'remark')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
                   <div v-else @click="startEdit(p, 'remark')" class="cursor-pointer">{{ p?.remark || '-' }}</div>
                 </td>
@@ -216,15 +204,8 @@
               <input v-model="createForm.size" class="w-full p-2 border rounded" placeholder="e.g., 150, 200" />
             </label>
 
-            <label>Type
-              <select v-model="createForm.type" class="w-full p-2 border rounded">
-                <option value="1 (FULL SLEEVE)">1 (FULL SLEEVE)</option>
-                <option value="2 (HALF SLEEVE)">2 (HALF SLEEVE)</option>
-              </select>
-            </label>
-            
-            <label>MM (Individual piece length)
-              <input v-model.number="createForm.mm" type="number" step="0.01" class="w-full p-2 border rounded" min="0" placeholder="Individual piece length in mm" />
+            <label>{{ props.section?.startsWith('NEOPRENE') ? 'Full Sleeve' : 'Type (Numerical value)' }}
+              <input v-model="createForm.type" class="w-full p-2 border rounded" :placeholder="props.section?.startsWith('NEOPRENE') ? 'e.g., FULL SLEEVE' : 'e.g., 18, 21, 10, 24'" />
             </label>
             
             <label>Total MM (Total inventory)
@@ -389,7 +370,6 @@
                     <th class="text-left p-1">section</th>
                     <th class="text-left p-1">size</th>
                     <th class="text-left p-1">type</th>
-                    <th class="text-left p-1">mm</th>
                     <th class="text-left p-1">total_mm</th>
                     <th class="text-left p-1">rate</th>
                     <th class="text-left p-1">remark</th>
@@ -443,12 +423,116 @@
       </div>
 
     </div>
+
+    <!-- Excel Import Modal -->
+    <div v-if="showExcelImportModal" class="fixed inset-0 z-40 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black/40" @click="showExcelImportModal = false"></div>
+      <div class="relative bg-white dark:bg-gray-800 rounded p-6 w-full max-w-2xl z-50">
+        <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Import Timing Belts from Excel</h3>
+        
+        <!-- Belt Type Selection -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Belt Type
+          </label>
+          <select v-model="excelImportForm.beltType" class="w-full p-2 border rounded bg-white dark:bg-gray-700 dark:text-white">
+            <option value="commercial">Commercial Timing Belts</option>
+            <option value="neoprene">Neoprene Timing Belts</option>
+          </select>
+        </div>
+
+        <!-- File Upload -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Excel File (.xlsx, .xls)
+          </label>
+          <input 
+            type="file" 
+            ref="excelFileInput"
+            @change="handleExcelFileSelect"
+            accept=".xlsx,.xls"
+            class="w-full p-2 border rounded bg-white dark:bg-gray-700 dark:text-white"
+          />
+        </div>
+
+        <!-- Expected Format Info -->
+        <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded">
+          <h4 class="font-medium text-blue-800 dark:text-blue-200 mb-2">Expected Excel Format:</h4>
+          <div v-if="excelImportForm.beltType === 'commercial'" class="text-sm text-blue-700 dark:text-blue-300">
+            <p><strong>Commercial:</strong> XL | TYPE- 1 (FULL SLEVE) | MM | TOTAL(MM) | RATE PER SLV | TOTAL MM RATE | FINAL VALUE</p>
+            <p class="mt-1">Section will be detected from header (XL, L, 5M, T5, T10, AT5, AT10)</p>
+            <p class="mt-1 text-xs">Example: 100 | 18 | 390,420,430... | 4690 | 417 | 4346 | 11852</p>
+          </div>
+          <div v-else class="text-sm text-blue-700 dark:text-blue-300">
+            <p><strong>Neoprene:</strong> FULL SLEEVE | MM | RATE PER SLEEVE | TOTAL RATE</p>
+          </div>
+        </div>
+
+        <!-- Preview Data -->
+        <div v-if="excelPreviewData.length > 0" class="mb-4">
+          <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+            Preview Data ({{ excelPreviewData.length }} items)
+          </h4>
+          <div class="max-h-60 overflow-y-auto border rounded">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th class="p-2 text-left">Section</th>
+                  <th class="p-2 text-left">Size</th>
+                  <th class="p-2 text-left">Type</th>
+                  <th class="p-2 text-left">Total MM</th>
+                  <th class="p-2 text-left">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in excelPreviewData.slice(0, 10)" :key="index" class="border-t">
+                  <td class="p-2">{{ item.section }}</td>
+                  <td class="p-2">{{ item.size }}</td>
+                  <td class="p-2">{{ item.type }}</td>
+                  <td class="p-2">{{ item.total_mm }}</td>
+                  <td class="p-2">₹{{ item.value }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-if="excelPreviewData.length > 10" class="p-2 text-center text-gray-500 text-sm">
+              ... and {{ excelPreviewData.length - 10 }} more items
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end gap-2">
+          <button 
+            @click="showExcelImportModal = false" 
+            class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          >
+            Cancel
+          </button>
+          <button 
+            @click="processExcelFile" 
+            :disabled="!excelImportForm.selectedFile || processingExcel"
+            class="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 disabled:bg-gray-400"
+          >
+            {{ processingExcel ? 'Processing...' : 'Process Excel' }}
+          </button>
+          <button 
+            v-if="excelPreviewData.length > 0"
+            @click="importToDatabase" 
+            :disabled="importingToDb"
+            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
+          >
+            {{ importingToDb ? 'Importing...' : 'Import to Database' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useTimingBelts, type TimingBelt, type Transaction } from '../../composables/useTimingBelts'
+import axios from '@/lib/axios'
 
 const props = defineProps<{
   section?: string
@@ -496,11 +580,21 @@ const editValue = ref<any>('')
 const savingCell = ref<string|null>(null)
 
 const showCreateModal = ref(false)
+
+// Excel Import functionality
+const showExcelImportModal = ref(false)
+const excelFileInput = ref<HTMLInputElement | null>(null)
+const excelImportForm = ref({
+  beltType: 'commercial',
+  selectedFile: null as File | null
+})
+const excelPreviewData = ref<any[]>([])
+const processingExcel = ref(false)
+const importingToDb = ref(false)
 const createForm = ref({ 
   section: props.section || '',
   size: '', 
-  type: '1 (FULL SLEEVE)',
-  mm: 0,
+  type: props.section?.startsWith('NEOPRENE') ? 'FULL SLEEVE' : '',
   total_mm: 0,
   rate: 0,
   remark: ''
@@ -527,12 +621,12 @@ const importMode = ref('append')
 
 const sampleJSONFormat = `[
   {
-    "section": "XL",
+    "section": "${props.section || 'XL'}",
     "size": "150",
-    "type": "1 (FULL SLEEVE)",
-    "mm": 100.00,
+    "type": "${props.section?.startsWith('NEOPRENE') ? 'FULL SLEEVE' : '18'}",
     "total_mm": 1000.00,
     "rate": 2.50,
+    "value": 11852.00,
     "remark": "Sample timing belt"
   }
 ]`
@@ -589,7 +683,7 @@ const saveCell = async (product: TimingBelt | null | undefined, field: keyof Tim
     return
   }
   
-  const val = ['mm', 'total_mm', 'rate'].includes(field) ? Number(editValue.value) : editValue.value
+  const val = ['total_mm', 'rate'].includes(field) ? Number(editValue.value) : editValue.value
   
   // Set saving state and clear editing state immediately to prevent double saves
   savingCell.value = cellId
@@ -621,8 +715,7 @@ const createProduct = async () => {
     createForm.value = { 
       section: props.section || '',
       size: '', 
-      type: '1 (FULL SLEEVE)',
-      mm: 0,
+      type: props.section?.startsWith('NEOPRENE') ? 'FULL SLEEVE' : '',
       total_mm: 0,
       rate: 0,
       remark: ''
@@ -701,6 +794,10 @@ const importData = async () => {
   } else {
     await importExcelData()
   }
+}
+
+const importFromJSON = async () => {
+  await importJSONData()
 }
 
 const importJSONData = async () => {
@@ -836,6 +933,11 @@ const downloadExcel = () => {
   showNotification('success', 'Downloaded', `Downloaded ${products.value.length} products as Excel file`)
 }
 
+// Export to JSON
+const exportToJSON = () => {
+  downloadJSON()
+}
+
 // Download JSON data
 const downloadJSON = () => {
   if (products.value.length === 0) {
@@ -848,7 +950,6 @@ const downloadJSON = () => {
     section: product.section,
     size: product.size,
     type: product.type,
-    mm: product.mm,
     total_mm: product.total_mm,
     in_mm: product.in_mm,
     out_mm: product.out_mm,
@@ -873,6 +974,82 @@ const downloadJSON = () => {
   URL.revokeObjectURL(url)
 
   showNotification('success', 'Downloaded', `Downloaded ${exportData.length} products`)
+}
+
+// Excel Import Functions
+const handleExcelFileSelect = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (file) {
+    excelImportForm.value.selectedFile = file
+    excelPreviewData.value = [] // Clear previous preview
+  }
+}
+
+const processExcelFile = async () => {
+  if (!excelImportForm.value.selectedFile) {
+    showNotification('error', 'Error', 'Please select an Excel file')
+    return
+  }
+
+  processingExcel.value = true
+  
+  try {
+    const formData = new FormData()
+    formData.append('excel_file', excelImportForm.value.selectedFile)
+    formData.append('belt_type', excelImportForm.value.beltType)
+
+    const response = await axios.post('/api/timing-belts/upload-excel', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    if (response.data.success) {
+      excelPreviewData.value = response.data.data
+      showNotification('success', 'Processed', `Successfully processed ${response.data.count} items from Excel`)
+    } else {
+      showNotification('error', 'Error', response.data.message || 'Failed to process Excel file')
+    }
+  } catch (error: any) {
+    console.error('Excel processing error:', error)
+    showNotification('error', 'Error', error.response?.data?.message || 'Failed to process Excel file')
+  } finally {
+    processingExcel.value = false
+  }
+}
+
+const importToDatabase = async () => {
+  if (excelPreviewData.value.length === 0) {
+    showNotification('error', 'Error', 'No data to import')
+    return
+  }
+
+  importingToDb.value = true
+  
+  try {
+    const response = await axios.post('/api/timing-belts/import-to-database', {
+      data: excelPreviewData.value,
+      section: excelPreviewData.value[0]?.section || 'UNKNOWN'
+    })
+
+    if (response.data.success) {
+      showNotification('success', 'Imported', response.data.message)
+      showExcelImportModal.value = false
+      excelPreviewData.value = []
+      excelImportForm.value.selectedFile = null
+      
+      // Refresh the products list
+      await fetchProducts()
+    } else {
+      showNotification('error', 'Error', response.data.message || 'Failed to import to database')
+    }
+  } catch (error: any) {
+    console.error('Database import error:', error)
+    showNotification('error', 'Error', error.response?.data?.message || 'Failed to import to database')
+  } finally {
+    importingToDb.value = false
+  }
 }
 
 onMounted(async () => {

@@ -26,4 +26,10 @@ Route::prefix('timing-belts')->group(function () {
 
     // Global settings
     Route::post('/update-global-min-inventory', [TimingBeltController::class, 'updateGlobalMinInventory']);
+    
+    // Settings page endpoints
+    Route::post('/update-section-rate', [TimingBeltController::class, 'updateSectionRate']);
+    Route::post('/seed-section', [TimingBeltController::class, 'seedSection']);
+    Route::delete('/clear-section/{section}', [TimingBeltController::class, 'clearSection']);
+    Route::delete('/clear-all', [TimingBeltController::class, 'clearAll']);
 });

@@ -59,7 +59,7 @@ class TimingBeltController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'section' => 'required|string|max:10',
+            'section' => 'required|string|max:20',
             'size' => 'required|string|max:20',
             'type' => 'nullable|string|max:50',
             'mm' => 'nullable|numeric|min:0',
@@ -113,7 +113,7 @@ class TimingBeltController extends Controller
     public function update(Request $request, TimingBelt $timingBelt)
     {
         $validator = Validator::make($request->all(), [
-            'section' => 'sometimes|required|string|max:10',
+            'section' => 'sometimes|required|string|max:20',
             'size' => 'sometimes|required|string|max:20',
             'type' => 'nullable|string|max:50',
             'mm' => 'nullable|numeric|min:0',
@@ -191,11 +191,11 @@ class TimingBeltController extends Controller
                 $createData = [
                     'section' => $item['section'],
                     'size' => (string)$item['size'],
-                    'type' => $item['type'] ?? '1 (FULL SLEEVE)',
-                    'mm' => $item['mm'] ?? 0,
-                    'total_mm' => $item['total_mm'] ?? $item['mm'] ?? 0,
+                    'type' => $item['type'] ?? '0', // Default to '0' if not provided
+                    'total_mm' => $item['total_mm'] ?? 0,
                     'rate' => $item['rate'] ?? 0,
-                    'reorder_level' => $item['reorder_level'] ?? 5,
+                    'value' => $item['value'] ?? 0,
+                    'reorder_level' => $item['reorder_level'] ?? null,
                     'remark' => $item['remark'] ?? null,
                     'created_by' => session('user')['id'] ?? null,
                 ];
@@ -362,6 +362,163 @@ class TimingBeltController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Failed to update global minimum inventory',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update rate for all products in a specific section
+     */
+    public function updateSectionRate(Request $request)
+    {
+        $request->validate([
+            'section' => 'required|string',
+            'rate' => 'required|numeric|min:0'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $updated = TimingBelt::where('section', $request->section)
+                                 ->update(['rate' => $request->rate]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => "Updated rate for {$updated} products in {$request->section} section",
+                'updated_count' => $updated
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to update section rate',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Seed specific section from JSON file
+     */
+    public function seedSection(Request $request)
+    {
+        $request->validate([
+            'section' => 'required|string',
+            'filename' => 'required|string'
+        ]);
+
+        try {
+            $jsonPath = resource_path("js/mock/{$request->filename}");
+            
+            if (!file_exists($jsonPath)) {
+                return response()->json([
+                    'message' => "JSON file not found: {$request->filename}"
+                ], 404);
+            }
+
+            $jsonData = json_decode(file_get_contents($jsonPath), true);
+            
+            if (!$jsonData) {
+                return response()->json([
+                    'message' => 'Invalid JSON file format'
+                ], 400);
+            }
+
+            DB::beginTransaction();
+
+            $imported = 0;
+            $skipped = 0;
+            foreach ($jsonData as $item) {
+                $section = $item['section'] ?? $request->section;
+                $size = (string)$item['size'];
+                $type = $item['type'] ?? '0';
+                
+                // Check if product already exists
+                $existing = TimingBelt::where('section', $section)
+                                     ->where('size', $size)
+                                     ->where('type', $type)
+                                     ->first();
+                
+                if ($existing) {
+                    $skipped++;
+                    continue;
+                }
+                
+                TimingBelt::create([
+                    'section' => $section,
+                    'size' => $size,
+                    'type' => $type,
+                    'total_mm' => $item['total_mm'] ?? 0,
+                    'rate' => $item['rate'] ?? 0,
+                    'value' => $item['value'] ?? 0,
+                    'reorder_level' => $item['reorder_level'] ?? null,
+                    'remark' => $item['remark'] ?? null,
+                    'created_by' => session('user')['id'] ?? null,
+                ]);
+                $imported++;
+            }
+
+            DB::commit();
+
+            $message = "Successfully seeded {$imported} products for {$request->section} section";
+            if ($skipped > 0) {
+                $message .= " ({$skipped} duplicates skipped)";
+            }
+            
+            return response()->json([
+                'message' => $message,
+                'imported_count' => $imported,
+                'skipped_count' => $skipped
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Seeding failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Clear all products from a specific section
+     */
+    public function clearSection($section)
+    {
+        try {
+            $deleted = TimingBelt::where('section', $section)->delete();
+
+            return response()->json([
+                'message' => "Cleared {$deleted} products from {$section} section",
+                'deleted_count' => $deleted
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to clear section',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Clear all timing belt data
+     */
+    public function clearAll()
+    {
+        try {
+            $deleted = TimingBelt::query()->delete();
+
+            return response()->json([
+                'message' => "Cleared all timing belt data ({$deleted} products)",
+                'deleted_count' => $deleted
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to clear all data',
                 'error' => $e->getMessage()
             ], 500);
         }

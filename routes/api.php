@@ -36,6 +36,8 @@ Route::middleware(['App\Http\Middleware\CheckSession'])->group(function () {
 Route::middleware(['App\Http\Middleware\CheckSession'])->group(function () {
     // Dashboard API Routes
     Route::get('dashboard/inventory-stats', [DashboardController::class, 'getInventoryStats']);
+    Route::get('dashboard/low-stock-items', [DashboardController::class, 'getLowStockItems']);
+    Route::post('dashboard/send-stock-alert', [DashboardController::class, 'sendStockAlert']);
     
     // Debug routes for individual belt types
     Route::get('dashboard/vee-belts-debug', [DashboardController::class, 'getVeeBeltTotalDebug']);
@@ -68,6 +70,11 @@ Route::middleware(['App\Http\Middleware\CheckSession'])->group(function () {
 
     // Timing Belts API Routes
     require __DIR__.'/api_timing_belts.php';
+
+    // Timing Belt Excel Import/Export Routes
+    Route::post('timing-belts/upload-excel', [App\Http\Controllers\TimingBeltExcelController::class, 'uploadExcel']);
+    Route::post('timing-belts/import-to-database', [App\Http\Controllers\TimingBeltExcelController::class, 'importToDatabase']);
+    Route::get('timing-belts/download-json', [App\Http\Controllers\TimingBeltExcelController::class, 'downloadJson']);
 
     // Special Belts API Routes
     require __DIR__.'/api_special_belts.php';

@@ -1,0 +1,47 @@
+[
+  {
+    "section": "5M",
+    "size": "200",
+    "type": "18",
+    "total_mm": 1200.00,
+    "rate": 5.50,
+    "value": 0,
+    "remark": "Sample 5M section belt"
+  },
+  {
+    "section": "5M",
+    "size": "220",
+    "type": "21",
+    "total_mm": 1400.00,
+    "rate": 5.75,
+    "value": 0,
+    "remark": "Sample 5M section belt"
+  },
+  {
+    "section": "5M",
+    "size": "240",
+    "type": "24",
+    "total_mm": 1000.00,
+    "rate": 6.00,
+    "value": 0,
+    "remark": "Sample 5M section belt"
+  },
+  {
+    "section": "5M",
+    "size": "260",
+    "type": "32",
+    "total_mm": 1600.00,
+    "rate": 5.25,
+    "value": 0,
+    "remark": "Sample 5M section belt"
+  },
+  {
+    "section": "5M",
+    "size": "280",
+    "type": "25",
+    "total_mm": 1100.00,
+    "rate": 6.25,
+    "value": 0,
+    "remark": "Sample 5M section belt"
+  }
+]

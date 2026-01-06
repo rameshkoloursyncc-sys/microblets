@@ -1,0 +1,56 @@
+[
+  {
+    "section": "XH",
+    "size": "200",
+    "type": "18",
+    "total_mm": 1500.00,
+    "rate": 4.00,
+    "value": 0,
+    "remark": "Sample XH section belt"
+  },
+  {
+    "section": "XH",
+    "size": "220",
+    "type": "21",
+    "total_mm": 1200.00,
+    "rate": 4.25,
+    "value": 0,
+    "remark": "Sample XH section belt"
+  },
+  {
+    "section": "XH",
+    "size": "240",
+    "type": "24",
+    "total_mm": 1000.00,
+    "rate": 4.50,
+    "value": 0,
+    "remark": "Sample XH section belt"
+  },
+  {
+    "section": "XH",
+    "size": "260",
+    "type": "32",
+    "total_mm": 800.00,
+    "rate": 4.75,
+    "value": 0,
+    "remark": "Sample XH section belt"
+  },
+  {
+    "section": "XH",
+    "size": "280",
+    "type": "25",
+    "total_mm": 1100.00,
+    "rate": 4.60,
+    "value": 0,
+    "remark": "Sample XH section belt"
+  },
+  {
+    "section": "XH",
+    "size": "300",
+    "type": "18",
+    "total_mm": 1300.00,
+    "rate": 4.80,
+    "value": 0,
+    "remark": "Sample XH section belt"
+  }
+]

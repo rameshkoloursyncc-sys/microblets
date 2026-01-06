@@ -1,0 +1,47 @@
+[
+  {
+    "section": "T5",
+    "size": "100",
+    "type": "18",
+    "total_mm": 1000.00,
+    "rate": 3.50,
+    "value": 0,
+    "remark": "Sample T5 section belt"
+  },
+  {
+    "section": "T5",
+    "size": "110",
+    "type": "21",
+    "total_mm": 1200.00,
+    "rate": 3.75,
+    "value": 0,
+    "remark": "Sample T5 section belt"
+  },
+  {
+    "section": "T5",
+    "size": "120",
+    "type": "24",
+    "total_mm": 800.00,
+    "rate": 4.00,
+    "value": 0,
+    "remark": "Sample T5 section belt"
+  },
+  {
+    "section": "T5",
+    "size": "130",
+    "type": "32",
+    "total_mm": 1500.00,
+    "rate": 3.25,
+    "value": 0,
+    "remark": "Sample T5 section belt"
+  },
+  {
+    "section": "T5",
+    "size": "140",
+    "type": "25",
+    "total_mm": 900.00,
+    "rate": 4.25,
+    "value": 0,
+    "remark": "Sample T5 section belt"
+  }
+]

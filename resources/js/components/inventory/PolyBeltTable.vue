@@ -158,7 +158,6 @@
                       type="number" 
                       step="0.01" 
                       min="0.01" 
-                      @blur="saveCell(p, 'size')" 
                       @keyup.enter="saveCell(p, 'size')" 
                       @keyup.esc="cancelEdit" 
                       class="w-full p-1 border rounded" 
@@ -175,7 +174,7 @@
 
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p.id}-ribs`">
-                    <input v-model="editValue" type="number" min="0" @blur="saveCell(p, 'ribs')" @keyup.enter="saveCell(p, 'ribs')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
+                    <input v-model="editValue" type="number" min="0" @keyup.enter="saveCell(p, 'ribs')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
                   </div>
                   <div v-else @click="startEdit(p, 'ribs')" class="cursor-pointer">
                     <span :class="getRibsClass(p)" class="font-bold">{{ p.ribs }}</span>
@@ -219,17 +218,16 @@
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p.id}-reorder_level`">
                     <input v-model="editValue" type="number" min="0" 
-                           @blur="saveCell(p, 'reorder_level')" 
                            @keyup.enter="saveCell(p, 'reorder_level')" 
                            @keyup.esc="cancelEdit" 
                            class="w-20 p-1 border rounded text-center" />
                   </div>
-                  <div v-else @click="startEdit(p, 'reorder_level')" class="cursor-pointer">{{ p.reorder_level }}</div>
+                  <div v-else @click="startEdit(p, 'reorder_level')" class="cursor-pointer">{{ p.reorder_level ?? 'Not tracked' }}</div>
                 </td>
 
                 <td class="py-2 px-3 text-right">
                   <div v-if="editingCell === `${p.id}-rate_per_rib`">
-                    <input v-model="editValue" type="number" step="0.01" @blur="saveCell(p, 'rate_per_rib')" @keyup.enter="saveCell(p, 'rate_per_rib')" @keyup.esc="cancelEdit" class="w-24 p-1 border rounded text-right" />
+                    <input v-model="editValue" type="number" step="0.01"  @keyup.enter="saveCell(p, 'rate_per_rib')" @keyup.esc="cancelEdit" class="w-24 p-1 border rounded text-right" />
                   </div>
                   <div v-else @click="startEdit(p, 'rate_per_rib')" class="cursor-pointer">
                     ₹{{ (Number(p.rate_per_rib) || 0).toFixed(2) }}
@@ -244,7 +242,7 @@
 
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-remark`">
-                    <input v-model="editValue" @blur="saveCell(p, 'remark')" @keyup.enter="saveCell(p, 'remark')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue" @keyup.enter="saveCell(p, 'remark')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
                   <div v-else @click="startEdit(p, 'remark')" class="cursor-pointer">{{ p.remark || '-' }}</div>
                 </td>
@@ -363,7 +361,7 @@
             </label>
 
             <label>Minimum Ribs Level
-              <input v-model.number="createForm.reorder_level" type="number" class="w-full p-2 border rounded" min="0" />
+              <input v-model.number="createForm.reorder_level" type="number" class="w-full p-2 border rounded" min="0" placeholder="Leave empty to disable tracking" />
             </label>
 
             <label>Rate per Rib (leave empty for auto-calculation)
@@ -483,7 +481,7 @@ const createForm = ref({
   section: props.section || '',
   size: 0, 
   ribs: 0,
-  reorder_level: 5, 
+  reorder_level: null, 
   rate_per_rib: undefined as number | undefined,
   remark: ''
 })
@@ -771,7 +769,7 @@ const createProduct = async () => {
       section: props.section || '',
       size: 0, 
       ribs: 0,
-      reorder_level: 5, 
+      reorder_level: null, 
       rate_per_rib: undefined,
       remark: ''
     }

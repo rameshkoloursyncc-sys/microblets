@@ -201,7 +201,7 @@
                            @keyup.esc="cancelEdit" 
                            class="w-20 p-1 border rounded text-center" />
                   </div>
-                  <div v-else @click="startEdit(p, 'reorder_level')" class="cursor-pointer">{{ p.reorder_level }}</div>
+                  <div v-else @click="startEdit(p, 'reorder_level')" class="cursor-pointer">{{ p.reorder_level ?? 'Not tracked' }}</div>
                 </td>
 
                 <td class="py-2 px-3 text-right">
@@ -330,8 +330,8 @@
               <input v-model.number="createForm.balance_stock" type="number" class="w-full p-2 border rounded" min="0" />
             </label>
 
-            <label>Minimum Inventory Level
-              <input v-model.number="createForm.reorder_level" type="number" class="w-full p-2 border rounded" min="0" />
+            <label>Minimum Inventory Level (leave empty for no tracking)
+              <input v-model.number="createForm.reorder_level" type="number" class="w-full p-2 border rounded" min="0" placeholder="Leave empty to disable tracking" />
             </label>
 
             <label>Rate per item (leave empty for auto-calculation)
@@ -408,7 +408,7 @@ const createForm = ref({
   section: props.section || '',
   size: '', 
   balance_stock: 0, 
-  reorder_level: 5, 
+  reorder_level: null, 
   rate: undefined as number | undefined,
   remark: ''
 })
@@ -452,7 +452,7 @@ const visibleProducts = computed(() => {
   
   // Low stock filter
   if (showLowStockOnly.value) {
-    list = list.filter(p => p.balance_stock <= p.reorder_level && p.balance_stock > 0)
+    list = list.filter(p => p.reorder_level !== null && p.reorder_level >= 1 && p.balance_stock <= p.reorder_level && p.balance_stock > 0)
   }
   
   // Out of stock filter
@@ -498,7 +498,7 @@ const totalValue = computed(() => {
 })
 
 const lowStockCount = computed(() => {
-  return visibleProducts.value.filter(p => p.balance_stock <= p.reorder_level && p.balance_stock > 0).length
+  return visibleProducts.value.filter(p => p.reorder_level !== null && p.reorder_level >= 1 && p.balance_stock <= p.reorder_level && p.balance_stock > 0).length
 })
 
 // Filtered transaction history by date
@@ -589,7 +589,7 @@ const saveCell = async (product: VeeBelt, field: keyof VeeBelt) => {
 
 const getStockClass = (p: VeeBelt) => { 
   if (p.balance_stock <= 0) return 'text-red-600 font-semibold'
-  if (p.balance_stock <= p.reorder_level) return 'text-yellow-600 font-semibold'
+  if (p.reorder_level !== null && p.reorder_level >= 1 && p.balance_stock <= p.reorder_level) return 'text-yellow-600 font-semibold'
   return 'text-green-600 font-semibold'
 }
 
@@ -602,7 +602,7 @@ const createProduct = async () => {
       section: props.section || '',
       size: '', 
       balance_stock: 0, 
-      reorder_level: 5, 
+      reorder_level: null, 
       rate: undefined,
       remark: ''
     }

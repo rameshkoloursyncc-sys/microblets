@@ -1,0 +1,47 @@
+[
+  {
+    "section": "NEOPRENE-5M",
+    "size": "200",
+    "type": "FULL SLEEVE",
+    "total_mm": 1200.00,
+    "rate": 5.80,
+    "value": 0,
+    "remark": "Sample neoprene 5M belt"
+  },
+  {
+    "section": "NEOPRENE-5M",
+    "size": "220",
+    "type": "FULL SLEEVE",
+    "total_mm": 1400.00,
+    "rate": 6.00,
+    "value": 0,
+    "remark": "Sample neoprene 5M belt"
+  },
+  {
+    "section": "NEOPRENE-5M",
+    "size": "240",
+    "type": "FULL SLEEVE",
+    "total_mm": 1000.00,
+    "rate": 6.20,
+    "value": 0,
+    "remark": "Sample neoprene 5M belt"
+  },
+  {
+    "section": "NEOPRENE-5M",
+    "size": "260",
+    "type": "FULL SLEEVE",
+    "total_mm": 1600.00,
+    "rate": 5.60,
+    "value": 0,
+    "remark": "Sample neoprene 5M belt"
+  },
+  {
+    "section": "NEOPRENE-5M",
+    "size": "280",
+    "type": "FULL SLEEVE",
+    "total_mm": 1300.00,
+    "rate": 6.40,
+    "value": 0,
+    "remark": "Sample neoprene 5M belt"
+  }
+]

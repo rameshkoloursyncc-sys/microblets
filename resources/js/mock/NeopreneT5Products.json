@@ -1,0 +1,47 @@
+[
+  {
+    "section": "NEOPRENE-T5",
+    "size": "100",
+    "type": "FULL SLEEVE",
+    "total_mm": 1000.00,
+    "rate": 3.80,
+    "value": 0,
+    "remark": "Sample neoprene T5 belt"
+  },
+  {
+    "section": "NEOPRENE-T5",
+    "size": "110",
+    "type": "FULL SLEEVE",
+    "total_mm": 1200.00,
+    "rate": 4.00,
+    "value": 0,
+    "remark": "Sample neoprene T5 belt"
+  },
+  {
+    "section": "NEOPRENE-T5",
+    "size": "120",
+    "type": "FULL SLEEVE",
+    "total_mm": 900.00,
+    "rate": 4.20,
+    "value": 0,
+    "remark": "Sample neoprene T5 belt"
+  },
+  {
+    "section": "NEOPRENE-T5",
+    "size": "130",
+    "type": "FULL SLEEVE",
+    "total_mm": 1400.00,
+    "rate": 3.60,
+    "value": 0,
+    "remark": "Sample neoprene T5 belt"
+  },
+  {
+    "section": "NEOPRENE-T5",
+    "size": "140",
+    "type": "FULL SLEEVE",
+    "total_mm": 1100.00,
+    "rate": 4.40,
+    "value": 0,
+    "remark": "Sample neoprene T5 belt"
+  }
+]

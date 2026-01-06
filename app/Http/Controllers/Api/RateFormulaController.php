@@ -33,7 +33,7 @@ class RateFormulaController extends Controller
     {
         $validated = $request->validate([
             'category' => 'required|string|max:50',
-            'section' => 'required|string|max:10',
+            'section' => 'required|string|max:20',
             'formula' => 'required|array',
             'formula.type' => 'required|in:multiply,divide_multiply,custom',
             'is_active' => 'boolean',
@@ -87,7 +87,7 @@ class RateFormulaController extends Controller
     {
         $validated = $request->validate([
             'category' => 'required|string|max:50',
-            'section' => 'required|string|max:10',
+            'section' => 'required|string|max:20',
             'formula' => 'required|string',
         ]);
 

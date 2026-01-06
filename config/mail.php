@@ -115,4 +115,17 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Low Stock Report Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for daily low stock email reports
+    |
+    */
+
+    'low_stock_recipients' => env('LOW_STOCK_EMAIL_RECIPIENTS') ? 
+        explode(',', env('LOW_STOCK_EMAIL_RECIPIENTS')) : 
+        ['admin@example.com'],
+
 ];

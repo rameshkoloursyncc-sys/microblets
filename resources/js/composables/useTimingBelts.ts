@@ -172,25 +172,25 @@ export function useTimingBelts(section?: string) {
   const totalProducts = computed(() => (products.value || []).length)
   
   const totalStock = computed(() => {
-    return (products.value || []).reduce((sum, p) => sum + (p?.total_mm || 0), 0)
+    return (products.value || []).reduce((sum, p) => sum + (Number(p?.total_mm) || 0), 0)
   })
   
   const totalValue = computed(() => {
-    return (products.value || []).reduce((sum, p) => sum + (p?.value || 0), 0)
+    return (products.value || []).reduce((sum, p) => sum + (Number(p?.value) || 0), 0)
   })
   
   const lowStockCount = computed(() => {
     return (products.value || []).filter(p => {
       if (!p) return false
-      const currentStock = p.total_mm || 0
-      return currentStock <= (p.reorder_level || 0)
+      const currentStock = Number(p.total_mm) || 0
+      return currentStock <= (Number(p.reorder_level) || 0)
     }).length
   })
   
   const outOfStockCount = computed(() => {
     return (products.value || []).filter(p => {
       if (!p) return false
-      const currentStock = p.total_mm || 0
+      const currentStock = Number(p.total_mm) || 0
       return currentStock <= 0
     }).length
   })

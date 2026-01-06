@@ -47,19 +47,57 @@ class TimingBelt extends Model
 
         static::updating(function ($timingBelt) {
             // Recalculate value when relevant fields change
-            if ($timingBelt->isDirty(['total_mm', 'rate'])) {
+            if ($timingBelt->isDirty(['size', 'type', 'total_mm', 'rate'])) {
                 $timingBelt->calculateValue();
             }
         });
     }
 
     /**
-     * Calculate total value based on total_mm and rate
+     * Calculate total value based on the timing belt formula:
+     * value = (size * type_numeric_value * 450 * multiplier) + (size * total_mm * multiplier)
      */
     public function calculateValue()
     {
-        // Calculate based on total_mm and rate
-        $this->value = $this->total_mm * $this->rate;
+        // Get the multiplier for this section from rate_formulas
+        $formula = \DB::table('rate_formulas')
+            ->where('category', 'timing_belts')
+            ->where('section', $this->section)
+            ->where('is_active', 1)
+            ->first();
+        
+        if (!$formula) {
+            // Fallback to old calculation if no formula found
+            $this->value = $this->total_mm * $this->rate;
+            return;
+        }
+        
+        $multiplier = (float) $formula->formula;
+        $size = (float) $this->size;
+        $totalMm = (float) $this->total_mm;
+        
+        // Convert type to numeric value
+        $typeNumeric = $this->getTypeNumericValue();
+        
+        // Apply the formula: (size * type * 450 * multiplier) + (size * total_mm * multiplier)
+        $part1 = $size * $typeNumeric * 450 * $multiplier;
+        $part2 = $size * $totalMm * $multiplier;
+        
+        $this->value = $part1 + $part2;
+    }
+    
+    /**
+     * Convert type to numeric value for calculation
+     */
+    private function getTypeNumericValue()
+    {
+        // For neoprene belts with "FULL SLEEVE", treat as 1
+        if ($this->type === 'FULL SLEEVE') {
+            return 1;
+        }
+        
+        // For commercial belts, use the numeric type value
+        return (float) $this->type;
     }
 
     /**

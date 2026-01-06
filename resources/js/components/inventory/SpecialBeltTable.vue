@@ -120,21 +120,21 @@
               <tr v-for="p in visibleProducts" :key="p.id" class="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-section`">
-                    <input v-model="editValue" @blur="saveCell(p, 'section')" @keyup.enter="saveCell(p, 'section')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue"  @keyup.enter="saveCell(p, 'section')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
                   <div v-else @click="startEdit(p, 'section')" class="cursor-pointer">{{ p.section }}</div>
                 </td>
 
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-size`">
-                    <input v-model="editValue" @blur="saveCell(p, 'size')" @keyup.enter="saveCell(p, 'size')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue"  @keyup.enter="saveCell(p, 'size')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
                   <div v-else @click="startEdit(p, 'size')" class="cursor-pointer">{{ p.size }}</div>
                 </td>
 
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-type`">
-                    <select v-model="editValue" @blur="saveCell(p, 'type')" @keyup.enter="saveCell(p, 'type')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded">
+                    <select v-model="editValue" @keyup.enter="saveCell(p, 'type')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded">
                       <option value="Special">Special</option>
                       <option value="Banded Cogged">Banded Cogged</option>
                       <option value="Hybrid">Hybrid</option>
@@ -150,7 +150,7 @@
 
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p.id}-balance_stock`">
-                    <input v-model.number="editValue" type="number" min="0" @blur="saveCell(p, 'balance_stock')" @keyup.enter="saveCell(p, 'balance_stock')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
+                    <input v-model.number="editValue" type="number" min="0" @keyup.enter="saveCell(p, 'balance_stock')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
                   </div>
                   <div v-else @click="startEdit(p, 'balance_stock')" class="cursor-pointer">
                     <span :class="getStockClass(p)" class="font-medium">{{ p.balance_stock }}</span>
@@ -159,7 +159,7 @@
 
                 <td class="py-2 px-3 text-right">
                   <div v-if="editingCell === `${p.id}-rate`">
-                    <input v-model.number="editValue" type="number" step="0.01" @blur="saveCell(p, 'rate')" @keyup.enter="saveCell(p, 'rate')" @keyup.esc="cancelEdit" class="w-24 p-1 border rounded text-right" />
+                    <input v-model.number="editValue" type="number" step="0.01" @keyup.enter="saveCell(p, 'rate')" @keyup.esc="cancelEdit" class="w-24 p-1 border rounded text-right" />
                   </div>
                   <div v-else @click="startEdit(p, 'rate')" class="cursor-pointer">₹{{ Number(p.rate).toFixed(2) }}</div>
                 </td>
@@ -168,7 +168,7 @@
 
                 <td class="py-2 px-3">
                   <div v-if="editingCell === `${p.id}-remark`">
-                    <input v-model="editValue" @blur="saveCell(p, 'remark')" @keyup.enter="saveCell(p, 'remark')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue"  @keyup.enter="saveCell(p, 'remark')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
                   </div>
                   <div v-else @click="startEdit(p, 'remark')" class="cursor-pointer">{{ p.remark || '-' }}</div>
                 </td>
@@ -626,7 +626,7 @@ const saveCell = async (product: SpecialBelt, field: keyof SpecialBelt) => {
 
 const getStockClass = (p: SpecialBelt) => { 
   if (p.balance_stock <= 0) return 'text-red-600'
-  if (p.balance_stock <= p.reorder_level) return 'text-yellow-600'
+  if (p.reorder_level !== null && p.reorder_level >= 1 && p.balance_stock <= p.reorder_level) return 'text-yellow-600'
   return 'text-blue-600'
 }
 

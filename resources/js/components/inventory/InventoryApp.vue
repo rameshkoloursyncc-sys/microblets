@@ -9,45 +9,17 @@ import { Datepicker } from 'flowbite'
 import VeeBeltTable from './VeeBeltTable.vue'
 import CoggedBeltTable from './CoggedBeltTable.vue'
 import PolyBeltTable from './PolyBeltTable.vue'
-import ATable from './tables/veebelts/A_table.vue'
-import BTable from './tables/veebelts/B_table.vue'
-import CTable from './tables/veebelts/C_Table.vue'
-import DTable from './tables/veebelts/D_table.vue'
-import ETable from './tables/veebelts/E_table.vue'
-import SPATable from './tables/veebelts/SPA_table.vue'
-import SPBTable from './tables/veebelts/SPB_table.vue'
-import SPCTable from './tables/veebelts/SPC_table.¯vue'
-import SPZTable from './tables/veebelts/SPZ_table.vue'
-import V3VTable from './tables/veebelts/3V_table.vue'
-import V5VTable from './tables/veebelts/5V_table.vue'
-import V8VTable from './tables/veebelts/8V_table.vue'
-import T5MTable from './tables/tpubelts/T5M_table.vue'
-import T8MTable from './tables/tpubelts/T8M_table.vue'
-import T8MRPPTable from './tables/tpubelts/T8m_RPP_table.vue'
-import TS8MTable from './tables/tpubelts/TS8M_table.vue'
 import TpuBeltTable from './TpuBeltTable.vue'
 import TimingBeltTable from './TimingBeltTable.vue'
 import SpecialBeltTable from './SpecialBeltTable.vue'
-import T14MTable from './tables/tpubelts/T14M_table.vue'
-import TXLTable from './tables/tpubelts/XL_table.vue'
-import TLTable from './tables/tpubelts/L_table.vue'
-import THTable from './tables/tpubelts/H_table.vue'
-import AT5Table from './tables/tpubelts/AT5_table.vue'
-import AT10Table from './tables/tpubelts/AT10_table.vue'
-import T10Table from './tables/tpubelts/T10_table.vue'
-import AT20Table from './tables/tpubelts/AT20_table.vue'
-import DPKTable from './tables/polybelts/DPK_table.vue'
-import DPLTable from './tables/polybelts/DPL_table.vue'
-import PHTable from './tables/polybelts/PH_table.vue'
-import PJTable from './tables/polybelts/PJ_table.vue'
-import PKTable from './tables/polybelts/PK_table.vue'
-import PLTable from './tables/polybelts/PL_table.vue'
-import PMTable from './tables/polybelts/PM_table.vue'
-import FiveVXTable from './tables/veebelts/5VX_table.vue'
 import SettingsPage from './SettingsPage.vue'
 import LoginPage from '../auth/LoginPage.vue'
 import UserManagement from '../auth/UserManagement.vue'
 const currentView = ref('inventory')
+
+// Stock alert functionality
+const sendingAlert = ref(false)
+const alertMessage = ref<{type: 'success' | 'error', text: string} | null>(null)
 const sidebarCollapsed = ref(false)
 const globalSectionQuery = ref('')
 const globalSizeQuery = ref('')
@@ -229,6 +201,46 @@ const loadDashboardStats = async () => {
   }
 }
 
+// Send stock alert email
+const sendStockAlert = async () => {
+  sendingAlert.value = true
+  alertMessage.value = null
+  
+  try {
+    console.log('📧 Sending stock alert report...')
+    
+    const response = await axios.post('/api/dashboard/send-stock-alert', {
+      force: true // Send even if no alerts (for testing)
+    })
+    
+    if (response.data.success) {
+      alertMessage.value = {
+        type: 'success',
+        text: response.data.message
+      }
+      console.log('✅ Stock alert sent successfully:', response.data)
+    } else {
+      alertMessage.value = {
+        type: 'error', 
+        text: response.data.message || 'Failed to send stock alert'
+      }
+    }
+  } catch (error: any) {
+    console.error('❌ Error sending stock alert:', error)
+    alertMessage.value = {
+      type: 'error',
+      text: error.response?.data?.message || 'Failed to send stock alert'
+    }
+  } finally {
+    sendingAlert.value = false
+    
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      alertMessage.value = null
+    }, 5000)
+  }
+}
+
 // Computed style for main content margin
 const mainContentStyle = computed(() => {
   // Force margin with CSS for desktop
@@ -360,6 +372,7 @@ const navigationMapping: Record<string, { title: string; categories: string[] }>
   'raw-timing-belts-classic': { title: 'Raw Material - Classical Timing Belts (XL, L, H, XH, T5, T10)', categories: ['XL Section', 'L Section', 'H Section', 'XH Section', 'T5 Section', 'T10 Section'] },
   'raw-timing-belts-htd': { title: 'Raw Material - HTD Timing Belts (5M, 8M, 14M)', categories: ['5M Section', '8M Section', '14M Section'] },
   'raw-timing-belts-double-sided': { title: 'Raw Material - Double-Side Timing Belts (DL, DH, D5M, D8M)', categories: ['DL Section', 'DH Section', 'D5M Section', 'D8M Section'] },
+  'raw-timing-belts-neoprene': { title: 'Raw Material - Neoprene Timing Belts', categories: ['NEOPRENE-XL Section', 'NEOPRENE-L Section', 'NEOPRENE-H Section', 'NEOPRENE-XH Section', 'NEOPRENE-T5 Section', 'NEOPRENE-T10 Section'] },
   // Raw Material - TPU Belt Open
   'raw-tpu-belt-open': { title: 'Raw Material - TPU Belt Open (5M, 8M, 8M RPP, S8M, 14M, XL, L, H, AT5, AT10, T10, AT20)', categories: ['5M Section', '8M Section', '8M RPP Section', 'S8M Section', '14M Section', 'XL Section', 'L Section', 'H Section', 'AT5 Section', 'AT10 Section', 'T10 Section', 'AT20 Section'] },
   // Raw Material - Special Belts and Coated Belts - Main Subsections
@@ -485,6 +498,7 @@ const customViewMapping = computed(() => {
   'timing-belts-xh': { component: TimingBeltTable, props: { section: 'XH', title: 'XH Section Inventory' } },
   'timing-belts-t5': { component: TimingBeltTable, props: { section: 'T5', title: 'T5 Section Inventory' } },
   'timing-belts-t10': { component: TimingBeltTable, props: { section: 'T10', title: 'T10 Section Inventory' } },
+  'timing-belts-3m': { component: TimingBeltTable, props: { section: '3M', title: '3M Section Inventory' } },
   'timing-belts-5m': { component: TimingBeltTable, props: { section: '5M', title: '5M Section Inventory' } },
   'timing-belts-8m': { component: TimingBeltTable, props: { section: '8M', title: '8M Section Inventory' } },
   'timing-belts-14m': { component: TimingBeltTable, props: { section: '14M', title: '14M Section Inventory' } },
@@ -492,6 +506,20 @@ const customViewMapping = computed(() => {
   'timing-belts-dh': { component: TimingBeltTable, props: { section: 'DH', title: 'DH Section Inventory' } },
   'timing-belts-d5m': { component: TimingBeltTable, props: { section: 'D5M', title: 'D5M Section Inventory' } },
   'timing-belts-d8m': { component: TimingBeltTable, props: { section: 'D8M', title: 'D8M Section Inventory' } },
+  'timing-belts-neoprene-xl': { component: TimingBeltTable, props: { section: 'NEOPRENE-XL', title: 'Neoprene XL Section Inventory' } },
+  'timing-belts-neoprene-l': { component: TimingBeltTable, props: { section: 'NEOPRENE-L', title: 'Neoprene L Section Inventory' } },
+  'timing-belts-neoprene-h': { component: TimingBeltTable, props: { section: 'NEOPRENE-H', title: 'Neoprene H Section Inventory' } },
+  'timing-belts-neoprene-xh': { component: TimingBeltTable, props: { section: 'NEOPRENE-XH', title: 'Neoprene XH Section Inventory' } },
+  'timing-belts-neoprene-t5': { component: TimingBeltTable, props: { section: 'NEOPRENE-T5', title: 'Neoprene T5 Section Inventory' } },
+  'timing-belts-neoprene-t10': { component: TimingBeltTable, props: { section: 'NEOPRENE-T10', title: 'Neoprene T10 Section Inventory' } },
+  'timing-belts-neoprene-3m': { component: TimingBeltTable, props: { section: 'NEOPRENE-3M', title: 'Neoprene 3M Section Inventory' } },
+  'timing-belts-neoprene-5m': { component: TimingBeltTable, props: { section: 'NEOPRENE-5M', title: 'Neoprene 5M Section Inventory' } },
+  'timing-belts-neoprene-8m': { component: TimingBeltTable, props: { section: 'NEOPRENE-8M', title: 'Neoprene 8M Section Inventory' } },
+  'timing-belts-neoprene-14m': { component: TimingBeltTable, props: { section: 'NEOPRENE-14M', title: 'Neoprene 14M Section Inventory' } },
+  'timing-belts-neoprene-dl': { component: TimingBeltTable, props: { section: 'NEOPRENE-DL', title: 'Neoprene DL Section Inventory' } },
+  'timing-belts-neoprene-dh': { component: TimingBeltTable, props: { section: 'NEOPRENE-DH', title: 'Neoprene DH Section Inventory' } },
+  'timing-belts-neoprene-d5m': { component: TimingBeltTable, props: { section: 'NEOPRENE-D5M', title: 'Neoprene D5M Section Inventory' } },
+  'timing-belts-neoprene-d8m': { component: TimingBeltTable, props: { section: 'NEOPRENE-D8M', title: 'Neoprene D8M Section Inventory' } },
   
   // Special Belts - Using new backend-connected SpecialBeltTable
   'special-belts-search': { 
@@ -565,6 +593,8 @@ const handleSearch = (searchData: { type: string; sectionQuery?: string; sizeQue
   const polySections = ['PJ', 'PK', 'PL', 'PM', 'PH', 'DPL', 'DPK']
   // Check if it's a TPU belt section
   const tpuSections = ['5M', '8M', '8M RPP', 'S8M', '14M', 'XL', 'L', 'H', 'AT5', 'AT10', 'T10', 'AT20']
+  // Check if it's a timing belt section
+  const timingSections = ['XL', 'L', 'H', 'XH', 'T5', 'T10', '5M', '8M', '14M', 'DL', 'DH', 'D5M', 'D8M', 'NEOPRENE-XL', 'NEOPRENE-L', 'NEOPRENE-H', 'NEOPRENE-XH', 'NEOPRENE-T5', 'NEOPRENE-T10']
   
   // Simple logic: section determines the view, size is just a filter
   if (section) {
@@ -578,6 +608,8 @@ const handleSearch = (searchData: { type: string; sectionQuery?: string; sizeQue
         currentView.value = 'poly-belts-search'
       } else if (tpuSections.includes(section)) {
         currentView.value = 'tpu-belts-search'
+      } else if (timingSections.includes(section)) {
+        currentView.value = 'timing-belts-search'
       } else {
         currentView.value = 'inventory'
       }
@@ -639,6 +671,29 @@ const handleSearch = (searchData: { type: string; sectionQuery?: string; sizeQue
           'AT20': 'tpu-belts-at20m-page'
         }
         currentView.value = sectionPageMap[section] || 'tpu-belts-search'
+      } else if (timingSections.includes(section)) {
+        const sectionPageMap: Record<string, string> = {
+          'XL': 'timing-belts-xl',
+          'L': 'timing-belts-l',
+          'H': 'timing-belts-h',
+          'XH': 'timing-belts-xh',
+          'T5': 'timing-belts-t5',
+          'T10': 'timing-belts-t10',
+          '5M': 'timing-belts-5m',
+          '8M': 'timing-belts-8m',
+          '14M': 'timing-belts-14m',
+          'DL': 'timing-belts-dl',
+          'DH': 'timing-belts-dh',
+          'D5M': 'timing-belts-d5m',
+          'D8M': 'timing-belts-d8m',
+          'NEOPRENE-XL': 'timing-belts-neoprene-xl',
+          'NEOPRENE-L': 'timing-belts-neoprene-l',
+          'NEOPRENE-H': 'timing-belts-neoprene-h',
+          'NEOPRENE-XH': 'timing-belts-neoprene-xh',
+          'NEOPRENE-T5': 'timing-belts-neoprene-t5',
+          'NEOPRENE-T10': 'timing-belts-neoprene-t10'
+        }
+        currentView.value = sectionPageMap[section] || 'timing-belts-search'
       } else {
         currentView.value = 'inventory'
       }
@@ -915,6 +970,45 @@ onMounted(() => {
                     <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Special Belts</p>
                     <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(finishedGoodsStats.beltTypeValues.special || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stock Alert Section -->
+          <div class="mt-8">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Stock Alerts</h3>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">Send low stock and out of stock report via email</p>
+                </div>
+                <button 
+                  @click="sendStockAlert"
+                  :disabled="sendingAlert"
+                  class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                >
+                  <svg v-if="sendingAlert" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2v10a2 2 0 002 2z"></path>
+                  </svg>
+                  {{ sendingAlert ? 'Sending...' : 'Send Stock Alert' }}
+                </button>
+              </div>
+              
+              <!-- Alert Status -->
+              <div v-if="alertMessage" class="mt-4 p-3 rounded-lg" :class="alertMessage.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200' : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'">
+                <div class="flex items-center">
+                  <svg v-if="alertMessage.type === 'success'" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                  </svg>
+                  <svg v-else class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                  </svg>
+                  <span>{{ alertMessage.text }}</span>
                 </div>
               </div>
             </div>

@@ -35,13 +35,6 @@
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Global Inventory Settings
         </h2>
-        
-        <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <h3 class="font-medium text-blue-800 dark:text-blue-200 mb-2">Minimum Inventory Management:</h3>
-          <p class="text-sm text-blue-700 dark:text-blue-300">
-            Set minimum inventory levels for all belt types at once. This will update the reorder level for all products across all sections.
-          </p>
-        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Minimum Inventory Setting -->
@@ -69,36 +62,6 @@
             <p class="text-xs text-gray-500 mt-2">
               This will set the reorder level for all products in all belt types (Vee, Cogged, Poly, TPU, Timing, Special). You can set this to 0 to disable low stock warnings.
             </p>
-          </div>
-
-          <!-- Current Statistics -->
-          <div class="border rounded-lg p-4">
-            <h3 class="font-medium text-gray-900 dark:text-white mb-3">Current Inventory Status</h3>
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between">
-                <span class="text-gray-600 dark:text-gray-400">Total Products:</span>
-                <span class="font-medium">{{ globalStats.totalProducts }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600 dark:text-gray-400">Low Stock Items:</span>
-                <span class="font-medium text-yellow-600">{{ globalStats.lowStock }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600 dark:text-gray-400">Out of Stock:</span>
-                <span class="font-medium text-red-600">{{ globalStats.outOfStock }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600 dark:text-gray-400">Well Stocked:</span>
-                <span class="font-medium text-green-600">{{ globalStats.wellStocked }}</span>
-              </div>
-            </div>
-            <button 
-              @click="loadGlobalStats" 
-              class="mt-3 w-full px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
-              :disabled="loading"
-            >
-              Refresh Stats
-            </button>
           </div>
         </div>
 
@@ -139,21 +102,7 @@
           {{ beltTypeConfig[selectedBeltType].name }} Rate Formula Management
         </h2>
         
-        <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <h3 class="font-medium text-blue-800 dark:text-blue-200 mb-2">Formula Structure:</h3>
-          <div class="text-sm text-blue-700 dark:text-blue-300">
-            <div v-if="selectedBeltType === 'poly'">
-              <strong>Poly Belts:</strong> rate_per_rib = (ribs ÷ divisor) × multiplier<br>
-              <em>Example: PK section with 4 ribs, divisor 25.4, multiplier 0.59 → (4÷25.4)×0.59 = 0.093</em>
-            </div>
-            <div v-else>
-              <strong>{{ beltTypeConfig[selectedBeltType].name }}:</strong> rate = (size ÷ divisor) × multiplier<br>
-              <em>Examples:</em><br>
-              • <em>A section: size 1000, divisor 1, multiplier 1.05 → (1000÷1)×1.05 = 1050</em><br>
-              • <em>3V section: size 1000, divisor 10, multiplier 1.50 → (1000÷10)×1.50 = 150</em>
-            </div>
-          </div>
-        </div>
+       
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div v-for="section in currentSections" :key="section" class="border rounded-lg p-4">
@@ -163,6 +112,7 @@
             
             <div class="mb-2 text-xs text-gray-600 dark:text-gray-400">
               <span v-if="selectedBeltType === 'poly'">ribs ÷ divisor × multiplier</span>
+              <span v-else-if="selectedBeltType === 'timing'">(size × type × 450 × multiplier) + (size × total_mm × multiplier)</span>
               <span v-else>size ÷ divisor × multiplier</span>
             </div>
             
@@ -297,25 +247,6 @@
         </div>
       </div>
         
-      <!-- System Information -->
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">System Information</h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded">
-            <div class="text-2xl font-bold text-blue-600">{{ totalProducts }}</div>
-            <div class="text-sm text-gray-600 dark:text-gray-400">Total Products</div>
-          </div>
-          <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded">
-            <div class="text-2xl font-bold text-green-600">{{ totalValue.toFixed(2) }}</div>
-            <div class="text-sm text-gray-600 dark:text-gray-400">Total Value (₹)</div>
-          </div>
-          <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded">
-            <div class="text-2xl font-bold text-purple-600">{{ activeSections }}</div>
-            <div class="text-sm text-gray-600 dark:text-gray-400">Active Sections</div>
-          </div>
-        </div>
-      </div>
 
       <!-- Notifications -->
       <div class="fixed right-4 top-4 space-y-3 z-50">
@@ -444,20 +375,30 @@ const beltTypeConfig = {
   timing: {
     name: 'Timing Belts',
     apiEndpoint: '/api/timing-belts',
-    sections: ['XL', 'L', 'H', 'XH', 'T5', 'T10', '5M', '8M', '14M', 'DL', 'DH', 'D5M', 'D8M'],
-    formulaType: 'size_divide_multiply', // rate = (size ÷ divisor) × multiplier
+    sections: ['XL', 'L', 'H', 'XH', 'T5', 'T10', '3M', '5M', '8M', '14M', 'DL', 'DH', 'D5M', 'D8M', 'NEOPRENE-XL', 'NEOPRENE-L', 'NEOPRENE-H', 'NEOPRENE-XH', 'NEOPRENE-T5', 'NEOPRENE-T10', 'NEOPRENE-3M', 'NEOPRENE-5M', 'NEOPRENE-8M', 'NEOPRENE-14M', 'NEOPRENE-DL', 'NEOPRENE-DH', 'NEOPRENE-D5M', 'NEOPRENE-D8M'],
+    formulaType: 'timing_belt_formula', // Special formula: (size * type * 450 * multiplier) + (size * total_mm * multiplier)
     defaultFormulas: {
-      'XL': 2.80, 'L': 3.00, 'H': 3.20, 'XH': 3.50, 'T5': 2.00, 'T10': 4.00,
-      '5M': 2.50, '8M': 3.20, '14M': 5.50, 'DL': 3.50, 'DH': 3.80, 'D5M': 3.00, 'D8M': 3.80
+      'XL': 0.0094, 'L': 0.0045, 'H': 0.0094, 'XH': 0.0094, 'T5': 0.0094, 'T10': 0.0094,
+      '3M': 0.0094, '5M': 0.0094, '8M': 0.0094, '14M': 0.0094, 'DL': 0.0094, 'DH': 0.0094, 'D5M': 0.0094, 'D8M': 0.0094,
+      'NEOPRENE-XL': 0.0094, 'NEOPRENE-L': 0.0045, 'NEOPRENE-H': 0.0094, 'NEOPRENE-XH': 0.0094, 'NEOPRENE-T5': 0.0094, 'NEOPRENE-T10': 0.0094,
+      'NEOPRENE-3M': 0.0094, 'NEOPRENE-5M': 0.0094, 'NEOPRENE-8M': 0.0094, 'NEOPRENE-14M': 0.0094, 'NEOPRENE-DL': 0.0094, 'NEOPRENE-DH': 0.0094, 'NEOPRENE-D5M': 0.0094, 'NEOPRENE-D8M': 0.0094
     },
     defaultDivisors: {
       'XL': 1, 'L': 1, 'H': 1, 'XH': 1, 'T5': 1, 'T10': 1,
-      '5M': 1, '8M': 1, '14M': 1, 'DL': 1, 'DH': 1, 'D5M': 1, 'D8M': 1
+      '3M': 1, '5M': 1, '8M': 1, '14M': 1, 'DL': 1, 'DH': 1, 'D5M': 1, 'D8M': 1,
+      'NEOPRENE-XL': 1, 'NEOPRENE-L': 1, 'NEOPRENE-H': 1, 'NEOPRENE-XH': 1, 'NEOPRENE-T5': 1, 'NEOPRENE-T10': 1,
+      'NEOPRENE-3M': 1, 'NEOPRENE-5M': 1, 'NEOPRENE-8M': 1, 'NEOPRENE-14M': 1, 'NEOPRENE-DL': 1, 'NEOPRENE-DH': 1, 'NEOPRENE-D5M': 1, 'NEOPRENE-D8M': 1
     },
-    sectionsWithDivisor: ['XL', 'L', 'H', 'XH', 'T5', 'T10', '5M', '8M', '14M', 'DL', 'DH', 'D5M', 'D8M'],
+    sectionsWithDivisor: ['XL', 'L', 'H', 'XH', 'T5', 'T10', '3M', '5M', '8M', '14M', 'DL', 'DH', 'D5M', 'D8M', 'NEOPRENE-XL', 'NEOPRENE-L', 'NEOPRENE-H', 'NEOPRENE-XH', 'NEOPRENE-T5', 'NEOPRENE-T10', 'NEOPRENE-3M', 'NEOPRENE-5M', 'NEOPRENE-8M', 'NEOPRENE-14M', 'NEOPRENE-DL', 'NEOPRENE-DH', 'NEOPRENE-D5M', 'NEOPRENE-D8M'],
     jsonFiles: {
-      'XL': 'TimingXLProducts.json', 'L': 'TimingLProducts.json', 'H': 'TimingHProducts.json',
-      '5M': 'Timing5MProducts.json', '8M': 'Timing8MProducts.json', 'T10': 'TimingT10Products.json'
+      'XL': 'XLProducts.json', 'L': 'TimingLProducts.json', 'H': 'TimingHProducts.json', 'XH': 'TimingXHProducts.json',
+      'T5': 'TimingT5Products.json', 'T10': 'TimingT10Products.json',
+      '3M': 'Timing3MProducts.json', '5M': 'Timing5MProducts.json', '8M': 'Timing8MProducts.json', '14M': 'Timing14MProducts.json',
+      'DL': 'TimingDLProducts.json', 'DH': 'TimingDHProducts.json', 'D5M': 'TimingD5MProducts.json', 'D8M': 'TimingD8MProducts.json',
+      'NEOPRENE-XL': 'NeopreneXLProducts.json', 'NEOPRENE-L': 'NeopreneLProducts.json', 'NEOPRENE-H': 'NeopreneHProducts.json',
+      'NEOPRENE-XH': 'NeopreneXHProducts.json', 'NEOPRENE-T5': 'NeopreneT5Products.json', 'NEOPRENE-T10': 'NeopreneT10Products.json',
+      'NEOPRENE-3M': 'Neoprene3MProducts.json', 'NEOPRENE-5M': 'Neoprene5MProducts.json', 'NEOPRENE-8M': 'Neoprene8MProducts.json', 'NEOPRENE-14M': 'Neoprene14MProducts.json',
+      'NEOPRENE-DL': 'NeopreneDLProducts.json', 'NEOPRENE-DH': 'NeopreneDHProducts.json', 'NEOPRENE-D5M': 'NeopreneD5MProducts.json', 'NEOPRENE-D8M': 'NeopreneD8MProducts.json'
     }
   },
   special: {
@@ -530,6 +471,8 @@ const getCurrentFormulaText = (section: string) => {
   
   if (currentFormulaType.value === 'ribs_divide_multiply') {
     return `ribs÷${divisor}×${multiplier}`
+  } else if (currentFormulaType.value === 'timing_belt_formula') {
+    return `(size×type×450×${multiplier})+(size×total_mm×${multiplier})`
   } else {
     return `size÷${divisor}×${multiplier}`
   }

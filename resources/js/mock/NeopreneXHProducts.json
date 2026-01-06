@@ -1,0 +1,47 @@
+[
+  {
+    "section": "NEOPRENE-XH",
+    "size": "200",
+    "type": "FULL SLEEVE",
+    "total_mm": 1500.00,
+    "rate": 4.50,
+    "value": 0,
+    "remark": "Sample neoprene XH belt"
+  },
+  {
+    "section": "NEOPRENE-XH",
+    "size": "220",
+    "type": "FULL SLEEVE",
+    "total_mm": 1700.00,
+    "rate": 4.75,
+    "value": 0,
+    "remark": "Sample neoprene XH belt"
+  },
+  {
+    "section": "NEOPRENE-XH",
+    "size": "240",
+    "type": "FULL SLEEVE",
+    "total_mm": 1300.00,
+    "rate": 5.00,
+    "value": 0,
+    "remark": "Sample neoprene XH belt"
+  },
+  {
+    "section": "NEOPRENE-XH",
+    "size": "260",
+    "type": "FULL SLEEVE",
+    "total_mm": 1900.00,
+    "rate": 4.25,
+    "value": 0,
+    "remark": "Sample neoprene XH belt"
+  },
+  {
+    "section": "NEOPRENE-XH",
+    "size": "280",
+    "type": "FULL SLEEVE",
+    "total_mm": 1400.00,
+    "rate": 5.25,
+    "value": 0,
+    "remark": "Sample neoprene XH belt"
+  }
+]

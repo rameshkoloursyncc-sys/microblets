@@ -69,7 +69,7 @@ class DashboardController extends Controller
                 ->select([
                     DB::raw('COUNT(*) as total_products'),
                     DB::raw('SUM(CASE WHEN balance_stock > 0 THEN 1 ELSE 0 END) as in_stock'),
-                    DB::raw('SUM(CASE WHEN balance_stock > 0 AND balance_stock <= COALESCE(reorder_level, 5) THEN 1 ELSE 0 END) as low_stock'),
+                    DB::raw('SUM(CASE WHEN reorder_level IS NOT NULL AND reorder_level > 1 AND balance_stock > 0 AND balance_stock <= reorder_level THEN 1 ELSE 0 END) as low_stock'),
                     DB::raw('SUM(CASE WHEN balance_stock = 0 THEN 1 ELSE 0 END) as out_of_stock'),
                     DB::raw($hasValueColumn ? 'SUM(COALESCE(value, 0)) as total_value' : '0 as total_value')
                 ])
@@ -104,7 +104,7 @@ class DashboardController extends Controller
                 ->select([
                     DB::raw('COUNT(*) as total_products'),
                     DB::raw('SUM(CASE WHEN balance_stock > 0 THEN 1 ELSE 0 END) as in_stock'),
-                    DB::raw('SUM(CASE WHEN balance_stock > 0 AND balance_stock <= COALESCE(reorder_level, 5) THEN 1 ELSE 0 END) as low_stock'),
+                    DB::raw('SUM(CASE WHEN reorder_level IS NOT NULL AND reorder_level > 1 AND balance_stock > 0 AND balance_stock <= reorder_level THEN 1 ELSE 0 END) as low_stock'),
                     DB::raw('SUM(CASE WHEN balance_stock = 0 THEN 1 ELSE 0 END) as out_of_stock'),
                     DB::raw($hasValueColumn ? 'SUM(COALESCE(value, 0)) as total_value' : '0 as total_value')
                 ])
@@ -141,7 +141,7 @@ class DashboardController extends Controller
                 ->select([
                     DB::raw('COUNT(*) as total_products'),
                     DB::raw("SUM(CASE WHEN {$stockColumn} > 0 THEN 1 ELSE 0 END) as in_stock"),
-                    DB::raw("SUM(CASE WHEN {$stockColumn} > 0 AND {$stockColumn} <= COALESCE(reorder_level, 5) THEN 1 ELSE 0 END) as low_stock"),
+                    DB::raw("SUM(CASE WHEN reorder_level IS NOT NULL AND reorder_level > 1 AND {$stockColumn} > 0 AND {$stockColumn} <= reorder_level THEN 1 ELSE 0 END) as low_stock"),
                     DB::raw("SUM(CASE WHEN {$stockColumn} = 0 THEN 1 ELSE 0 END) as out_of_stock"),
                     DB::raw($hasValueColumn ? 'SUM(COALESCE(value, 0)) as total_value' : '0 as total_value')
                 ])
@@ -179,7 +179,7 @@ class DashboardController extends Controller
                 ->select([
                     DB::raw('COUNT(*) as total_products'),
                     DB::raw("SUM(CASE WHEN {$stockColumn} > 0 THEN 1 ELSE 0 END) as in_stock"),
-                    DB::raw("SUM(CASE WHEN {$stockColumn} > 0 AND {$stockColumn} <= COALESCE(reorder_level, 5) THEN 1 ELSE 0 END) as low_stock"),
+                    DB::raw("SUM(CASE WHEN reorder_level IS NOT NULL AND reorder_level > 1 AND {$stockColumn} > 0 AND {$stockColumn} <= reorder_level THEN 1 ELSE 0 END) as low_stock"),
                     DB::raw("SUM(CASE WHEN {$stockColumn} = 0 THEN 1 ELSE 0 END) as out_of_stock"),
                     DB::raw($hasValueColumn ? 'SUM(COALESCE(value, 0)) as total_value' : '0 as total_value')
                 ])
@@ -217,7 +217,7 @@ class DashboardController extends Controller
                 ->select([
                     DB::raw('COUNT(*) as total_products'),
                     DB::raw("SUM(CASE WHEN {$stockColumn} > 0 THEN 1 ELSE 0 END) as in_stock"),
-                    DB::raw("SUM(CASE WHEN {$stockColumn} > 0 AND {$stockColumn} <= COALESCE(reorder_level, 5) THEN 1 ELSE 0 END) as low_stock"),
+                    DB::raw("SUM(CASE WHEN reorder_level IS NOT NULL AND reorder_level > 1 AND {$stockColumn} > 0 AND {$stockColumn} <= reorder_level THEN 1 ELSE 0 END) as low_stock"),
                     DB::raw("SUM(CASE WHEN {$stockColumn} = 0 THEN 1 ELSE 0 END) as out_of_stock"),
                     DB::raw($hasValueColumn ? 'SUM(COALESCE(value, 0)) as total_value' : '0 as total_value')
                 ])
@@ -252,7 +252,7 @@ class DashboardController extends Controller
                 ->select([
                     DB::raw('COUNT(*) as total_products'),
                     DB::raw('SUM(CASE WHEN balance_stock > 0 THEN 1 ELSE 0 END) as in_stock'),
-                    DB::raw('SUM(CASE WHEN balance_stock > 0 AND balance_stock <= COALESCE(reorder_level, 5) THEN 1 ELSE 0 END) as low_stock'),
+                    DB::raw('SUM(CASE WHEN reorder_level IS NOT NULL AND reorder_level > 1 AND balance_stock > 0 AND balance_stock <= reorder_level THEN 1 ELSE 0 END) as low_stock'),
                     DB::raw('SUM(CASE WHEN balance_stock = 0 THEN 1 ELSE 0 END) as out_of_stock'),
                     DB::raw($hasValueColumn ? 'SUM(COALESCE(value, 0)) as total_value' : '0 as total_value')
                 ])
@@ -607,5 +607,253 @@ class DashboardController extends Controller
                 'message' => 'Error: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function getLowStockItems()
+    {
+        try {
+            $lowStockItems = [];
+            $outOfStockItems = [];
+
+            // Get low stock and out of stock items from all belt types
+            $beltTypes = [
+                'vee_belts' => ['stock_column' => 'balance_stock', 'size_column' => 'size', 'name' => 'Vee Belts'],
+                'cogged_belts' => ['stock_column' => 'balance_stock', 'size_column' => 'size', 'name' => 'Cogged Belts'],
+                'poly_belts' => ['stock_column' => 'ribs', 'size_column' => 'size', 'name' => 'Poly Belts'],
+                'tpu_belts' => ['stock_column' => 'meter', 'size_column' => 'width', 'name' => 'TPU Belts'],
+                'timing_belts' => ['stock_column' => 'total_mm', 'size_column' => 'size', 'name' => 'Timing Belts'],
+                'special_belts' => ['stock_column' => 'balance_stock', 'size_column' => 'size', 'name' => 'Special Belts']
+            ];
+
+            foreach ($beltTypes as $table => $config) {
+                // Check if table exists and has required columns
+                $columns = DB::getSchemaBuilder()->getColumnListing($table);
+                if (!in_array($config['stock_column'], $columns)) {
+                    $config['stock_column'] = 'balance_stock'; // fallback
+                }
+                if (!in_array($config['size_column'], $columns)) {
+                    $config['size_column'] = 'size'; // fallback
+                }
+
+                // Build select array based on available columns
+                $selectColumns = [
+                    'id',
+                    'section',
+                    $config['size_column'] . ' as size',
+                    $config['stock_column'] . ' as current_stock',
+                    'reorder_level'
+                ];
+
+                // Add optional columns if they exist
+                if (in_array('sku', $columns)) {
+                    $selectColumns[] = 'sku';
+                }
+                if (in_array('value', $columns)) {
+                    $selectColumns[] = 'value';
+                }
+
+                // Get LOW STOCK items (reorder_level >= 1 AND current_stock > 0 AND current_stock <= reorder_level)
+                $lowStockQuery = DB::table($table)
+                    ->select($selectColumns)
+                    ->whereNotNull('reorder_level')
+                    ->where('reorder_level', '>=', 1)
+                    ->whereRaw("{$config['stock_column']} > 0")
+                    ->whereRaw("{$config['stock_column']} <= reorder_level")
+                    ->orderBy('section')
+                    ->orderBy($config['size_column'])
+                    ->get();
+
+                // Get OUT OF STOCK items (reorder_level >= 1 AND current_stock = 0)
+                $outOfStockQuery = DB::table($table)
+                    ->select($selectColumns)
+                    ->whereNotNull('reorder_level')
+                    ->where('reorder_level', '>=', 1)
+                    ->whereRaw("{$config['stock_column']} = 0")
+                    ->orderBy('section')
+                    ->orderBy($config['size_column'])
+                    ->get();
+
+                if ($lowStockQuery->count() > 0) {
+                    $lowStockItems[$table] = [
+                        'name' => $config['name'],
+                        'items' => $lowStockQuery->toArray(),
+                        'count' => $lowStockQuery->count()
+                    ];
+                }
+
+                if ($outOfStockQuery->count() > 0) {
+                    $outOfStockItems[$table] = [
+                        'name' => $config['name'],
+                        'items' => $outOfStockQuery->toArray(),
+                        'count' => $outOfStockQuery->count()
+                    ];
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'low_stock_items' => $lowStockItems,
+                    'out_of_stock_items' => $outOfStockItems,
+                    'total_low_stock_count' => array_sum(array_column($lowStockItems, 'count')),
+                    'total_out_of_stock_count' => array_sum(array_column($outOfStockItems, 'count')),
+                    'total_alert_count' => array_sum(array_column($lowStockItems, 'count')) + array_sum(array_column($outOfStockItems, 'count')),
+                    'generated_at' => now()->toDateTimeString()
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching stock alert items: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function sendStockAlert(Request $request)
+    {
+        try {
+            // Get low stock data using the same logic as the command
+            $lowStockData = $this->getStockAlertData();
+            
+            // Get email addresses from request or config
+            $emails = $request->input('emails', config('mail.low_stock_recipients', ['admin@example.com']));
+            if (is_string($emails)) {
+                $emails = explode(',', $emails);
+            }
+            
+            $totalLowStock = $lowStockData['total_low_stock_count'] ?? 0;
+            $totalOutOfStock = $lowStockData['total_out_of_stock_count'] ?? 0;
+            $totalAlerts = $lowStockData['total_alert_count'] ?? 0;
+            
+            if ($totalAlerts > 0 || $request->input('force', false)) {
+                foreach ($emails as $email) {
+                    \Mail::to(trim($email))->send(new \App\Mail\LowStockReport($lowStockData));
+                }
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => "Stock alert report sent successfully to " . count($emails) . " recipient(s)",
+                    'data' => [
+                        'total_low_stock' => $totalLowStock,
+                        'total_out_of_stock' => $totalOutOfStock,
+                        'total_alerts' => $totalAlerts,
+                        'recipients' => $emails,
+                        'sent_at' => now()->toDateTimeString()
+                    ]
+                ]);
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No stock alerts found. Use force=true to send anyway.',
+                    'data' => [
+                        'total_low_stock' => $totalLowStock,
+                        'total_out_of_stock' => $totalOutOfStock,
+                        'total_alerts' => $totalAlerts
+                    ]
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error sending stock alert report: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function getStockAlertData()
+    {
+        $lowStockItems = [];
+        $outOfStockItems = [];
+
+        // Get low stock and out of stock items from all belt types
+        $beltTypes = [
+            'vee_belts' => ['stock_column' => 'balance_stock', 'size_column' => 'size', 'name' => 'Vee Belts'],
+            'cogged_belts' => ['stock_column' => 'balance_stock', 'size_column' => 'size', 'name' => 'Cogged Belts'],
+            'poly_belts' => ['stock_column' => 'ribs', 'size_column' => 'size', 'name' => 'Poly Belts'],
+            'tpu_belts' => ['stock_column' => 'meter', 'size_column' => 'width', 'name' => 'TPU Belts'],
+            'timing_belts' => ['stock_column' => 'total_mm', 'size_column' => 'size', 'name' => 'Timing Belts'],
+            'special_belts' => ['stock_column' => 'balance_stock', 'size_column' => 'size', 'name' => 'Special Belts']
+        ];
+
+        foreach ($beltTypes as $table => $config) {
+            try {
+                // Check if table exists and has required columns
+                $columns = DB::getSchemaBuilder()->getColumnListing($table);
+                if (!in_array($config['stock_column'], $columns)) {
+                    $config['stock_column'] = 'balance_stock'; // fallback
+                }
+                if (!in_array($config['size_column'], $columns)) {
+                    $config['size_column'] = 'size'; // fallback
+                }
+
+                // Build select array based on available columns
+                $selectColumns = [
+                    'id',
+                    'section',
+                    $config['size_column'] . ' as size',
+                    $config['stock_column'] . ' as current_stock',
+                    'reorder_level'
+                ];
+
+                // Add optional columns if they exist
+                if (in_array('sku', $columns)) {
+                    $selectColumns[] = 'sku';
+                }
+                if (in_array('value', $columns)) {
+                    $selectColumns[] = 'value';
+                }
+
+                // Get LOW STOCK items (reorder_level >= 1 AND current_stock > 0 AND current_stock <= reorder_level)
+                $lowStockQuery = DB::table($table)
+                    ->select($selectColumns)
+                    ->whereNotNull('reorder_level')
+                    ->where('reorder_level', '>=', 1)
+                    ->whereRaw("{$config['stock_column']} > 0")
+                    ->whereRaw("{$config['stock_column']} <= reorder_level")
+                    ->orderBy('section')
+                    ->orderBy($config['size_column'])
+                    ->get();
+
+                // Get OUT OF STOCK items (reorder_level >= 1 AND current_stock = 0)
+                $outOfStockQuery = DB::table($table)
+                    ->select($selectColumns)
+                    ->whereNotNull('reorder_level')
+                    ->where('reorder_level', '>=', 1)
+                    ->whereRaw("{$config['stock_column']} = 0")
+                    ->orderBy('section')
+                    ->orderBy($config['size_column'])
+                    ->get();
+
+                if ($lowStockQuery->count() > 0) {
+                    $lowStockItems[$table] = [
+                        'name' => $config['name'],
+                        'items' => $lowStockQuery->toArray(),
+                        'count' => $lowStockQuery->count()
+                    ];
+                }
+
+                if ($outOfStockQuery->count() > 0) {
+                    $outOfStockItems[$table] = [
+                        'name' => $config['name'],
+                        'items' => $outOfStockQuery->toArray(),
+                        'count' => $outOfStockQuery->count()
+                    ];
+                }
+            } catch (\Exception $e) {
+                // Log error but continue with other tables
+                \Log::warning("Error processing {$table} for stock alerts: " . $e->getMessage());
+            }
+        }
+
+        return [
+            'low_stock_items' => $lowStockItems,
+            'out_of_stock_items' => $outOfStockItems,
+            'total_low_stock_count' => array_sum(array_column($lowStockItems, 'count')),
+            'total_out_of_stock_count' => array_sum(array_column($outOfStockItems, 'count')),
+            'total_alert_count' => array_sum(array_column($lowStockItems, 'count')) + array_sum(array_column($outOfStockItems, 'count')),
+            'generated_at' => now()->toDateTimeString()
+        ];
     }
 }
