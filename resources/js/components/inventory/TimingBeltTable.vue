@@ -19,10 +19,10 @@
           <div class="text-sm text-gray-600 dark:text-gray-400">Total Products</div>
           <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ visibleProducts.length }}</div>
         </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+      <!--  <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
           <div class="text-sm text-gray-600 dark:text-gray-400">Total Stock</div>
           <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ Number(totalStock || 0).toFixed(2) }}</div>
-        </div>
+        </div> -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
           <div class="text-sm text-gray-600 dark:text-gray-400">Total Value</div>
           <div class="text-2xl font-bold text-green-600 dark:text-green-400">₹{{ Number(totalValue || 0).toFixed(2) }}</div>
@@ -46,17 +46,17 @@
 
 
           <!-- Quick Filter Buttons -->
-          <button 
+       <!--   <button 
             @click="toggleOutOfStockFilter" 
             :class="showOutOfStockOnly ? 'bg-red-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
             class="px-3 py-1.5 text-sm rounded hover:opacity-80 transition-colors"
           >
             {{ showOutOfStockOnly ? '✓ Out of Stock' : 'Out of Stock' }}
-          </button>
+          </button> -->
           
           <!-- JSON Import/Export Buttons -->
           <div class="ml-auto flex items-center gap-2">
-           <!-- <button @click="showImportModal = true" class="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700">
+            <button @click="showImportModal = true" class="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700">
               Imporrt JSON
             </button>
             <button @click="showExcelImportModal = true" class="px-3 py-1.5 text-sm bg-orange-600 text-white rounded hover:bg-orange-700">
@@ -64,7 +64,7 @@
             </button>
             <button @click="downloadJSON" class="px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700">
               Download JSON
-            </button> -->
+            </button> 
             <button @click="showCreateModal = true" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
               Create Product
             </button>
@@ -102,9 +102,9 @@
         <tr>
          <th class="py-3 px-3">Section</th>
                 <th class="py-3 px-3">Size</th>
-                <th class="py-3 px-3">{{ props.section?.startsWith('NEOPRENE') ? 'FULL SLEEVE' : 'TYPE 1 (FULL SLEEVE)' }}</th>
-                <th class="py-3 px-3 text-center">Total MM</th>
-                <th class="py-3 px-3 text-right">Value</th>
+                <th class="py-3 px-3">{{ props.section?.startsWith('NEOPRENE') ? 'FULL SLEEVE' : 'FULL SLEEVE' }}</th>
+                <th class="py-3 px-3 text-center">MM Sleeve</th>
+                <th class="py-3 px-3 text-right">Total Value</th>
                 <th class="py-3 px-3">Remark</th>
                 <th class="py-3 px-3 text-center">IN/OUT</th>
                 <th class="py-3 px-3 text-center">Actions</th>
@@ -135,7 +135,7 @@
                   </div>
                 </td>
 
-                <!-- Total MM -->
+                <!-- MM Sleeve -->
                 <td class="py-2 px-3 text-center">
                   <div v-if="editingCell === `${p?.id}-total_mm`">
                     <input v-model.number="editValue" type="number" step="0.01" min="0"  @keyup.enter="saveCell(p, 'total_mm')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
@@ -157,12 +157,26 @@
 
                 <td class="py-2 px-3 text-center">
                   <div class="flex items-center justify-center gap-1">
-                    <button @click="showInOutModal(p, 'IN')" class="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700">
-                      IN
-                    </button>
-                    <button @click="showInOutModal(p, 'OUT')" class="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">
-                      OUT
-                    </button>
+                    <!-- Total MM Operations -->
+                    <div class="flex flex-col gap-1">
+                      <div class="flex gap-1">
+                        <button @click="showInOutModal(p, 'IN', 'total_mm')" class="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700">
+                          IN
+                        </button>
+                        <button @click="showInOutModal(p, 'OUT', 'total_mm')" class="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700">
+                          OUT
+                        </button>
+                      </div>
+                      <!-- Full Sleeve Operations -->
+                      <div class="flex gap-1">
+                        <button @click="showInOutModal(p, 'IN', 'type')" class="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">
+                          IN
+                        </button>
+                        <button @click="showInOutModal(p, 'OUT', 'type')" class="px-2 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700">
+                          OUT
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </td>
 
@@ -204,16 +218,12 @@
               <input v-model="createForm.size" class="w-full p-2 border rounded" placeholder="e.g., 150, 200" />
             </label>
 
-            <label>{{ props.section?.startsWith('NEOPRENE') ? 'Full Sleeve' : 'Type (Numerical value)' }}
-              <input v-model="createForm.type" class="w-full p-2 border rounded" :placeholder="props.section?.startsWith('NEOPRENE') ? 'e.g., FULL SLEEVE' : 'e.g., 18, 21, 10, 24'" />
+            <label>{{ props.section?.startsWith('NEOPRENE') ? 'Full Sleeve' : 'Full Sleeve' }}
+              <input v-model="createForm.type" class="w-full p-2 border rounded" :placeholder="props.section?.startsWith('NEOPRENE') ? 'e.g., 18' : 'e.g., 18, 21, 10, 24'" />
             </label>
             
-            <label>Total MM (Total inventory)
+            <label> MM Sleeve
               <input v-model.number="createForm.total_mm" type="number" step="0.01" class="w-full p-2 border rounded" min="0" placeholder="Total inventory in mm" />
-            </label>
-            
-            <label>Rate (per mm)
-              <input v-model.number="createForm.rate" type="number" step="0.01" class="w-full p-2 border rounded" placeholder="Rate per mm" />
             </label>
 
             <label>Remark
@@ -239,20 +249,41 @@
           <div v-if="selectedProduct" class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded">
             <div class="font-medium">{{ selectedProduct?.section || 'Unknown' }} - {{ selectedProduct?.size || 'Unknown' }}</div>
             <div class="text-sm text-gray-600 dark:text-gray-400">
-              Current Stock: {{ selectedProduct?.total_mm || 0 }}mm
+              <div v-if="inOutForm.unit_type === 'total_mm'">
+                Current Total MM: {{ selectedProduct?.total_mm || 0 }}mm
+              </div>
+              <div v-else>
+                Current Type (Full Sleeve): {{ selectedProduct?.type || 0 }}
+              </div>
             </div>
           </div>
 
           <div class="space-y-3">
             <div>
-              <label class="block text-sm font-medium mb-1">Quantity</label>
+              <label class="block text-sm font-medium mb-1">Unit Type</label>
+              <div class="flex gap-2">
+                <label class="flex items-center">
+                  <input v-model="inOutForm.unit_type" type="radio" value="total_mm" class="mr-2" />
+                   MM Sleeve
+                </label>
+                <label class="flex items-center">
+                  <input v-model="inOutForm.unit_type" type="radio" value="type" class="mr-2" />
+                  Full Sleeve
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">
+                Quantity ({{ inOutForm.unit_type === 'total_mm' ? 'mm' : 'full sleeves' }})
+              </label>
               <input 
                 v-model.number="inOutForm.quantity" 
                 type="number" 
-                step="0.01"
+                :step="inOutForm.unit_type === 'total_mm' ? '0.01' : '1'"
                 min="0.01"
                 class="w-full p-2 border rounded" 
-                placeholder="Enter quantity"
+                :placeholder="`Enter quantity in ${inOutForm.unit_type === 'total_mm' ? 'mm' : 'full sleeves'}`"
               />
             </div>
 
@@ -272,7 +303,7 @@
               :class="inOutAction === 'IN' ? 'bg-green-600' : 'bg-red-600'"
               :disabled="loading || !inOutForm.quantity"
             >
-              {{ inOutAction }}
+              {{ inOutAction }} {{ inOutForm.unit_type === 'total_mm' ? 'MM' : 'Full Sleeve' }}
             </button>
           </div>
         </div>
@@ -459,7 +490,7 @@
         <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded">
           <h4 class="font-medium text-blue-800 dark:text-blue-200 mb-2">Expected Excel Format:</h4>
           <div v-if="excelImportForm.beltType === 'commercial'" class="text-sm text-blue-700 dark:text-blue-300">
-            <p><strong>Commercial:</strong> XL | TYPE- 1 (FULL SLEVE) | MM | TOTAL(MM) | RATE PER SLV | TOTAL MM RATE | FINAL VALUE</p>
+            <p><strong>Commercial:</strong> XL | FULL SLEVE | MM | TOTAL(MM) | RATE PER SLV | TOTAL MM RATE | FINAL VALUE</p>
             <p class="mt-1">Section will be detected from header (XL, L, 5M, T5, T10, AT5, AT10)</p>
             <p class="mt-1 text-xs">Example: 100 | 18 | 390,420,430... | 4690 | 417 | 4346 | 11852</p>
           </div>
@@ -596,7 +627,9 @@ const createForm = ref({
   size: '', 
   type: props.section?.startsWith('NEOPRENE') ? 'FULL SLEEVE' : '',
   total_mm: 0,
+  full_sleeve: 0,
   rate: 0,
+  rate_per_sleeve: 0,
   remark: ''
 })
 
@@ -605,6 +638,7 @@ const showInOutModalFlag = ref(false)
 const selectedProduct = ref<TimingBelt | null>(null)
 const inOutAction = ref<'IN' | 'OUT'>('IN')
 const inOutForm = ref({
+  unit_type: 'total_mm' as 'total_mm' | 'type',
   quantity: 0,
   remark: ''
 })
@@ -702,9 +736,17 @@ const saveCell = async (product: TimingBelt | null | undefined, field: keyof Tim
 const getStockClass = (p: TimingBelt | null | undefined) => { 
   if (!p) return 'text-gray-400'
   const currentStock = p.total_mm || 0
+  if (currentStock <= 0) return 'text-black-600'
+  if (currentStock <= (p.reorder_level || 5)) return 'text-yellow-600'
+  return 'text-black-600'
+}
+
+const getSleeveStockClass = (p: TimingBelt | null | undefined) => { 
+  if (!p) return 'text-gray-400'
+  const currentStock = p.full_sleeve || 0
   if (currentStock <= 0) return 'text-red-600'
   if (currentStock <= (p.reorder_level || 5)) return 'text-yellow-600'
-  return 'text-blue-600'
+  return 'text-green-600'
 }
 
 const createProduct = async () => {
@@ -717,7 +759,9 @@ const createProduct = async () => {
       size: '', 
       type: props.section?.startsWith('NEOPRENE') ? 'FULL SLEEVE' : '',
       total_mm: 0,
+      full_sleeve: 0,
       rate: 0,
+      rate_per_sleeve: 0,
       remark: ''
     }
   } catch (err: any) {
@@ -737,11 +781,12 @@ const onDelete = async (id: number | undefined) => {
   }
 }
 
-const showInOutModal = (product: TimingBelt | null | undefined, action: 'IN' | 'OUT') => {
+const showInOutModal = (product: TimingBelt | null | undefined, action: 'IN' | 'OUT', unitType: 'total_mm' | 'type' = 'total_mm') => {
   if (!product) return
   selectedProduct.value = product
   inOutAction.value = action
   inOutForm.value = {
+    unit_type: unitType,
     quantity: 0,
     remark: ''
   }
@@ -760,12 +805,14 @@ const performInOut = async () => {
     const result = await inOutOperation({
       ids: [selectedProduct.value.id],
       action: inOutAction.value,
+      unit_type: inOutForm.value.unit_type,
       quantity: inOutForm.value.quantity,
       remark: inOutForm.value.remark
     })
     
+    const operationUnit = inOutForm.value.unit_type === 'total_mm' ? 'mm' : 'full sleeves'
     showNotification('success', `${inOutAction.value} Complete`, 
-      `${inOutAction.value} ${inOutForm.value.quantity} units for ${selectedProduct.value?.section}-${selectedProduct.value?.size}`)
+      `${inOutAction.value} ${inOutForm.value.quantity} ${operationUnit} for ${selectedProduct.value?.section}-${selectedProduct.value?.size}`)
     
     showInOutModalFlag.value = false
     

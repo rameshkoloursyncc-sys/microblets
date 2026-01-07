@@ -111,7 +111,7 @@
             </label>
             
             <div class="mb-2 text-xs text-gray-600 dark:text-gray-400">
-              <span v-if="selectedBeltType === 'poly'">ribs ÷ divisor × multiplier</span>
+              <span v-if="selectedBeltType === 'poly'">size ÷ divisor × multiplier</span>
               <span v-else-if="selectedBeltType === 'timing'">(size × type × 450 × multiplier) + (size × total_mm × multiplier)</span>
               <span v-else>size ÷ divisor × multiplier</span>
             </div>
@@ -119,7 +119,7 @@
             <!-- Divisor input (for all sections) -->
             <div class="mb-2">
               <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                {{ selectedBeltType === 'poly' ? 'Divisor (ribs):' : 'Divisor (size):' }}
+                {{ selectedBeltType === 'poly' ? 'Divisor (size):' : 'Divisor (size):' }}
               </label>
               <input 
                 v-model.number="divisors[section]" 
@@ -128,6 +128,21 @@
                 min="0.1"
                 class="w-full p-2 border rounded bg-white dark:bg-gray-700 dark:text-white text-sm"
                 :placeholder="currentDefaultDivisors[section] || (selectedBeltType === 'poly' ? '25.4' : '1')"
+              />
+            </div>
+            
+            <!-- Type Multiplier input (for timing belts only) -->
+            <div v-if="selectedBeltType === 'timing'" class="mb-2">
+              <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                Type Multiplier (replaces 450):
+              </label>
+              <input 
+                v-model.number="typeMultipliers[section]" 
+                type="number" 
+                step="1" 
+                min="1"
+                class="w-full p-2 border rounded bg-white dark:bg-gray-700 dark:text-white text-sm"
+                :placeholder="currentDefaultTypeMultipliers[section] || '450'"
               />
             </div>
             
@@ -187,7 +202,7 @@
       </div>
 
       <!-- Data Seeding -->
-      <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+     <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           {{ beltTypeConfig[selectedBeltType].name }} Data Seeding
         </h2>
@@ -257,6 +272,7 @@
         </div>
       </div>
     </div>
+ 
   </div>
 </template>
 
@@ -338,7 +354,7 @@ const beltTypeConfig = {
     name: 'Poly Belts',
     apiEndpoint: '/api/poly-belts',
     sections: ['PJ', 'PK', 'PL', 'PM', 'PH', 'DPL', 'DPK'],
-    formulaType: 'ribs_divide_multiply', // rate_per_rib = ribs ÷ divisor × multiplier
+    formulaType: 'ribs_divide_multiply', // rate_per_rib = size ÷ divisor × multiplier
     defaultFormulas: {
       'PJ': 0.36, 'PK': 0.59, 'PL': 0.85, 'PM': 1.25, 'PH': 1.85,
       'DPL': 1.15, 'DPK': 0.89
@@ -376,18 +392,24 @@ const beltTypeConfig = {
     name: 'Timing Belts',
     apiEndpoint: '/api/timing-belts',
     sections: ['XL', 'L', 'H', 'XH', 'T5', 'T10', '3M', '5M', '8M', '14M', 'DL', 'DH', 'D5M', 'D8M', 'NEOPRENE-XL', 'NEOPRENE-L', 'NEOPRENE-H', 'NEOPRENE-XH', 'NEOPRENE-T5', 'NEOPRENE-T10', 'NEOPRENE-3M', 'NEOPRENE-5M', 'NEOPRENE-8M', 'NEOPRENE-14M', 'NEOPRENE-DL', 'NEOPRENE-DH', 'NEOPRENE-D5M', 'NEOPRENE-D8M'],
-    formulaType: 'timing_belt_formula', // Special formula: (size * type * 450 * multiplier) + (size * total_mm * multiplier)
+    formulaType: 'timing_belt_formula', // Special formula: (size * type * type_multiplier * multiplier) + (size * total_mm * multiplier)
     defaultFormulas: {
-      'XL': 0.0094, 'L': 0.0045, 'H': 0.0094, 'XH': 0.0094, 'T5': 0.0094, 'T10': 0.0094,
-      '3M': 0.0094, '5M': 0.0094, '8M': 0.0094, '14M': 0.0094, 'DL': 0.0094, 'DH': 0.0094, 'D5M': 0.0094, 'D8M': 0.0094,
-      'NEOPRENE-XL': 0.0094, 'NEOPRENE-L': 0.0045, 'NEOPRENE-H': 0.0094, 'NEOPRENE-XH': 0.0094, 'NEOPRENE-T5': 0.0094, 'NEOPRENE-T10': 0.0094,
-      'NEOPRENE-3M': 0.0094, 'NEOPRENE-5M': 0.0094, 'NEOPRENE-8M': 0.0094, 'NEOPRENE-14M': 0.0094, 'NEOPRENE-DL': 0.0094, 'NEOPRENE-DH': 0.0094, 'NEOPRENE-D5M': 0.0094, 'NEOPRENE-D8M': 0.0094
+      'XL': 0.0094, 'L': 0.0119, 'H': 0.0117, 'XH': 0.0231, 'T5': 0.0049, 'T10': 0.0053,
+      '3M': 0.0054, '5M': 0.0062, '8M': 0.0068, '14M': 0.0114, 'DL': 0.0269, 'DH': 0.0263, 'D5M': 0.0139, 'D8M': 0.0153,
+      'NEOPRENE-XL': 0.0105, 'NEOPRENE-L': 0.0134, 'NEOPRENE-H': 0.0131, 'NEOPRENE-XH': 0.0259, 'NEOPRENE-T5': 0.0055, 'NEOPRENE-T10': 0.0059,
+      'NEOPRENE-3M': 0.006, 'NEOPRENE-5M': 0.0062, 'NEOPRENE-8M': 0.0076, 'NEOPRENE-14M': 0.0128, 'NEOPRENE-DL': 0.0301, 'NEOPRENE-DH': 0.0294, 'NEOPRENE-D5M': 0.0155, 'NEOPRENE-D8M': 0.0171
     },
     defaultDivisors: {
       'XL': 1, 'L': 1, 'H': 1, 'XH': 1, 'T5': 1, 'T10': 1,
       '3M': 1, '5M': 1, '8M': 1, '14M': 1, 'DL': 1, 'DH': 1, 'D5M': 1, 'D8M': 1,
       'NEOPRENE-XL': 1, 'NEOPRENE-L': 1, 'NEOPRENE-H': 1, 'NEOPRENE-XH': 1, 'NEOPRENE-T5': 1, 'NEOPRENE-T10': 1,
       'NEOPRENE-3M': 1, 'NEOPRENE-5M': 1, 'NEOPRENE-8M': 1, 'NEOPRENE-14M': 1, 'NEOPRENE-DL': 1, 'NEOPRENE-DH': 1, 'NEOPRENE-D5M': 1, 'NEOPRENE-D8M': 1
+    },
+    defaultTypeMultipliers: {
+      'XL': 450, 'L': 450, 'H': 450, 'XH': 430, 'T5': 450, 'T10': 450,
+      '3M': 450, '5M': 450, '8M': 450, '14M': 430, 'DL': 200, 'DH': 200, 'D5M': 200, 'D8M': 200,
+      'NEOPRENE-XL': 450, 'NEOPRENE-L': 450, 'NEOPRENE-H': 450, 'NEOPRENE-XH': 430, 'NEOPRENE-T5': 450, 'NEOPRENE-T10': 450,
+      'NEOPRENE-3M': 450, 'NEOPRENE-5M': 450, 'NEOPRENE-8M': 450, 'NEOPRENE-14M': 430, 'NEOPRENE-DL': 200, 'NEOPRENE-DH': 200, 'NEOPRENE-D5M': 200, 'NEOPRENE-D8M': 200
     },
     sectionsWithDivisor: ['XL', 'L', 'H', 'XH', 'T5', 'T10', '3M', '5M', '8M', '14M', 'DL', 'DH', 'D5M', 'D8M', 'NEOPRENE-XL', 'NEOPRENE-L', 'NEOPRENE-H', 'NEOPRENE-XH', 'NEOPRENE-T5', 'NEOPRENE-T10', 'NEOPRENE-3M', 'NEOPRENE-5M', 'NEOPRENE-8M', 'NEOPRENE-14M', 'NEOPRENE-DL', 'NEOPRENE-DH', 'NEOPRENE-D5M', 'NEOPRENE-D8M'],
     jsonFiles: {
@@ -425,6 +447,7 @@ const beltTypeConfig = {
 // Current formulas (editable)
 const formulas = ref<Record<string, number>>({})
 const divisors = ref<Record<string, number>>({})
+const typeMultipliers = ref<Record<string, number>>({})
 
 // Global inventory settings
 const globalMinInventory = ref<number>(0)
@@ -446,6 +469,7 @@ const totalValue = ref(0)
 const currentSections = computed(() => beltTypeConfig[selectedBeltType.value].sections)
 const currentDefaultFormulas = computed(() => beltTypeConfig[selectedBeltType.value].defaultFormulas)
 const currentDefaultDivisors = computed(() => beltTypeConfig[selectedBeltType.value].defaultDivisors)
+const currentDefaultTypeMultipliers = computed(() => beltTypeConfig[selectedBeltType.value].defaultTypeMultipliers || {})
 const currentSectionsWithDivisor = computed(() => beltTypeConfig[selectedBeltType.value].sectionsWithDivisor)
 const currentJsonFiles = computed(() => beltTypeConfig[selectedBeltType.value].jsonFiles)
 const currentApiEndpoint = computed(() => beltTypeConfig[selectedBeltType.value].apiEndpoint)
@@ -470,9 +494,10 @@ const getCurrentFormulaText = (section: string) => {
   const divisor = divisors.value[section] || currentDefaultDivisors.value[section] || (selectedBeltType.value === 'poly' ? 25.4 : 1)
   
   if (currentFormulaType.value === 'ribs_divide_multiply') {
-    return `ribs÷${divisor}×${multiplier}`
+    return `size÷${divisor}×${multiplier}`
   } else if (currentFormulaType.value === 'timing_belt_formula') {
-    return `(size×type×450×${multiplier})+(size×total_mm×${multiplier})`
+    const typeMultiplier = typeMultipliers.value[section] || currentDefaultTypeMultipliers.value[section] || 450
+    return `(size×type×${typeMultiplier}×${multiplier})+(size×total_mm×${multiplier})`
   } else {
     return `size÷${divisor}×${multiplier}`
   }
@@ -483,6 +508,7 @@ const onBeltTypeChange = () => {
   // Reset formulas and divisors to defaults for new belt type
   formulas.value = { ...currentDefaultFormulas.value }
   divisors.value = { ...currentDefaultDivisors.value }
+  typeMultipliers.value = { ...currentDefaultTypeMultipliers.value }
   // Load statistics for new belt type
   loadStatistics()
 }
@@ -546,6 +572,12 @@ const updateSectionFormula = async (section: string) => {
     return
   }
   
+  // Validate type multiplier for timing belts
+  if (selectedBeltType.value === 'timing' && (!typeMultipliers.value[section] || typeMultipliers.value[section] <= 0)) {
+    showNotification('error', 'Invalid Type Multiplier', 'Type multiplier must be greater than 0')
+    return
+  }
+  
   loading.value = true
   try {
     let formulaString = ''
@@ -553,6 +585,10 @@ const updateSectionFormula = async (section: string) => {
     
     if (currentFormulaType.value === 'ribs_divide_multiply') {
       formulaString = `ribs/${divisor}*${formulas.value[section]}`
+    } else if (currentFormulaType.value === 'timing_belt_formula') {
+      // For timing belts, include the type multiplier in the formula
+      const typeMultiplier = typeMultipliers.value[section] || currentDefaultTypeMultipliers.value[section] || 450
+      formulaString = `size*type*${typeMultiplier}*${formulas.value[section]}+size*total_mm*${formulas.value[section]}`
     } else {
       formulaString = `size/${divisor}*${formulas.value[section]}`
     }
@@ -887,6 +923,7 @@ onMounted(() => {
   // Initialize with default formulas and divisors for TPU belts
   formulas.value = { ...currentDefaultFormulas.value }
   divisors.value = { ...currentDefaultDivisors.value }
+  typeMultipliers.value = { ...currentDefaultTypeMultipliers.value }
   loadStatistics()
   loadGlobalStats()
 })

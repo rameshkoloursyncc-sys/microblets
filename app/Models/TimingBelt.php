@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class TimingBelt extends Model
 {
@@ -17,6 +18,10 @@ class TimingBelt extends Model
         'total_mm',
         'in_mm',
         'out_mm',
+        'full_sleeve',
+        'in_sleeve',
+        'out_sleeve',
+        'rate_per_sleeve',
         'reorder_level',
         'rate',
         'value',
@@ -30,6 +35,10 @@ class TimingBelt extends Model
         'total_mm' => 'decimal:2',
         'in_mm' => 'decimal:2',
         'out_mm' => 'decimal:2',
+        'full_sleeve' => 'integer',
+        'in_sleeve' => 'integer',
+        'out_sleeve' => 'integer',
+        'rate_per_sleeve' => 'decimal:2',
         'rate' => 'decimal:2',
         'value' => 'decimal:2',
     ];
@@ -54,36 +63,76 @@ class TimingBelt extends Model
     }
 
     /**
-     * Calculate total value based on the timing belt formula:
-     * value = (size * type_numeric_value * 450 * multiplier) + (size * total_mm * multiplier)
+     * Calculate total value and rate based on the STRICT timing belt formula:
+     * value = (size × type × type_multiplier × multiplier) + (size × total_mm × multiplier)
+     * rate = value / total_mm (rate per mm)
      */
     public function calculateValue()
     {
         // Get the multiplier for this section from rate_formulas
-        $formula = \DB::table('rate_formulas')
+        $formula = DB::table('rate_formulas')
             ->where('category', 'timing_belts')
             ->where('section', $this->section)
             ->where('is_active', 1)
             ->first();
         
         if (!$formula) {
-            // Fallback to old calculation if no formula found
-            $this->value = $this->total_mm * $this->rate;
+            // Fallback: set rate and value to 0 if no formula found
+            $this->rate = 0;
+            $this->value = 0;
             return;
         }
         
-        $multiplier = (float) $formula->formula;
+        // Parse the formula string to extract the multiplier and type multiplier
+        $formulaString = $formula->formula;
+        $multiplier = 0;
+        $typeMultiplier = 450; // Default value
+        
+        // Handle different formula formats
+        if (is_numeric($formulaString)) {
+            // Simple numeric multiplier (e.g., "0.0094")
+            $multiplier = (float) $formulaString;
+        } elseif (preg_match('/size\*type\*(\d+(?:\.\d+)?)\*(\d+(?:\.\d+)?)\+size\*total_mm\*(\d+(?:\.\d+)?)/', $formulaString, $matches)) {
+            // New format: "size*type*450*0.0094+size*total_mm*0.0094"
+            $typeMultiplier = (float) $matches[1];
+            $multiplier = (float) $matches[2];
+        } elseif (preg_match('/size\/(\d+(?:\.\d+)?)\*(\d+(?:\.\d+)?)/', $formulaString, $matches)) {
+            // Old format: "size/1*0.0094"
+            $divisor = (float) $matches[1];
+            $multiplier = (float) $matches[2];
+        } else {
+            // Try to extract just the multiplier from the end
+            if (preg_match('/(\d+(?:\.\d+)?)$/', $formulaString, $matches)) {
+                $multiplier = (float) $matches[1];
+            }
+        }
+        
+        if ($multiplier <= 0) {
+            // Set rate and value to 0 if multiplier is invalid
+            $this->rate = 0;
+            $this->value = 0;
+            return;
+        }
+        
         $size = (float) $this->size;
         $totalMm = (float) $this->total_mm;
         
         // Convert type to numeric value
         $typeNumeric = $this->getTypeNumericValue();
         
-        // Apply the formula: (size * type * 450 * multiplier) + (size * total_mm * multiplier)
-        $part1 = $size * $typeNumeric * 450 * $multiplier;
+        // STRICT FORMULA: (size × type × type_multiplier × multiplier) + (size × total_mm × multiplier)
+        $part1 = $size * $typeNumeric * $typeMultiplier * $multiplier;
         $part2 = $size * $totalMm * $multiplier;
         
         $this->value = $part1 + $part2;
+        
+        // Calculate rate per mm (avoid division by zero)
+        if ($totalMm > 0) {
+            $this->rate = $this->value / $totalMm;
+        } else {
+            // If no total_mm, rate is just the first part divided by 1mm
+            $this->rate = $part1;
+        }
     }
     
     /**

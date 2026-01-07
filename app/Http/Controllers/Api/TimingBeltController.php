@@ -194,12 +194,13 @@ class TimingBeltController extends Controller
                     'type' => $item['type'] ?? '0', // Default to '0' if not provided
                     'total_mm' => $item['total_mm'] ?? 0,
                     'rate' => $item['rate'] ?? 0,
-                    'value' => $item['value'] ?? 0,
+                    // Note: Removed 'value' to allow model auto-calculation
                     'reorder_level' => $item['reorder_level'] ?? null,
                     'remark' => $item['remark'] ?? null,
                     'created_by' => session('user')['id'] ?? null,
                 ];
 
+                // Create using model to trigger auto-calculation
                 TimingBelt::create($createData);
                 $imported++;
             }
@@ -221,7 +222,7 @@ class TimingBeltController extends Controller
     }
 
     /**
-     * Perform IN/OUT operations for timing belts
+     * Perform IN/OUT operations for timing belts (supports both total_mm and full_sleeve operations)
      */
     public function inOutOperation(Request $request)
     {
@@ -234,6 +235,7 @@ class TimingBeltController extends Controller
             'ids' => 'required|array',
             'ids.*' => 'exists:timing_belts,id',
             'action' => 'required|in:IN,OUT',
+            'unit_type' => 'required|in:total_mm,type', // Changed from full_sleeve to type
             'quantity' => 'required|numeric|min:0.01',
             'remark' => 'nullable|string'
         ]);
@@ -255,18 +257,56 @@ class TimingBeltController extends Controller
             foreach ($request->ids as $id) {
                 $timingBelt = TimingBelt::findOrFail($id);
                 
-                $oldStock = $timingBelt->total_mm;
+                $unitType = $request->unit_type;
                 $change = $request->quantity;
                 
-                if ($request->action === 'IN') {
-                    $timingBelt->total_mm += $change;
-                    $timingBelt->in_mm += $change;
-                } else { // OUT
-                    if ($timingBelt->total_mm < $change) {
-                        throw new \Exception("Insufficient stock for {$timingBelt->section}-{$timingBelt->size}. Available: {$timingBelt->total_mm}mm, Requested: {$change}mm");
+                if ($unitType === 'total_mm') {
+                    // Total MM operations
+                    $oldStock = $timingBelt->total_mm;
+                    
+                    if ($request->action === 'IN') {
+                        $timingBelt->total_mm += $change;
+                        $timingBelt->in_mm += $change;
+                    } else { // OUT
+                        if ($timingBelt->total_mm < $change) {
+                            throw new \Exception("Insufficient Total MM stock for {$timingBelt->section}-{$timingBelt->size}. Available: {$timingBelt->total_mm}mm, Requested: {$change}mm");
+                        }
+                        $timingBelt->total_mm -= $change;
+                        $timingBelt->out_mm += $change;
                     }
-                    $timingBelt->total_mm -= $change;
-                    $timingBelt->out_mm += $change;
+                    
+                    $results[] = [
+                        'id' => $timingBelt->id,
+                        'section' => $timingBelt->section,
+                        'size' => $timingBelt->size,
+                        'unit_type' => 'total_mm',
+                        'old_stock' => $oldStock,
+                        'new_stock' => $timingBelt->total_mm,
+                        'change' => $change,
+                    ];
+                    
+                } else { // type operations (Full Sleeve)
+                    // Type operations - treating type as quantity of full sleeves
+                    $oldTypeStock = (float) $timingBelt->type;
+                    
+                    if ($request->action === 'IN') {
+                        $timingBelt->type = $oldTypeStock + $change;
+                    } else { // OUT
+                        if ($oldTypeStock < $change) {
+                            throw new \Exception("Insufficient Type stock for {$timingBelt->section}-{$timingBelt->size}. Available: {$oldTypeStock}, Requested: {$change}");
+                        }
+                        $timingBelt->type = $oldTypeStock - $change;
+                    }
+                    
+                    $results[] = [
+                        'id' => $timingBelt->id,
+                        'section' => $timingBelt->section,
+                        'size' => $timingBelt->size,
+                        'unit_type' => 'type',
+                        'old_stock' => $oldTypeStock,
+                        'new_stock' => (float) $timingBelt->type,
+                        'change' => $change,
+                    ];
                 }
                 
                 $timingBelt->save();
@@ -277,21 +317,12 @@ class TimingBeltController extends Controller
                     'product_id' => $timingBelt->id,
                     'type' => $request->action,
                     'quantity' => $request->quantity,
-                    'stock_before' => $oldStock,
-                    'stock_after' => $timingBelt->total_mm,
-                    'rate' => $timingBelt->rate ?? 0,
-                    'description' => "{$request->action} {$change}mm",
+                    'stock_before' => $unitType === 'total_mm' ? ($oldStock ?? 0) : ($oldTypeStock ?? 0),
+                    'stock_after' => $unitType === 'total_mm' ? $timingBelt->total_mm : (float) $timingBelt->type,
+                    'rate' => $unitType === 'total_mm' ? ($timingBelt->rate ?? 0) : ($timingBelt->rate_per_sleeve ?? 0),
+                    'description' => "{$request->action} {$change}" . ($unitType === 'total_mm' ? 'mm' : ' full sleeves') . " ({$unitType})",
                     'user_id' => session('user')['id'] ?? null,
                 ]);
-
-                $results[] = [
-                    'id' => $timingBelt->id,
-                    'section' => $timingBelt->section,
-                    'size' => $timingBelt->size,
-                    'old_stock' => $oldStock,
-                    'new_stock' => $timingBelt->total_mm,
-                    'change' => $request->quantity,
-                ];
             }
 
             DB::commit();
@@ -446,17 +477,20 @@ class TimingBeltController extends Controller
                     continue;
                 }
                 
-                TimingBelt::create([
+                // Create timing belt without explicit value to allow auto-calculation
+                $timingBelt = TimingBelt::create([
                     'section' => $section,
                     'size' => $size,
                     'type' => $type,
                     'total_mm' => $item['total_mm'] ?? 0,
                     'rate' => $item['rate'] ?? 0,
-                    'value' => $item['value'] ?? 0,
+                    // Note: Removed 'value' to allow model auto-calculation
                     'reorder_level' => $item['reorder_level'] ?? null,
                     'remark' => $item['remark'] ?? null,
                     'created_by' => session('user')['id'] ?? null,
                 ]);
+                
+                // The value will be automatically calculated by the model's boot method
                 $imported++;
             }
 
@@ -519,6 +553,76 @@ class TimingBeltController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to clear all data',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Recalculate rates for all timing belts based on current formulas
+     */
+    public function recalculateAllRates()
+    {
+        try {
+            DB::beginTransaction();
+
+            $timingBelts = TimingBelt::all();
+            $updated = 0;
+
+            foreach ($timingBelts as $timingBelt) {
+                $timingBelt->calculateValue();
+                $timingBelt->save();
+                $updated++;
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => "Recalculated rates for {$updated} timing belt products",
+                'updated_count' => $updated
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to recalculate rates',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Recalculate rates for specific section
+     */
+    public function recalculateSectionRates(Request $request)
+    {
+        $request->validate([
+            'section' => 'required|string'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $timingBelts = TimingBelt::where('section', $request->section)->get();
+            $updated = 0;
+
+            foreach ($timingBelts as $timingBelt) {
+                $timingBelt->calculateValue();
+                $timingBelt->save();
+                $updated++;
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => "Recalculated rates for {$updated} products in {$request->section} section",
+                'updated_count' => $updated
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to recalculate section rates',
                 'error' => $e->getMessage()
             ], 500);
         }

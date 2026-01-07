@@ -29,6 +29,8 @@ Route::prefix('timing-belts')->group(function () {
     
     // Settings page endpoints
     Route::post('/update-section-rate', [TimingBeltController::class, 'updateSectionRate']);
+    Route::post('/recalculate-all-rates', [TimingBeltController::class, 'recalculateAllRates']);
+    Route::post('/recalculate-section-rates', [TimingBeltController::class, 'recalculateSectionRates']);
     Route::post('/seed-section', [TimingBeltController::class, 'seedSection']);
     Route::delete('/clear-section/{section}', [TimingBeltController::class, 'clearSection']);
     Route::delete('/clear-all', [TimingBeltController::class, 'clearAll']);

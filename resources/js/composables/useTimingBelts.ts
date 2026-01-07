@@ -10,6 +10,10 @@ export interface TimingBelt {
   total_mm?: number
   in_mm?: number
   out_mm?: number
+  full_sleeve?: number
+  in_sleeve?: number
+  out_sleeve?: number
+  rate_per_sleeve?: number
   rate?: number
   value?: number
   reorder_level: number
@@ -38,6 +42,7 @@ export interface Transaction {
 export interface InOutRequest {
   ids: number[]
   action: 'IN' | 'OUT'
+  unit_type?: 'total_mm' | 'type'
   quantity: number
   remark?: string
 }

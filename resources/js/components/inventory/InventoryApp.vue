@@ -545,14 +545,6 @@ const customViewMapping = computed(() => {
   
   // User management page (admin only)
   'user-management': { component: UserManagement, props: {} },
-  
-    'poly-belts-pj-page': PJTable,
-    'poly-belts-pk-page': PKTable,
-    'poly-belts-pl-page': PLTable,
-    'poly-belts-pm-page': PMTable,
-    'poly-belts-ph-page': PHTable,
-    'poly-belts-dpl-page': DPLTable,
-    'poly-belts-dpk-page': DPKTable,
   }
 });
 const handleNavigation = (view: string) => {
@@ -760,7 +752,7 @@ onMounted(() => {
     <!-- Belt Section Navigation -->
     <!-- ✅ Custom full pages FIRST -->
 <div
-  v-else-if="customViewMapping[currentView]"
+  v-else-if="customViewMapping && customViewMapping[currentView]"
 >
   <component 
     :is="customViewMapping[currentView].component || customViewMapping[currentView]" 
@@ -771,7 +763,7 @@ onMounted(() => {
 </div>
 
 <!-- ✅ Normal inventory table pages -->
-<div v-else-if="navigationMapping[currentView]">
+<div v-else-if="navigationMapping && navigationMapping[currentView]">
   <FlowbiteTable
     :title="navigationMapping[currentView].title"
     :initialCategories="navigationMapping[currentView].categories"
