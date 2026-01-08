@@ -1,6 +1,6 @@
 [
   {
-    "id": 2212,
+    "id": 5932,
     "section": "D8M",
     "size": "400",
     "type": "0",
@@ -13,11 +13,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2213,
+    "id": 5933,
     "section": "D8M",
     "size": "424",
     "type": "0",
@@ -30,11 +30,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2214,
+    "id": 5934,
     "section": "D8M",
     "size": "472",
     "type": "0",
@@ -47,11 +47,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2215,
+    "id": 5935,
     "section": "D8M",
     "size": "480",
     "type": "0",
@@ -64,11 +64,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2216,
+    "id": 5936,
     "section": "D8M",
     "size": "496",
     "type": "0",
@@ -81,11 +81,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2217,
+    "id": 5937,
     "section": "D8M",
     "size": "512",
     "type": "0",
@@ -98,11 +98,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2218,
+    "id": 5938,
     "section": "D8M",
     "size": "520",
     "type": "0",
@@ -115,11 +115,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2219,
+    "id": 5939,
     "section": "D8M",
     "size": "528",
     "type": "0",
@@ -132,11 +132,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2220,
+    "id": 5940,
     "section": "D8M",
     "size": "560",
     "type": "0",
@@ -149,11 +149,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2221,
+    "id": 5941,
     "section": "D8M",
     "size": "576",
     "type": "0",
@@ -166,11 +166,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2222,
+    "id": 5942,
     "section": "D8M",
     "size": "584",
     "type": "0",
@@ -183,11 +183,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2223,
+    "id": 5943,
     "section": "D8M",
     "size": "600",
     "type": "0",
@@ -200,11 +200,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2224,
+    "id": 5944,
     "section": "D8M",
     "size": "608",
     "type": "0",
@@ -217,11 +217,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2225,
+    "id": 5945,
     "section": "D8M",
     "size": "624",
     "type": "0",
@@ -234,11 +234,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2226,
+    "id": 5946,
     "section": "D8M",
     "size": "640",
     "type": "0",
@@ -251,11 +251,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2227,
+    "id": 5947,
     "section": "D8M",
     "size": "656",
     "type": "0",
@@ -268,11 +268,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2228,
+    "id": 5948,
     "section": "D8M",
     "size": "672",
     "type": "0",
@@ -285,11 +285,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2229,
+    "id": 5949,
     "section": "D8M",
     "size": "680",
     "type": "0",
@@ -302,11 +302,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2230,
+    "id": 5950,
     "section": "D8M",
     "size": "696",
     "type": "0",
@@ -319,11 +319,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2231,
+    "id": 5951,
     "section": "D8M",
     "size": "712",
     "type": "0",
@@ -336,11 +336,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2232,
+    "id": 5952,
     "section": "D8M",
     "size": "720",
     "type": "0",
@@ -353,11 +353,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2233,
+    "id": 5953,
     "section": "D8M",
     "size": "736",
     "type": "0",
@@ -370,28 +370,28 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2234,
+    "id": 5954,
     "section": "D8M",
     "size": "760",
     "type": "0",
-    "total_mm": "0.00",
+    "total_mm": "160.00",
     "in_mm": "0.00",
     "out_mm": "0.00",
-    "rate": "0.00",
-    "value": "0.00",
+    "rate": "11.63",
+    "value": "1860.48",
     "reorder_level": null,
-    "remark": null,
+    "remark": "160",
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2235,
+    "id": 5955,
     "section": "D8M",
     "size": "768",
     "type": "0",
@@ -404,11 +404,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2236,
+    "id": 5956,
     "section": "D8M",
     "size": "776",
     "type": "0",
@@ -421,11 +421,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2237,
+    "id": 5957,
     "section": "D8M",
     "size": "784",
     "type": "0",
@@ -438,11 +438,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2238,
+    "id": 5958,
     "section": "D8M",
     "size": "800",
     "type": "0",
@@ -455,11 +455,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2239,
+    "id": 5959,
     "section": "D8M",
     "size": "808",
     "type": "0",
@@ -472,11 +472,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2240,
+    "id": 5960,
     "section": "D8M",
     "size": "824",
     "type": "0",
@@ -489,11 +489,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2241,
+    "id": 5961,
     "section": "D8M",
     "size": "832",
     "type": "0",
@@ -506,11 +506,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2242,
+    "id": 5962,
     "section": "D8M",
     "size": "840",
     "type": "0",
@@ -523,11 +523,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2243,
+    "id": 5963,
     "section": "D8M",
     "size": "848",
     "type": "0",
@@ -540,28 +540,28 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2244,
+    "id": 5964,
     "section": "D8M",
     "size": "856",
-    "type": "0",
+    "type": "2",
     "total_mm": "0.00",
     "in_mm": "0.00",
     "out_mm": "0.00",
-    "rate": "0.00",
-    "value": "0.00",
+    "rate": "5238.72",
+    "value": "5238.72",
     "reorder_level": null,
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2245,
+    "id": 5965,
     "section": "D8M",
     "size": "864",
     "type": "0",
@@ -574,28 +574,28 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2246,
+    "id": 5966,
     "section": "D8M",
     "size": "880",
-    "type": "0",
+    "type": "4",
     "total_mm": "0.00",
     "in_mm": "0.00",
     "out_mm": "0.00",
-    "rate": "0.00",
-    "value": "0.00",
+    "rate": "10771.20",
+    "value": "10771.20",
     "reorder_level": null,
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2247,
+    "id": 5967,
     "section": "D8M",
     "size": "888",
     "type": "0",
@@ -608,11 +608,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2248,
+    "id": 5968,
     "section": "D8M",
     "size": "896",
     "type": "0",
@@ -625,11 +625,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2249,
+    "id": 5969,
     "section": "D8M",
     "size": "912",
     "type": "0",
@@ -642,11 +642,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2250,
+    "id": 5970,
     "section": "D8M",
     "size": "920",
     "type": "0",
@@ -659,11 +659,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2251,
+    "id": 5971,
     "section": "D8M",
     "size": "928",
     "type": "0",
@@ -676,11 +676,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2252,
+    "id": 5972,
     "section": "D8M",
     "size": "936",
     "type": "0",
@@ -693,11 +693,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2253,
+    "id": 5973,
     "section": "D8M",
     "size": "960",
     "type": "0",
@@ -710,11 +710,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2254,
+    "id": 5974,
     "section": "D8M",
     "size": "968",
     "type": "0",
@@ -727,11 +727,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2255,
+    "id": 5975,
     "section": "D8M",
     "size": "984",
     "type": "0",
@@ -744,11 +744,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2256,
+    "id": 5976,
     "section": "D8M",
     "size": "1000",
     "type": "0",
@@ -761,11 +761,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2257,
+    "id": 5977,
     "section": "D8M",
     "size": "1024",
     "type": "0",
@@ -778,28 +778,28 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2258,
+    "id": 5978,
     "section": "D8M",
     "size": "1032",
-    "type": "0",
+    "type": "2",
     "total_mm": "0.00",
     "in_mm": "0.00",
     "out_mm": "0.00",
-    "rate": "0.00",
-    "value": "0.00",
+    "rate": "6315.84",
+    "value": "6315.84",
     "reorder_level": null,
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2259,
+    "id": 5979,
     "section": "D8M",
     "size": "1040",
     "type": "0",
@@ -812,11 +812,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2260,
+    "id": 5980,
     "section": "D8M",
     "size": "1056",
     "type": "0",
@@ -829,11 +829,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2261,
+    "id": 5981,
     "section": "D8M",
     "size": "1072",
     "type": "0",
@@ -846,11 +846,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2262,
+    "id": 5982,
     "section": "D8M",
     "size": "1080",
     "type": "0",
@@ -863,28 +863,28 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2263,
+    "id": 5983,
     "section": "D8M",
     "size": "1096",
-    "type": "0",
+    "type": "1",
     "total_mm": "0.00",
     "in_mm": "0.00",
     "out_mm": "0.00",
-    "rate": "0.00",
-    "value": "0.00",
+    "rate": "3353.76",
+    "value": "3353.76",
     "reorder_level": null,
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2264,
+    "id": 5984,
     "section": "D8M",
     "size": "1120",
     "type": "0",
@@ -897,11 +897,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2265,
+    "id": 5985,
     "section": "D8M",
     "size": "1128",
     "type": "0",
@@ -914,11 +914,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2266,
+    "id": 5986,
     "section": "D8M",
     "size": "1136",
     "type": "0",
@@ -931,11 +931,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2267,
+    "id": 5987,
     "section": "D8M",
     "size": "1144",
     "type": "0",
@@ -948,11 +948,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2268,
+    "id": 5988,
     "section": "D8M",
     "size": "1152",
     "type": "0",
@@ -965,11 +965,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2269,
+    "id": 5989,
     "section": "D8M",
     "size": "1160",
     "type": "0",
@@ -982,11 +982,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2270,
+    "id": 5990,
     "section": "D8M",
     "size": "1200",
     "type": "0",
@@ -999,11 +999,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2271,
+    "id": 5991,
     "section": "D8M",
     "size": "1224",
     "type": "0",
@@ -1016,11 +1016,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2272,
+    "id": 5992,
     "section": "D8M",
     "size": "1240",
     "type": "0",
@@ -1033,11 +1033,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2273,
+    "id": 5993,
     "section": "D8M",
     "size": "1280",
     "type": "0",
@@ -1050,11 +1050,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2274,
+    "id": 5994,
     "section": "D8M",
     "size": "1304",
     "type": "0",
@@ -1067,11 +1067,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2275,
+    "id": 5995,
     "section": "D8M",
     "size": "1320",
     "type": "0",
@@ -1084,11 +1084,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2276,
+    "id": 5996,
     "section": "D8M",
     "size": "1360",
     "type": "0",
@@ -1101,11 +1101,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2277,
+    "id": 5997,
     "section": "D8M",
     "size": "1400",
     "type": "0",
@@ -1118,11 +1118,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2278,
+    "id": 5998,
     "section": "D8M",
     "size": "1424",
     "type": "0",
@@ -1135,11 +1135,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2279,
+    "id": 5999,
     "section": "D8M",
     "size": "1440",
     "type": "0",
@@ -1152,11 +1152,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2280,
+    "id": 6000,
     "section": "D8M",
     "size": "1520",
     "type": "0",
@@ -1169,11 +1169,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2281,
+    "id": 6001,
     "section": "D8M",
     "size": "1552",
     "type": "0",
@@ -1186,11 +1186,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2282,
+    "id": 6002,
     "section": "D8M",
     "size": "1600",
     "type": "0",
@@ -1203,11 +1203,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2283,
+    "id": 6003,
     "section": "D8M",
     "size": "1680",
     "type": "0",
@@ -1220,11 +1220,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2284,
+    "id": 6004,
     "section": "D8M",
     "size": "1760",
     "type": "0",
@@ -1237,11 +1237,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2285,
+    "id": 6005,
     "section": "D8M",
     "size": "1784",
     "type": "0",
@@ -1254,11 +1254,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2286,
+    "id": 6006,
     "section": "D8M",
     "size": "1800",
     "type": "0",
@@ -1271,11 +1271,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2287,
+    "id": 6007,
     "section": "D8M",
     "size": "1856",
     "type": "0",
@@ -1288,11 +1288,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2288,
+    "id": 6008,
     "section": "D8M",
     "size": "1896",
     "type": "0",
@@ -1305,11 +1305,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2289,
+    "id": 6009,
     "section": "D8M",
     "size": "1904",
     "type": "0",
@@ -1322,11 +1322,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2290,
+    "id": 6010,
     "section": "D8M",
     "size": "2000",
     "type": "0",
@@ -1339,11 +1339,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2291,
+    "id": 6011,
     "section": "D8M",
     "size": "2048",
     "type": "0",
@@ -1356,11 +1356,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2292,
+    "id": 6012,
     "section": "D8M",
     "size": "2080",
     "type": "0",
@@ -1373,11 +1373,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2293,
+    "id": 6013,
     "section": "D8M",
     "size": "2240",
     "type": "0",
@@ -1390,11 +1390,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2294,
+    "id": 6014,
     "section": "D8M",
     "size": "2248",
     "type": "0",
@@ -1407,28 +1407,28 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2295,
+    "id": 6015,
     "section": "D8M",
     "size": "2272",
     "type": "0",
-    "total_mm": "0.00",
+    "total_mm": "50.00",
     "in_mm": "0.00",
     "out_mm": "0.00",
-    "rate": "0.00",
-    "value": "0.00",
+    "rate": "34.76",
+    "value": "1738.08",
     "reorder_level": null,
-    "remark": null,
+    "remark": "50",
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2296,
+    "id": 6016,
     "section": "D8M",
     "size": "2400",
     "type": "0",
@@ -1441,11 +1441,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2297,
+    "id": 6017,
     "section": "D8M",
     "size": "2600",
     "type": "0",
@@ -1458,11 +1458,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2298,
+    "id": 6018,
     "section": "D8M",
     "size": "2800",
     "type": "0",
@@ -1475,11 +1475,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2299,
+    "id": 6019,
     "section": "D8M",
     "size": "3200",
     "type": "0",
@@ -1492,11 +1492,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2300,
+    "id": 6020,
     "section": "D8M",
     "size": "3280",
     "type": "0",
@@ -1509,11 +1509,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   },
   {
-    "id": 2301,
+    "id": 6021,
     "section": "D8M",
     "size": "3600",
     "type": "0",
@@ -1526,7 +1526,7 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-06T05:27:44.000000Z",
-    "updated_at": "2026-01-06T05:27:44.000000Z"
+    "created_at": "2026-01-07T09:25:54.000000Z",
+    "updated_at": "2026-01-07T09:25:54.000000Z"
   }
 ]

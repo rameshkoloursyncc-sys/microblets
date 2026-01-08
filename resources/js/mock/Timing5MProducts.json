@@ -1,6 +1,6 @@
 [
   {
-    "id": 4283,
+    "id": 4591,
     "section": "5M",
     "size": "265",
     "type": "0",
@@ -13,11 +13,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4284,
+    "id": 4592,
     "section": "5M",
     "size": "300",
     "type": "0",
@@ -30,11 +30,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4285,
+    "id": 4593,
     "section": "5M",
     "size": "310",
     "type": "0",
@@ -47,11 +47,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4286,
+    "id": 4594,
     "section": "5M",
     "size": "325",
     "type": "0",
@@ -64,11 +64,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4287,
+    "id": 4595,
     "section": "5M",
     "size": "330",
     "type": "0",
@@ -81,11 +81,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4288,
+    "id": 4596,
     "section": "5M",
     "size": "340",
     "type": "0",
@@ -98,11 +98,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4289,
+    "id": 4597,
     "section": "5M",
     "size": "345",
     "type": "0",
@@ -115,28 +115,28 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4290,
+    "id": 4598,
     "section": "5M",
     "size": "350",
-    "type": "3",
+    "type": "2",
     "total_mm": "0.00",
     "in_mm": "0.00",
     "out_mm": "0.00",
-    "rate": "2929.50",
-    "value": "2929.50",
+    "rate": "1953.00",
+    "value": "1953.00",
     "reorder_level": null,
     "remark": null,
     "created_by": null,
-    "updated_by": 3,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:53:49.000000Z"
+    "updated_by": null,
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4291,
+    "id": 4599,
     "section": "5M",
     "size": "360",
     "type": "0",
@@ -149,11 +149,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4292,
+    "id": 4600,
     "section": "5M",
     "size": "370",
     "type": "0",
@@ -166,11 +166,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4293,
+    "id": 4601,
     "section": "5M",
     "size": "375",
     "type": "0",
@@ -183,11 +183,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4294,
+    "id": 4602,
     "section": "5M",
     "size": "390",
     "type": "0",
@@ -200,11 +200,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4295,
+    "id": 4603,
     "section": "5M",
     "size": "395",
     "type": "0",
@@ -217,11 +217,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4296,
+    "id": 4604,
     "section": "5M",
     "size": "400",
     "type": "0",
@@ -234,11 +234,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4297,
+    "id": 4605,
     "section": "5M",
     "size": "420",
     "type": "2",
@@ -251,11 +251,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4298,
+    "id": 4606,
     "section": "5M",
     "size": "425",
     "type": "0",
@@ -268,11 +268,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4299,
+    "id": 4607,
     "section": "5M",
     "size": "440",
     "type": "0",
@@ -285,11 +285,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4300,
+    "id": 4608,
     "section": "5M",
     "size": "450",
     "type": "0",
@@ -302,11 +302,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4301,
+    "id": 4609,
     "section": "5M",
     "size": "460",
     "type": "0",
@@ -319,11 +319,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4302,
+    "id": 4610,
     "section": "5M",
     "size": "475",
     "type": "1",
@@ -336,11 +336,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4303,
+    "id": 4611,
     "section": "5M",
     "size": "480",
     "type": "1",
@@ -353,11 +353,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4304,
+    "id": 4612,
     "section": "5M",
     "size": "490",
     "type": "0",
@@ -370,11 +370,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:39.000000Z",
-    "updated_at": "2026-01-07T07:49:39.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4305,
+    "id": 4613,
     "section": "5M",
     "size": "500",
     "type": "1",
@@ -386,29 +386,29 @@
     "reorder_level": null,
     "remark": null,
     "created_by": null,
-    "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "updated_by": 3,
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:27:24.000000Z"
   },
   {
-    "id": 4306,
+    "id": 4614,
     "section": "5M",
     "size": "505",
-    "type": "1",
+    "type": "0",
     "total_mm": "380.00",
     "in_mm": "0.00",
     "out_mm": "0.00",
-    "rate": "6.84",
-    "value": "2598.73",
+    "rate": "3.13",
+    "value": "1189.78",
     "reorder_level": null,
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4307,
+    "id": 4615,
     "section": "5M",
     "size": "520",
     "type": "0",
@@ -421,11 +421,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4308,
+    "id": 4616,
     "section": "5M",
     "size": "525",
     "type": "0",
@@ -438,11 +438,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4309,
+    "id": 4617,
     "section": "5M",
     "size": "535",
     "type": "0",
@@ -455,11 +455,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4310,
+    "id": 4618,
     "section": "5M",
     "size": "540",
     "type": "0",
@@ -472,11 +472,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4311,
+    "id": 4619,
     "section": "5M",
     "size": "550",
     "type": "0",
@@ -489,11 +489,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4312,
+    "id": 4620,
     "section": "5M",
     "size": "560",
     "type": "0",
@@ -506,11 +506,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4313,
+    "id": 4621,
     "section": "5M",
     "size": "565",
     "type": "0",
@@ -523,11 +523,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4314,
+    "id": 4622,
     "section": "5M",
     "size": "575",
     "type": "0",
@@ -540,11 +540,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4315,
+    "id": 4623,
     "section": "5M",
     "size": "580",
     "type": "0",
@@ -557,11 +557,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4316,
+    "id": 4624,
     "section": "5M",
     "size": "590",
     "type": "0",
@@ -574,11 +574,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4317,
+    "id": 4625,
     "section": "5M",
     "size": "600",
     "type": "0",
@@ -591,11 +591,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4318,
+    "id": 4626,
     "section": "5M",
     "size": "615",
     "type": "0",
@@ -608,11 +608,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:31.000000Z",
+    "updated_at": "2026-01-07T08:23:31.000000Z"
   },
   {
-    "id": 4319,
+    "id": 4627,
     "section": "5M",
     "size": "625",
     "type": "0",
@@ -625,11 +625,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4320,
+    "id": 4628,
     "section": "5M",
     "size": "635",
     "type": "1",
@@ -641,12 +641,12 @@
     "reorder_level": null,
     "remark": "380, 410",
     "created_by": null,
-    "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "updated_by": 3,
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:25:27.000000Z"
   },
   {
-    "id": 4321,
+    "id": 4629,
     "section": "5M",
     "size": "640",
     "type": "0",
@@ -659,11 +659,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4322,
+    "id": 4630,
     "section": "5M",
     "size": "645",
     "type": "0",
@@ -676,11 +676,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4323,
+    "id": 4631,
     "section": "5M",
     "size": "650",
     "type": "0",
@@ -693,11 +693,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4324,
+    "id": 4632,
     "section": "5M",
     "size": "665",
     "type": "0",
@@ -710,11 +710,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4325,
+    "id": 4633,
     "section": "5M",
     "size": "670",
     "type": "0",
@@ -727,11 +727,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4326,
+    "id": 4634,
     "section": "5M",
     "size": "700",
     "type": "0",
@@ -744,45 +744,45 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4327,
+    "id": 4635,
     "section": "5M",
     "size": "710",
-    "type": "1",
+    "type": "0",
     "total_mm": "270.00",
     "in_mm": "0.00",
     "out_mm": "0.00",
-    "rate": "11.74",
-    "value": "3169.44",
+    "rate": "4.40",
+    "value": "1188.54",
     "reorder_level": null,
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4328,
+    "id": 4636,
     "section": "5M",
     "size": "720",
-    "type": "1",
+    "type": "0",
     "total_mm": "350.00",
     "in_mm": "0.00",
     "out_mm": "0.00",
-    "rate": "10.20",
-    "value": "3571.20",
+    "rate": "4.46",
+    "value": "1562.40",
     "reorder_level": null,
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4329,
+    "id": 4637,
     "section": "5M",
     "size": "740",
     "type": "0",
@@ -795,11 +795,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4330,
+    "id": 4638,
     "section": "5M",
     "size": "750",
     "type": "1",
@@ -812,11 +812,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4331,
+    "id": 4639,
     "section": "5M",
     "size": "760",
     "type": "0",
@@ -829,11 +829,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4332,
+    "id": 4640,
     "section": "5M",
     "size": "770",
     "type": "0",
@@ -846,11 +846,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4333,
+    "id": 4641,
     "section": "5M",
     "size": "780",
     "type": "0",
@@ -863,11 +863,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4334,
+    "id": 4642,
     "section": "5M",
     "size": "800",
     "type": "0",
@@ -880,11 +880,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4335,
+    "id": 4643,
     "section": "5M",
     "size": "810",
     "type": "0",
@@ -897,28 +897,28 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4336,
+    "id": 4644,
     "section": "5M",
     "size": "835",
-    "type": "1",
+    "type": "0",
     "total_mm": "440.00",
     "in_mm": "0.00",
     "out_mm": "0.00",
-    "rate": "10.47",
-    "value": "4607.53",
+    "rate": "5.18",
+    "value": "2277.88",
     "reorder_level": null,
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4337,
+    "id": 4645,
     "section": "5M",
     "size": "850",
     "type": "0",
@@ -931,11 +931,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4338,
+    "id": 4646,
     "section": "5M",
     "size": "860",
     "type": "0",
@@ -948,11 +948,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4339,
+    "id": 4647,
     "section": "5M",
     "size": "870",
     "type": "0",
@@ -965,11 +965,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4340,
+    "id": 4648,
     "section": "5M",
     "size": "890",
     "type": "1",
@@ -981,12 +981,12 @@
     "reorder_level": null,
     "remark": null,
     "created_by": null,
-    "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "updated_by": 3,
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:26:32.000000Z"
   },
   {
-    "id": 4341,
+    "id": 4649,
     "section": "5M",
     "size": "895",
     "type": "0",
@@ -999,11 +999,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4342,
+    "id": 4650,
     "section": "5M",
     "size": "900",
     "type": "0",
@@ -1016,11 +1016,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4343,
+    "id": 4651,
     "section": "5M",
     "size": "925",
     "type": "0",
@@ -1033,11 +1033,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4344,
+    "id": 4652,
     "section": "5M",
     "size": "935",
     "type": "1",
@@ -1050,11 +1050,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4345,
+    "id": 4653,
     "section": "5M",
     "size": "950",
     "type": "0",
@@ -1067,11 +1067,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4346,
+    "id": 4654,
     "section": "5M",
     "size": "975",
     "type": "0",
@@ -1084,11 +1084,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4347,
+    "id": 4655,
     "section": "5M",
     "size": "980",
     "type": "0",
@@ -1101,11 +1101,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4348,
+    "id": 4656,
     "section": "5M",
     "size": "1000",
     "type": "0",
@@ -1118,11 +1118,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4349,
+    "id": 4657,
     "section": "5M",
     "size": "1050",
     "type": "0",
@@ -1135,11 +1135,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4350,
+    "id": 4658,
     "section": "5M",
     "size": "1100",
     "type": "0",
@@ -1152,11 +1152,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4351,
+    "id": 4659,
     "section": "5M",
     "size": "1125",
     "type": "0",
@@ -1169,11 +1169,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4352,
+    "id": 4660,
     "section": "5M",
     "size": "1150",
     "type": "0",
@@ -1186,11 +1186,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4353,
+    "id": 4661,
     "section": "5M",
     "size": "1152",
     "type": "0",
@@ -1203,11 +1203,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4354,
+    "id": 4662,
     "section": "5M",
     "size": "1200",
     "type": "2",
@@ -1220,11 +1220,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4355,
+    "id": 4663,
     "section": "5M",
     "size": "1215",
     "type": "0",
@@ -1237,11 +1237,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4356,
+    "id": 4664,
     "section": "5M",
     "size": "1250",
     "type": "2",
@@ -1254,11 +1254,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4357,
+    "id": 4665,
     "section": "5M",
     "size": "1270",
     "type": "0",
@@ -1271,11 +1271,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4358,
+    "id": 4666,
     "section": "5M",
     "size": "1400",
     "type": "1",
@@ -1288,11 +1288,11 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   },
   {
-    "id": 4359,
+    "id": 4667,
     "section": "5M",
     "size": "2100",
     "type": "0",
@@ -1305,7 +1305,7 @@
     "remark": null,
     "created_by": null,
     "updated_by": null,
-    "created_at": "2026-01-07T07:49:40.000000Z",
-    "updated_at": "2026-01-07T07:49:40.000000Z"
+    "created_at": "2026-01-07T08:23:32.000000Z",
+    "updated_at": "2026-01-07T08:23:32.000000Z"
   }
 ]

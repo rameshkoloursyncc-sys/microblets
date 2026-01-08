@@ -63,7 +63,7 @@ class TimingBelt extends Model
     }
 
     /**
-     * Calculate total value and rate based on the STRICT timing belt formula:
+     * Calculate total value and rate based on the DYNAMIC timing belt formula:
      * value = (size × type × type_multiplier × multiplier) + (size × total_mm × multiplier)
      * rate = value / total_mm (rate per mm)
      */
@@ -120,7 +120,7 @@ class TimingBelt extends Model
         // Convert type to numeric value
         $typeNumeric = $this->getTypeNumericValue();
         
-        // STRICT FORMULA: (size × type × type_multiplier × multiplier) + (size × total_mm × multiplier)
+        // DYNAMIC FORMULA: (size × type × type_multiplier × multiplier) + (size × total_mm × multiplier)
         $part1 = $size * $typeNumeric * $typeMultiplier * $multiplier;
         $part2 = $size * $totalMm * $multiplier;
         

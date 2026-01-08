@@ -56,7 +56,7 @@
           
           <!-- JSON Import/Export Buttons -->
           <div class="ml-auto flex items-center gap-2">
-            <button @click="showImportModal = true" class="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700">
+         <!--   <button @click="showImportModal = true" class="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700">
               Imporrt JSON
             </button>
             <button @click="showExcelImportModal = true" class="px-3 py-1.5 text-sm bg-orange-600 text-white rounded hover:bg-orange-700">
@@ -64,7 +64,7 @@
             </button>
             <button @click="downloadJSON" class="px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700">
               Download JSON
-            </button> 
+            </button>  -->
             <button @click="showCreateModal = true" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
               Create Product
             </button>
@@ -168,14 +168,14 @@
                         </button>
                       </div>
                       <!-- Full Sleeve Operations -->
-                      <div class="flex gap-1">
+                  <!--    <div class="flex gap-1">
                         <button @click="showInOutModal(p, 'IN', 'type')" class="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">
                           IN
                         </button>
                         <button @click="showInOutModal(p, 'OUT', 'type')" class="px-2 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700">
                           OUT
                         </button>
-                      </div>
+                      </div> -->
                     </div>
                   </div>
                 </td>
