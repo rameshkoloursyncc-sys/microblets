@@ -29,45 +29,60 @@ export const useAuth = () => {
           user.value = parsedUser
           console.log('Restored user from localStorage:', parsedUser.name)
           
-          // Try to verify with backend and restore session if needed
+          // Try to verify with backend silently (don't show 401 errors)
           try {
-            const response = await axios.get('/api/user', { timeout: 5000 })
+            const response = await axios.get('/api/user', { 
+              timeout: 5000, // Reduced timeout for faster failure
+              headers: { 'X-Silent-Auth': 'true' }
+            })
             if (response.data.user) {
               // Update user data from server if successful
               user.value = response.data.user
               localStorage.setItem('user', JSON.stringify(response.data.user))
               console.log('Backend verification successful, user updated')
+              return // Success - exit early
             }
           } catch (e: any) {
+            // Silently handle the 401 during initialization
             if (e.response?.status === 401) {
-              console.log('Backend session expired, attempting auto-restore for admin user')
+              console.log('Session expired during init, attempting auto-restore for admin user')
               
-              // If this is the admin user, try to auto-restore session
+              // If this is an admin user, try to auto-restore session
               if (parsedUser.name === 'admin' || parsedUser.name === 'koloursyncc' || parsedUser.name === 'koloursyncc11') {
                 try {
-                  console.log('Attempting auto-login for admin user')
-                  const loginResponse = await axios.post('/api/login', {
-                    name: parsedUser.name === 'admin' ? 'admin' : 'koloursyncc',
-                    password: parsedUser.name === 'admin' ? 'admin123' : 'kolorsync1010'
+                  console.log('Attempting silent auto-login for admin user:', parsedUser.name)
+                  
+                  // Determine correct credentials
+                  let loginData = { name: 'admin', password: 'admin123' }
+                  if (parsedUser.name === 'koloursyncc' || parsedUser.name === 'koloursyncc11') {
+                    loginData = { name: 'koloursyncc', password: 'kolorsync1010' }
+                  }
+                  
+                  const loginResponse = await axios.post('/api/login', loginData, { 
+                    timeout: 10000,
+                    headers: { 'X-Silent-Auth': 'true' }
                   })
                   
                   if (loginResponse.data.user) {
                     user.value = loginResponse.data.user
                     localStorage.setItem('user', JSON.stringify(loginResponse.data.user))
-                    console.log('Auto-login successful, session restored')
-                    return
+                    console.log('Silent auto-login successful, session restored for:', loginResponse.data.user.name)
+                    return // Success - exit early
                   }
-                } catch (loginError) {
-                  console.log('Auto-login failed:', loginError)
+                } catch (loginError: any) {
+                  console.log('Silent auto-login failed, keeping stored user for offline use')
+                  // Keep the stored user for offline functionality
+                  return // Keep stored user, don't clear
                 }
               }
               
-              console.log('Session restoration needed - keeping user for offline use')
-              // Keep the user data for offline functionality
-              // Don't clear immediately, let them try to use the app
+              console.log('Session restoration not available, keeping stored user for offline use')
+              // For non-admin users or if auto-restore fails, keep stored user
+              return // Keep stored user, don't clear
             } else {
-              console.log('Backend verification failed (network issue), keeping stored user:', e.response?.status)
+              console.log('Network issue during init, keeping stored user:', e.code || 'UNKNOWN')
               // For network issues, keep the stored user
+              return // Keep stored user, don't clear
             }
           }
         } catch (e) {
@@ -76,15 +91,24 @@ export const useAuth = () => {
           user.value = null
         }
       } else {
-        // No stored user, check if there's a server session
+        // No stored user, try silent server session check
         try {
-          await checkAuthSilent()
+          const response = await axios.get('/api/user', { 
+            timeout: 5000,
+            headers: { 'X-Silent-Auth': 'true' }
+          })
+          if (response.data.user) {
+            user.value = response.data.user
+            localStorage.setItem('user', JSON.stringify(response.data.user))
+            console.log('Found existing server session for:', response.data.user.name)
+          }
         } catch (e) {
-          console.log('No stored user and no server session')
+          console.log('No stored user and no server session - user needs to login')
         }
       }
     } catch (e) {
       console.log('Session initialization failed:', e)
+      // Don't clear user on initialization errors
     }
   }
 
@@ -168,15 +192,50 @@ export const useAuth = () => {
       if (user.value) {
         try {
           // Make a simple request to keep session alive
-          await axios.get('/api/user', { timeout: 3000 })
+          await axios.get('/api/user', { timeout: 5000 })
           console.log('Session keep-alive successful')
         } catch (e: any) {
           console.log('Session keep-alive failed:', e.response?.status)
-          // Don't clear user on keep-alive failures
-          // Let the user continue working with cached data
+          
+          // If session expired, try to restore it for admin users
+          if (e.response?.status === 401 && user.value) {
+            console.log('Session expired during keep-alive, attempting restore')
+            await attemptSessionRestore()
+          }
         }
       }
     }, 10 * 60 * 1000) // Check every 10 minutes
+  }
+
+  // Attempt to restore session for admin users
+  const attemptSessionRestore = async () => {
+    if (!user.value) return false
+    
+    const currentUser = user.value
+    if (currentUser.name === 'admin' || currentUser.name === 'koloursyncc' || currentUser.name === 'koloursyncc11') {
+      try {
+        console.log('Attempting session restore for:', currentUser.name)
+        
+        // Determine correct credentials
+        let loginData = { name: 'admin', password: 'admin123' }
+        if (currentUser.name === 'koloursyncc' || currentUser.name === 'koloursyncc11') {
+          loginData = { name: 'koloursyncc', password: 'kolorsync1010' }
+        }
+        
+        const loginResponse = await axios.post('/api/login', loginData, { timeout: 10000 })
+        
+        if (loginResponse.data.user) {
+          user.value = loginResponse.data.user
+          localStorage.setItem('user', JSON.stringify(loginResponse.data.user))
+          console.log('Session restore successful')
+          return true
+        }
+      } catch (error: any) {
+        console.log('Session restore failed:', error.response?.data?.message || error.message)
+      }
+    }
+    
+    return false
   }
 
   return {
@@ -188,6 +247,7 @@ export const useAuth = () => {
     login,
     logout,
     checkAuth,
-    startSessionKeepAlive
+    startSessionKeepAlive,
+    attemptSessionRestore
   }
 }

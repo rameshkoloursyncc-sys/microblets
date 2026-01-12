@@ -12,7 +12,7 @@
       </div>
 
       <!-- Summary Stats (Scrollable on Mobile) -->
-      <div class="mb-2 sm:mb-4 overflow-x-auto">
+      <div class="mb-2 sm:mb-4 overflow-x-auto overflow-y-auto">
         <div class="flex gap-2 sm:gap-4 pb-2 min-w-max sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:min-w-0">
           <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-2 sm:p-4 min-w-[140px] sm:min-w-0">
             <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Products</div>
@@ -34,7 +34,7 @@
       </div>
 
       <!-- Filters - Sticky (Only This Section) -->
-      <div class="sticky  z-30 bg-gray-50 dark:bg-gray-900 pb-2 sm:pb-4">
+      <div class="  z-30 bg-gray-50 overflow-y-auto dark:bg-gray-900 pb-2 sm:pb-4">
         <div class="mb-2 sm:mb-4 bg-white dark:bg-gray-800 rounded-lg shadow-md p-2 sm:p-3">
           <div class="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-1 sm:gap-2">
             <!-- Search -->
@@ -125,7 +125,7 @@
       </div>
 
       <!-- Scrollable Table Container -->
-      <div v-else class="flex-1 bg-white dark:bg-gray-800 shadow rounded overflow-hidden">
+      <div v-else class="flex-1 sticky bg-white dark:bg-gray-800 shadow rounded overflow-hidden">
         <!-- Single Table View (Mobile + Desktop) -->
         <div class="overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)]">
           <table class="w-full text-xs sm:text-sm text-left text-gray-600 dark:text-gray-300">

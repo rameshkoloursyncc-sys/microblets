@@ -23,15 +23,43 @@ axios.interceptors.response.use(
   (error) => {
     // Handle session expiration specifically
     if (error.response?.status === 401) {
-      console.log('Session expired detected, user needs to re-login')
+      // Check if this is a silent auth check (don't log errors for these)
+      const isSilentAuth = error.config?.headers?.['X-Silent-Auth'] === 'true'
       
-      // Only redirect to login if this is a critical auth failure
-      // For now, let the components handle the error gracefully
-      if (error.response?.data?.error === 'session_expired') {
-        // Store that session expired for UI to handle
+      if (!isSilentAuth) {
+        console.log('401 Unauthorized detected')
+      }
+      
+      // Check if this is a critical auth endpoint
+      const criticalEndpoints = ['/api/login', '/api/register', '/api/logout']
+      const isCriticalEndpoint = criticalEndpoints.some(endpoint => 
+        error.config?.url?.includes(endpoint)
+      )
+      
+      if (isCriticalEndpoint) {
+        if (!isSilentAuth) {
+          console.log('Critical auth endpoint failed, clearing session')
+        }
+        localStorage.removeItem('user')
+      } else {
+        if (!isSilentAuth) {
+          console.log('Non-critical endpoint 401, keeping session for retry')
+        }
+        // For non-critical endpoints, don't clear the session immediately
+        // Let the component handle the error and potentially retry
+      }
+      
+      // Store that session may have expired for UI to handle (but not for silent checks)
+      if (!isSilentAuth && error.response?.data?.error === 'session_expired') {
         localStorage.setItem('session_expired', 'true')
       }
     }
+    
+    // Handle network errors gracefully
+    if (error.code === 'NETWORK_ERROR' || error.code === 'ECONNABORTED') {
+      console.log('Network error detected, request may be retried')
+    }
+    
     return Promise.reject(error)
   }
 )

@@ -49,7 +49,7 @@ const rawMaterialsStats = ref({
 })
 
 // Authentication
-const { user, isAuthenticated, isAdmin, initAuth, login, logout, startSessionKeepAlive } = useAuth()
+const { user, isAuthenticated, isAdmin, initAuth, login, logout, startSessionKeepAlive, attemptSessionRestore } = useAuth()
 const authLoading = ref(true)
 
 // Handle login success
@@ -84,6 +84,18 @@ onMounted(async () => {
     authLoading.value = false
     console.log('Auth loading complete, authenticated:', isAuthenticated.value)
   }
+  
+  // Add global error handler for session recovery
+  window.addEventListener('unhandledrejection', async (event) => {
+    if (event.reason?.response?.status === 401 && user.value) {
+      console.log('Global 401 error detected, attempting session recovery')
+      const restored = await attemptSessionRestore()
+      if (restored) {
+        console.log('Session recovered, preventing error propagation')
+        event.preventDefault() // Prevent the error from propagating
+      }
+    }
+  })
 })
 
 // Watch for view changes to load stats when dashboard is accessed

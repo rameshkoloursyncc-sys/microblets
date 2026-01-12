@@ -87,14 +87,14 @@
           </div>
           
           <!-- JSON Import/Export Buttons (Commented for production) -->
-          <div class="ml-auto flex items-center gap-2">
+          <div class="w-full sm:w-auto sm:ml-auto flex items-center gap-1 sm:gap-2">
             <!-- <button @click="showImportModal = true" class="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700">
               Import JSON
             </button>
             <button @click="downloadJSON" class="px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700">
               Download JSON
             </button> -->
-            <button @click="showCreateModal = true" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+            <button @click="showCreateModal = true" class="w-full sm:w-auto px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
               Create Product
             </button>
           </div>

@@ -13,7 +13,8 @@
       </div>
  
       <!-- Summary Stats -->
-      <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+         <div class="mb-2 sm:mb-4 overflow-x-auto">
+      <div class="flex gap-2 sm:gap-4 pb-2 min-w-max sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:min-w-0">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
           <div class="text-sm text-gray-600 dark:text-gray-400">Total Products</div>
           <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ visibleProducts.length }}</div>
@@ -31,6 +32,7 @@
           <div class="text-2xl font-bold text-red-600 dark:text-red-400">{{ lowStockCount }}</div>
         </div>
       </div>
+    </div>
 
       <!-- Filters -->
        <div class="sticky top-14 z-30 bg-gray-50 dark:bg-gray-900 pb-2 sm:pb-4">
@@ -87,8 +89,8 @@
           </div>
           
           <!-- Create Button -->
-          <div class="ml-auto item-left">
-            <button @click="showCreateModal = true" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+          <div class="w-full sm:w-auto sm:ml-auto">
+            <button @click="showCreateModal = true" class="w-full sm:w-auto px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
               Create Product
             </button>
           </div>

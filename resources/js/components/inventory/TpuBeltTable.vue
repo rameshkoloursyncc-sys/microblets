@@ -53,15 +53,17 @@
           </button>
 
           <!-- Date Range Filter -->
-          <div class="flex items-center gap-1.5 ml-2">
-            <label class="text-xs text-gray-600 dark:text-gray-400">From:</label>
+          <div class="flex-col md:flex items-center gap-2 m-2">
+            <label class="text-xs text-gray-600 dark:text-gray-400">From: </label>
             <input 
               v-model="dateFrom" 
               type="date" 
               class="px-2 py-1 border rounded bg-white dark:bg-gray-700 dark:text-white text-xs"
               :class="dateFrom ? 'border-blue-500' : ''"
             />
-            <label class="text-xs text-gray-600 dark:text-gray-400">To:</label>
+            <br/>
+             <br/>
+            <label class="text-xs text-gray-600 dark:text-gray-400">To: </label>
             <input 
               v-model="dateTo" 
               type="date" 
@@ -78,14 +80,14 @@
           </div>
           
           <!-- JSON Import/Export Buttons -->
-          <div class="ml-auto flex items-center gap-2">
-            <button @click="showImportModal = true" class="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700">
+          <div class="w-full sm:w-auto sm:ml-auto flex items-center gap-1 sm:gap-2">
+           <!--  <button @click="showImportModal = true" class="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700">
               Import JSON
             </button>
             <button @click="downloadJSON" class="px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700">
               Download JSON
-            </button>
-            <button @click="showCreateModal = true" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+            </button> -->
+            <button @click="showCreateModal = true" class="w-full sm:w-auto px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
               Create Product
             </button>
           </div>
