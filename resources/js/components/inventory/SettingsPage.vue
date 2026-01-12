@@ -202,7 +202,7 @@
       </div>
 
       <!-- Data Seeding -->
-     <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+     <!--  <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           {{ beltTypeConfig[selectedBeltType].name }} Data Seeding
         </h2>
@@ -261,18 +261,18 @@
           </div>
         </div>
       </div>
-        
+         --> 
+  </div>
 
-      <!-- Notifications -->
+    <!--  Notifications -->
       <div class="fixed right-4 top-4 space-y-3 z-50">
         <div v-for="n in notifications" :key="n.id" class="rounded shadow p-3 max-w-sm"
              :class="n.type === 'success' ? 'bg-green-100 text-green-800' : n.type === 'error' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'">
           <div class="font-semibold">{{ n.title }}</div>
           <div class="text-sm">{{ n.message }}</div>
         </div>
-      </div>
-    </div>
- 
+      </div> 
+           
   </div>
 </template>
 

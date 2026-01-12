@@ -1,92 +1,100 @@
 <template>
   <div class="transition-all duration-300" :class="props.sidebarCollapsed ? 'sm:ml-16' : 'sm:ml-80'">
-    <div class="p-6 mt-14 min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-      <!-- Header - Sticky -->
-      <div class="sticky top-14 z-30 bg-gray-50 dark:bg-gray-900 pb-4">
-        <div class="mb-6">
-          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-            {{ title }}
-          </h1>
-          <p class="text-gray-600 dark:text-gray-400">
-            Click a cell to edit. All changes are saved to the database.
-          </p>
-        </div>
+    <div class="p-3 sm:p-6 mt-14 min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+      <!-- Header - Scrollable (More Compact) -->
+      <div class="mb-2 sm:mb-4">
+        <h1 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+          {{ title }}
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">
+          Click a cell to edit. All changes are saved to the database.
+        </p>
+      </div>
 
-        <!-- Summary Stats -->
-        <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div class="text-sm text-gray-600 dark:text-gray-400">Total Products</div>
-            <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ visibleProducts.length }}</div>
+      <!-- Summary Stats (Scrollable on Mobile) -->
+      <div class="mb-2 sm:mb-4 overflow-x-auto">
+        <div class="flex gap-2 sm:gap-4 pb-2 min-w-max sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:min-w-0">
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-2 sm:p-4 min-w-[140px] sm:min-w-0">
+            <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Products</div>
+            <div class="text-sm sm:text-xl font-bold text-gray-900 dark:text-white">{{ visibleProducts.length }}</div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div class="text-sm text-gray-600 dark:text-gray-400">Total Stock</div>
-            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ totalStock }}</div>
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-2 sm:p-4 min-w-[140px] sm:min-w-0">
+            <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Stock</div>
+            <div class="text-sm sm:text-xl font-bold text-blue-600 dark:text-blue-400">{{ totalStock }}</div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div class="text-sm text-gray-600 dark:text-gray-400">Total Value</div>
-            <div class="text-2xl font-bold text-green-600 dark:text-green-400">₹{{ totalValue.toFixed(2) }}</div>
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-2 sm:p-4 min-w-[140px] sm:min-w-0">
+            <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Value</div>
+            <div class="text-sm sm:text-xl font-bold text-green-600 dark:text-green-400">₹{{ totalValue.toFixed(2) }}</div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-            <div class="text-sm text-gray-600 dark:text-gray-400">Low Stock Items</div>
-            <div class="text-2xl font-bold text-red-600 dark:text-red-400">{{ lowStockCount }}</div>
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-2 sm:p-4 min-w-[140px] sm:min-w-0">
+            <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Low Stock Items</div>
+            <div class="text-sm sm:text-xl font-bold text-red-600 dark:text-red-400">{{ lowStockCount }}</div>
           </div>
         </div>
+      </div>
 
-        <!-- Filters - Sticky -->
-        <div class="mb-4 bg-white dark:bg-gray-800 rounded-lg shadow-md p-3">
-          <div class="flex flex-wrap items-center gap-2">
+      <!-- Filters - Sticky (Only This Section) -->
+      <div class="sticky  z-30 bg-gray-50 dark:bg-gray-900 pb-2 sm:pb-4">
+        <div class="mb-2 sm:mb-4 bg-white dark:bg-gray-800 rounded-lg shadow-md p-2 sm:p-3">
+          <div class="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-1 sm:gap-2">
             <!-- Search -->
             <input 
               v-model="searchTerm" 
               placeholder="Search section / size" 
-              class="px-3 py-1.5 text-sm border rounded bg-white dark:bg-gray-700 dark:text-white"
+              class="w-full sm:w-auto px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm border rounded bg-white dark:bg-gray-700 dark:text-white"
             />
             
             <!-- Quick Filter Buttons -->
-            <button 
-              @click="toggleLowStockFilter" 
-              :class="showLowStockOnly ? 'bg-yellow-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
-              class="px-3 py-1.5 text-sm rounded hover:opacity-80 transition-colors"
-            >
-              {{ showLowStockOnly ? '✓ Low Stock' : 'Low Stock' }}
-            </button>
-            
-            <button 
-              @click="toggleOutOfStockFilter" 
-              :class="showOutOfStockOnly ? 'bg-red-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
-              class="px-3 py-1.5 text-sm rounded hover:opacity-80 transition-colors"
-            >
-              {{ showOutOfStockOnly ? '✓ Out of Stock' : 'Out of Stock' }}
-            </button>
+            <div class="flex flex-wrap gap-1 sm:gap-2 w-full sm:w-auto">
+              <button 
+                @click="toggleLowStockFilter" 
+                :class="showLowStockOnly ? 'bg-yellow-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
+                class="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm rounded hover:opacity-80 transition-colors"
+              >
+                {{ showLowStockOnly ? '✓ Low Stock' : 'Low Stock' }}
+              </button>
+              
+              <button 
+                @click="toggleOutOfStockFilter" 
+                :class="showOutOfStockOnly ? 'bg-red-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
+                class="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm rounded hover:opacity-80 transition-colors"
+              >
+                {{ showOutOfStockOnly ? '✓ Out of Stock' : 'Out of Stock' }}
+              </button>
+            </div>
 
             <!-- Date Range Filter -->
-            <div class="flex items-center gap-1.5 ml-2">
-              <label class="text-xs text-gray-600 dark:text-gray-400">From:</label>
-              <input 
-                v-model="dateFrom" 
-                type="date" 
-                class="px-2 py-1 border rounded bg-white dark:bg-gray-700 dark:text-white text-xs"
-                :class="dateFrom ? 'border-blue-500' : ''"
-              />
-              <label class="text-xs text-gray-600 dark:text-gray-400">To:</label>
-              <input 
-                v-model="dateTo" 
-                type="date" 
-                class="px-2 py-1 border rounded bg-white dark:bg-gray-700 dark:text-white text-xs"
-                :class="dateTo ? 'border-blue-500' : ''"
-              />
-              <button 
-                v-if="dateFrom || dateTo"
-                @click="clearDateFilter" 
-                class="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                Clear
-              </button>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-1 w-full sm:w-auto">
+              <div class="flex items-center gap-1">
+                <label class="text-xs text-gray-600 dark:text-gray-400">From:</label>
+                <input 
+                  v-model="dateFrom" 
+                  type="date" 
+                  class="px-1 sm:px-2 py-1 border rounded bg-white dark:bg-gray-700 dark:text-white text-xs"
+                  :class="dateFrom ? 'border-blue-500' : ''"
+                />
+              </div>
+              <div class="flex items-center gap-1">
+                <label class="text-xs text-gray-600 dark:text-gray-400">To:</label>
+                <input 
+                  v-model="dateTo" 
+                  type="date" 
+                  class="px-1 sm:px-2 py-1 border rounded bg-white dark:bg-gray-700 dark:text-white text-xs"
+                  :class="dateTo ? 'border-blue-500' : ''"
+                />
+                <button 
+                  v-if="dateFrom || dateTo"
+                  @click="clearDateFilter" 
+                  class="px-1 sm:px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
+                >
+                  Clear
+                </button>
+              </div>
             </div>
             
             <!-- Create Button -->
-            <div class="ml-auto">
-              <button @click="showCreateModal = true" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+            <div class="w-full sm:w-auto sm:ml-auto">
+              <button @click="showCreateModal = true" class="w-full sm:w-auto px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
                 Create Product
               </button>
             </div>
@@ -118,48 +126,49 @@
 
       <!-- Scrollable Table Container -->
       <div v-else class="flex-1 bg-white dark:bg-gray-800 shadow rounded overflow-hidden">
-        <div class="overflow-y-auto max-h-[calc(100vh-400px)]">
-          <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
+        <!-- Single Table View (Mobile + Desktop) -->
+        <div class="overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)]">
+          <table class="w-full text-xs sm:text-sm text-left text-gray-600 dark:text-gray-300">
             <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase sticky top-0 z-20">
               <tr>
-                <th class="py-3 px-3">Section</th>
-                <th class="py-3 px-3">Size</th>
-                <th class="py-3 px-3 text-center">Balance Stock</th>
-                <th class="py-3 px-3 text-center">IN Stock</th>
-                <th class="py-3 px-3 text-center">OUT Stock</th>
-                <th class="py-3 px-3 text-center">Min Inventory</th>
-                <th class="py-3 px-3 text-right">Rate</th>
-                <th class="py-3 px-3 text-right">Value</th>
-                <th class="py-3 px-3">Remark</th>
-                <th class="py-3 px-3 text-center">Actions</th>
+                <th class="py-2 sm:py-3 px-1 sm:px-3">Section</th>
+                <th class="py-2 sm:py-3 px-1 sm:px-3">Size</th>
+                <th class="py-2 sm:py-3 px-1 sm:px-3 text-center">Stock</th>
+                <th class="py-2 sm:py-3 px-1 sm:px-3 text-center">IN</th>
+                <th class="py-2 sm:py-3 px-1 sm:px-3 text-center">OUT</th>
+                <th class="py-2 sm:py-3 px-1 sm:px-3 text-center hidden sm:table-cell">Min Inv</th>
+                <th class="py-2 sm:py-3 px-1 sm:px-3 text-right">Rate</th>
+                <th class="py-2 sm:py-3 px-1 sm:px-3 text-right">Value</th>
+                <th class="py-2 sm:py-3 px-1 sm:px-3 hidden sm:table-cell">Remark</th>
+                <th class="py-2 sm:py-3 px-1 sm:px-3 text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="p in visibleProducts" :key="p.id" class="border-t hover:bg-gray-50 dark:hover:bg-gray-700">
-                <td class="py-2 px-3">
+                <td class="py-1 sm:py-2 px-1 sm:px-3">
                   <div v-if="editingCell === `${p.id}-section`">
-                    <input v-model="editValue"  @keyup.enter="saveCell(p, 'section')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue"  @keyup.enter="saveCell(p, 'section')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded text-xs" />
                   </div>
-                  <div v-else @click="startEdit(p, 'section')" class="cursor-pointer font-bold text-black dark:text-white">{{ p.section }}</div>
+                  <div v-else @click="startEdit(p, 'section')" class="cursor-pointer font-bold text-black dark:text-white text-xs sm:text-sm">{{ p.section }}</div>
                 </td>
 
-                <td class="py-2 px-3">
+                <td class="py-1 sm:py-2 px-1 sm:px-3">
                   <div v-if="editingCell === `${p.id}-size`">
-                    <input v-model="editValue"  @keyup.enter="saveCell(p, 'size')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue"  @keyup.enter="saveCell(p, 'size')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded text-xs" />
                   </div>
-                  <div v-else @click="startEdit(p, 'size')" class="cursor-pointer font-bold text-black dark:text-white">{{ p.size }}</div>
+                  <div v-else @click="startEdit(p, 'size')" class="cursor-pointer font-bold text-black dark:text-white text-xs sm:text-sm">{{ p.size }}</div>
                 </td>
 
-                <td class="py-2 px-3 text-center">
+                <td class="py-1 sm:py-2 px-1 sm:px-3 text-center">
                   <div v-if="editingCell === `${p.id}-balance_stock`">
-                    <input v-model.number="editValue" type="number" @keyup.enter="saveCell(p, 'balance_stock')" @keyup.esc="cancelEdit" class="w-20 p-1 border rounded text-center" />
+                    <input v-model.number="editValue" type="number" @keyup.enter="saveCell(p, 'balance_stock')" @keyup.esc="cancelEdit" class="w-16 sm:w-20 p-1 border rounded text-center text-xs" />
                   </div>
                   <div v-else @click="startEdit(p, 'balance_stock')" class="cursor-pointer">
-                    <span class="font-bold" :class="getStockClass(p)">{{ p.balance_stock }}</span>
+                    <span class="font-bold text-xs sm:text-sm" :class="getStockClass(p)">{{ p.balance_stock }}</span>
                   </div>
                 </td>
 
-                <td class="py-2 px-3 text-center">
+                <td class="py-1 sm:py-2 px-1 sm:px-3 text-center">
                   <div v-if="editingCell === `${p.id}-in_qty`">
                     <input 
                       v-model="editValue" 
@@ -167,16 +176,16 @@
                       min="0"
                       @keyup.enter="performInOut(p, 'IN')" 
                       @keyup.esc="cancelEdit" 
-                      class="w-20 p-1 border rounded text-center bg-green-50" 
-                      placeholder="IN qty (Press Enter)"
+                      class="w-12 sm:w-16 p-1 border rounded text-center bg-green-50 text-xs" 
+                      placeholder="IN"
                     />
                   </div>
-                  <div v-else @click="startEdit(p, 'in_qty')" class="cursor-pointer hover:bg-green-50 px-2 py-1 rounded">
-                    <span class="text-green-600 font-medium">0</span>
+                  <div v-else @click="startEdit(p, 'in_qty')" class="cursor-pointer hover:bg-green-50 px-1 py-1 rounded">
+                    <span class="text-green-600 font-medium text-xs">+</span>
                   </div>
                 </td>
 
-                <td class="py-2 px-3 text-center">
+                <td class="py-1 sm:py-2 px-1 sm:px-3 text-center">
                   <div v-if="editingCell === `${p.id}-out_qty`">
                     <input 
                       v-model="editValue" 
@@ -184,46 +193,45 @@
                       min="0"
                       @keyup.enter="performInOut(p, 'OUT')" 
                       @keyup.esc="cancelEdit" 
-                      class="w-20 p-1 border rounded text-center bg-red-50" 
-                      placeholder="OUT qty (Press Enter)"
+                      class="w-12 sm:w-16 p-1 border rounded text-center bg-red-50 text-xs" 
+                      placeholder="OUT"
                     />
                   </div>
-                  <div v-else @click="startEdit(p, 'out_qty')" class="cursor-pointer hover:bg-red-50 px-2 py-1 rounded">
-                    <span class="text-red-600 font-medium">0</span>
+                  <div v-else @click="startEdit(p, 'out_qty')" class="cursor-pointer hover:bg-red-50 px-1 py-1 rounded">
+                    <span class="text-red-600 font-medium text-xs">-</span>
                   </div>
                 </td>
 
-                <td class="py-2 px-3 text-center">
+                <td class="py-1 sm:py-2 px-1 sm:px-3 text-center hidden sm:table-cell">
                   <div v-if="editingCell === `${p.id}-reorder_level`">
                     <input v-model.number="editValue" type="number" min="0" 
-                          
                            @keyup.enter="saveCell(p, 'reorder_level')" 
                            @keyup.esc="cancelEdit" 
-                           class="w-20 p-1 border rounded text-center" />
+                           class="w-16 sm:w-20 p-1 border rounded text-center text-xs" />
                   </div>
-                  <div v-else @click="startEdit(p, 'reorder_level')" class="cursor-pointer">{{ p.reorder_level ?? 'Not tracked' }}</div>
+                  <div v-else @click="startEdit(p, 'reorder_level')" class="cursor-pointer text-xs">{{ p.reorder_level ?? 'N/A' }}</div>
                 </td>
 
-                <td class="py-2 px-3 text-right">
+                <td class="py-1 sm:py-2 px-1 sm:px-3 text-right">
                   <div v-if="editingCell === `${p.id}-rate`">
-                    <input v-model.number="editValue" type="number" step="0.01" @keyup.enter="saveCell(p, 'rate')" @keyup.esc="cancelEdit" class="w-24 p-1 border rounded text-right" />
+                    <input v-model.number="editValue" type="number" step="0.01" @keyup.enter="saveCell(p, 'rate')" @keyup.esc="cancelEdit" class="w-16 sm:w-24 p-1 border rounded text-right text-xs" />
                   </div>
-                  <div v-else @click="startEdit(p, 'rate')" class="cursor-pointer">₹{{ Number(p.rate).toFixed(2) }}</div>
+                  <div v-else @click="startEdit(p, 'rate')" class="cursor-pointer text-xs">₹{{ Number(p.rate).toFixed(2) }}</div>
                 </td>
 
-                <td class="py-2 px-3 text-right">₹{{ Number(p.value).toFixed(2) }}</td>
+                <td class="py-1 sm:py-2 px-1 sm:px-3 text-right text-xs font-medium text-green-600">₹{{ Number(p.value).toFixed(2) }}</td>
 
-                <td class="py-2 px-3">
+                <td class="py-1 sm:py-2 px-1 sm:px-3 hidden sm:table-cell">
                   <div v-if="editingCell === `${p.id}-remark`">
-                    <input v-model="editValue" @keyup.enter="saveCell(p, 'remark')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded" />
+                    <input v-model="editValue" @keyup.enter="saveCell(p, 'remark')" @keyup.esc="cancelEdit" class="w-full p-1 border rounded text-xs" />
                   </div>
-                  <div v-else @click="startEdit(p, 'remark')" class="cursor-pointer">{{ p.remark || '-' }}</div>
+                  <div v-else @click="startEdit(p, 'remark')" class="cursor-pointer text-xs">{{ p.remark || '-' }}</div>
                 </td>
 
-                <td class="py-2 px-3 text-center">
-                  <div class="flex items-center justify-center gap-2">
-                    <button @click="onDelete(p.id)" class="text-red-600 px-2 hover:text-red-800">Delete</button>
-                    <button @click="showHistory(p)" class="text-blue-600 px-2 hover:text-blue-800">History</button>
+                <td class="py-1 sm:py-2 px-1 sm:px-3 text-center">
+                  <div class="flex items-center justify-center gap-1">
+                    <button @click="onDelete(p.id)" class="text-red-600 px-1 hover:text-red-800 text-xs">Delete</button>
+                    <button @click="showHistory(p)" class="text-blue-600 px-1 hover:text-blue-800 text-xs">History</button>
                   </div>
                 </td>
               </tr>

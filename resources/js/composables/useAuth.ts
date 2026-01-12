@@ -31,7 +31,7 @@ export const useAuth = () => {
           
           // Try to verify with backend and restore session if needed
           try {
-            const response = await axios.get('/api/user', { timeout: 3000 })
+            const response = await axios.get('/api/user', { timeout: 5000 })
             if (response.data.user) {
               // Update user data from server if successful
               user.value = response.data.user
@@ -43,12 +43,12 @@ export const useAuth = () => {
               console.log('Backend session expired, attempting auto-restore for admin user')
               
               // If this is the admin user, try to auto-restore session
-              if (parsedUser.name === 'koloursyncc' || parsedUser.name === 'koloursyncc11') {
+              if (parsedUser.name === 'admin' || parsedUser.name === 'koloursyncc' || parsedUser.name === 'koloursyncc11') {
                 try {
                   console.log('Attempting auto-login for admin user')
                   const loginResponse = await axios.post('/api/login', {
-                    name: 'koloursyncc',
-                    password: 'kolorsync1010'
+                    name: parsedUser.name === 'admin' ? 'admin' : 'koloursyncc',
+                    password: parsedUser.name === 'admin' ? 'admin123' : 'kolorsync1010'
                   })
                   
                   if (loginResponse.data.user) {
@@ -62,12 +62,12 @@ export const useAuth = () => {
                 }
               }
               
-              console.log('Session restoration needed - user needs to login again')
-              // Clear user data if session can't be restored
-              user.value = null
-              localStorage.removeItem('user')
+              console.log('Session restoration needed - keeping user for offline use')
+              // Keep the user data for offline functionality
+              // Don't clear immediately, let them try to use the app
             } else {
               console.log('Backend verification failed (network issue), keeping stored user:', e.response?.status)
+              // For network issues, keep the stored user
             }
           }
         } catch (e) {

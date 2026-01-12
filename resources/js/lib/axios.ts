@@ -22,10 +22,15 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     // Handle session expiration specifically
-    if (error.response?.status === 401 && error.response?.data?.error === 'session_expired') {
+    if (error.response?.status === 401) {
       console.log('Session expired detected, user needs to re-login')
-      // Don't automatically clear user data, let the auth system handle it
-      // The user will see they need to login again
+      
+      // Only redirect to login if this is a critical auth failure
+      // For now, let the components handle the error gracefully
+      if (error.response?.data?.error === 'session_expired') {
+        // Store that session expired for UI to handle
+        localStorage.setItem('session_expired', 'true')
+      }
     }
     return Promise.reject(error)
   }

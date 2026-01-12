@@ -1,7 +1,7 @@
 <template>
   <div class="transition-all duration-300" :class="props.sidebarCollapsed ? 'sm:ml-16' : 'sm:ml-80'">
     <div class="p-6 mt-14 min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-     <div class="sticky top-14 z-30 bg-gray-50 dark:bg-gray-900 pb-4">
+     <div class="z-30 bg-gray-50 dark:bg-gray-900 pb-4">
       <!-- Header -->
       <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
@@ -33,6 +33,7 @@
       </div>
 
       <!-- Filters -->
+       <div class="sticky top-14 z-30 bg-gray-50 dark:bg-gray-900 pb-2 sm:pb-4">
       <div class="mb-4 bg-white dark:bg-gray-800 rounded-lg shadow-md p-3">
         <div class="flex flex-wrap items-center gap-2">
           <!-- Search -->
@@ -60,7 +61,7 @@
           </button>
 
           <!-- Date Range Filter -->
-          <div class="flex items-center gap-1.5 ml-2">
+          <div class="md:flex items-center gap-2 ml-2">
             <label class="text-xs text-gray-600 dark:text-gray-400">From:</label>
             <input 
               v-model="dateFrom" 
@@ -68,7 +69,8 @@
               class="px-2 py-1 border rounded bg-white dark:bg-gray-700 dark:text-white text-xs"
               :class="dateFrom ? 'border-blue-500' : ''"
             />
-            <label class="text-xs text-gray-600 dark:text-gray-400">To:</label>
+            <br/>
+            <label class="text-xs text-gray-600 flex-col dark:text-gray-400">To:</label>
             <input 
               v-model="dateTo" 
               type="date" 
@@ -85,13 +87,14 @@
           </div>
           
           <!-- Create Button -->
-          <div class="ml-auto">
+          <div class="ml-auto item-left">
             <button @click="showCreateModal = true" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
               Create Product
             </button>
           </div>
         </div>
       </div>
+         </div>
 </div>
       <!-- Error State -->
       <div v-if="error && !loading" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">

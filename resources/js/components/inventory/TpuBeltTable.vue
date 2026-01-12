@@ -1,7 +1,7 @@
 <template>
   <div class="transition-all duration-300" :class="props.sidebarCollapsed ? 'sm:ml-16' : 'sm:ml-80'">
     <div class="p-6 mt-14 min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-     <div class="sticky top-14 z-30 bg-gray-50 dark:bg-gray-900 pb-4">
+     <div class="z-30 bg-gray-50 dark:bg-gray-900 pb-4">
 
       <!-- Header -->
       <div class="mb-6">
@@ -34,7 +34,7 @@
       </div>
 
       <!-- Filters -->
-      <div class="mb-4 bg-white dark:bg-gray-800 rounded-lg shadow-md p-3">
+      <div class="mb-4 sticky top-14 bg-white dark:bg-gray-800 rounded-lg shadow-md p-3">
         <div class="flex flex-wrap items-center gap-2">
           <!-- Search -->
           <input 

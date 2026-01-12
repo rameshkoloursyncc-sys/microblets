@@ -583,10 +583,10 @@ const handleSearch = (searchData: { type: string; sectionQuery?: string; sizeQue
   const coggedSections = ['AX', 'BX', 'CX', 'XPA', 'XPB', 'XPC', 'XPZ', '3VX', '5VX', '8VX']
   // Check if it's a poly belt section
   const polySections = ['PJ', 'PK', 'PL', 'PM', 'PH', 'DPL', 'DPK']
-  // Check if it's a TPU belt section
-  const tpuSections = ['5M', '8M', '8M RPP', 'S8M', '14M', 'XL', 'L', 'H', 'AT5', 'AT10', 'T10', 'AT20']
-  // Check if it's a timing belt section
-  const timingSections = ['XL', 'L', 'H', 'XH', 'T5', 'T10', '5M', '8M', '14M', 'DL', 'DH', 'D5M', 'D8M', 'NEOPRENE-XL', 'NEOPRENE-L', 'NEOPRENE-H', 'NEOPRENE-XH', 'NEOPRENE-T5', 'NEOPRENE-T10']
+  // Check if it's a timing belt section (check timing first to avoid conflicts with TPU)
+  const timingSections = ['XL', 'L', 'H', 'XH', 'T5', 'T10', '3M', '5M', '8M', '14M', 'DL', 'DH', 'D5M', 'D8M', 'NEOPRENE-XL', 'NEOPRENE-L', 'NEOPRENE-H', 'NEOPRENE-XH', 'NEOPRENE-T5', 'NEOPRENE-T10', 'NEOPRENE-3M', 'NEOPRENE-5M', 'NEOPRENE-8M', 'NEOPRENE-14M', 'NEOPRENE-DL', 'NEOPRENE-DH', 'NEOPRENE-D5M', 'NEOPRENE-D8M']
+  // Check if it's a TPU belt section (more specific sections to avoid conflicts)
+  const tpuSections = ['8M RPP', 'S8M', 'AT5', 'AT10', 'T10', 'AT20']
   
   // Simple logic: section determines the view, size is just a filter
   if (section) {
@@ -598,10 +598,10 @@ const handleSearch = (searchData: { type: string; sectionQuery?: string; sizeQue
         currentView.value = 'cogged-belts-search'
       } else if (polySections.includes(section)) {
         currentView.value = 'poly-belts-search'
-      } else if (tpuSections.includes(section)) {
-        currentView.value = 'tpu-belts-search'
       } else if (timingSections.includes(section)) {
         currentView.value = 'timing-belts-search'
+      } else if (tpuSections.includes(section)) {
+        currentView.value = 'tpu-belts-search'
       } else {
         currentView.value = 'inventory'
       }
@@ -647,22 +647,6 @@ const handleSearch = (searchData: { type: string; sectionQuery?: string; sizeQue
           'DPK': 'poly-belts-dpk'
         }
         currentView.value = sectionPageMap[section] || 'poly-belts-search'
-      } else if (tpuSections.includes(section)) {
-        const sectionPageMap: Record<string, string> = {
-          '5M': 'tpu-belts-t5m-page',
-          '8M': 'tpu-belts-t8m-page',
-          '8M RPP': 'tpu-belts-t8m-RPP-page',
-          'S8M': 'tpu-belts-ts8m-page',
-          '14M': 'tpu-belts-t14m-page',
-          'XL': 'tpu-belts-txl-page',
-          'L': 'tpu-belts-tlm-page',
-          'H': 'tpu-belts-thm-page',
-          'AT5': 'tpu-belts-at5m-page',
-          'AT10': 'tpu-belts-at10m-page',
-          'T10': 'tpu-belts-t10M-page',
-          'AT20': 'tpu-belts-at20m-page'
-        }
-        currentView.value = sectionPageMap[section] || 'tpu-belts-search'
       } else if (timingSections.includes(section)) {
         const sectionPageMap: Record<string, string> = {
           'XL': 'timing-belts-xl',
@@ -671,6 +655,7 @@ const handleSearch = (searchData: { type: string; sectionQuery?: string; sizeQue
           'XH': 'timing-belts-xh',
           'T5': 'timing-belts-t5',
           'T10': 'timing-belts-t10',
+          '3M': 'timing-belts-3m',
           '5M': 'timing-belts-5m',
           '8M': 'timing-belts-8m',
           '14M': 'timing-belts-14m',
@@ -683,9 +668,27 @@ const handleSearch = (searchData: { type: string; sectionQuery?: string; sizeQue
           'NEOPRENE-H': 'timing-belts-neoprene-h',
           'NEOPRENE-XH': 'timing-belts-neoprene-xh',
           'NEOPRENE-T5': 'timing-belts-neoprene-t5',
-          'NEOPRENE-T10': 'timing-belts-neoprene-t10'
+          'NEOPRENE-T10': 'timing-belts-neoprene-t10',
+          'NEOPRENE-3M': 'timing-belts-neoprene-3m',
+          'NEOPRENE-5M': 'timing-belts-neoprene-5m',
+          'NEOPRENE-8M': 'timing-belts-neoprene-8m',
+          'NEOPRENE-14M': 'timing-belts-neoprene-14m',
+          'NEOPRENE-DL': 'timing-belts-neoprene-dl',
+          'NEOPRENE-DH': 'timing-belts-neoprene-dh',
+          'NEOPRENE-D5M': 'timing-belts-neoprene-d5m',
+          'NEOPRENE-D8M': 'timing-belts-neoprene-d8m'
         }
         currentView.value = sectionPageMap[section] || 'timing-belts-search'
+      } else if (tpuSections.includes(section)) {
+        const sectionPageMap: Record<string, string> = {
+          '8M RPP': 'tpu-belts-t8m-RPP-page',
+          'S8M': 'tpu-belts-ts8m-page',
+          'AT5': 'tpu-belts-at5m-page',
+          'AT10': 'tpu-belts-at10m-page',
+          'T10': 'tpu-belts-t10M-page',
+          'AT20': 'tpu-belts-at20m-page'
+        }
+        currentView.value = sectionPageMap[section] || 'tpu-belts-search'
       } else {
         currentView.value = 'inventory'
       }
