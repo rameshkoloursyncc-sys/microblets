@@ -8,15 +8,6 @@ axios.defaults.headers.common['Content-Type'] = 'application/json'
 // Include credentials (cookies) with requests
 axios.defaults.withCredentials = true
 
-// Add CSRF token interceptor
-axios.interceptors.request.use((config) => {
-  const token = document.head.querySelector('meta[name="csrf-token"]')
-  if (token) {
-    config.headers['X-CSRF-TOKEN'] = (token as HTMLMetaElement).content
-  }
-  return config
-})
-
 // Add response interceptor to handle authentication errors
 axios.interceptors.response.use(
   (response) => response,
@@ -63,5 +54,29 @@ axios.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+// Add request interceptor to include user data as fallback
+axios.interceptors.request.use((config) => {
+  const token = document.head.querySelector('meta[name="csrf-token"]')
+  if (token) {
+    config.headers['X-CSRF-TOKEN'] = (token as HTMLMetaElement).content
+  }
+  
+  // Add user data as fallback authentication
+  const storedUser = localStorage.getItem('user')
+  if (storedUser) {
+    try {
+      const userData = JSON.parse(storedUser)
+      if (userData && userData.id && userData.name && userData.role) {
+        config.headers['X-Auth-User'] = storedUser
+      }
+    } catch (e) {
+      // Invalid user data, remove it
+      localStorage.removeItem('user')
+    }
+  }
+  
+  return config
+})
 
 export default axios
