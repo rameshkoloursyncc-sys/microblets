@@ -129,4 +129,49 @@ class RateFormulaController extends Controller
             'message' => 'Formula deleted successfully'
         ]);
     }
+
+    public function getAllFormulas()
+    {
+        try{
+            $formulas = RateFormula::all();
+            $organised = [];
+
+            foreach ($formulas as $formula) {
+                $category = $formula->category;
+                $section = $formula->section;
+
+                if(!isset($organised[$category])){
+                    $organised[$category]= [];
+                }
+
+
+            $parsed = $this->parseFormula($formula->formula, $category);
+
+
+            $organised[$category][$section]=[
+                'id' => $formula->id,
+                'formula' => $formula->formula,
+                'multiplier'=>$parsed['multiplier'],
+                'divisor'=>$parsed['divisor'],
+                'type_multiplier'=>$parsed['type_multiplier'],
+                'created_at'=>$formula->created_at,
+                'updated_at'=>$formula->updated_at,
+            ];
+            }
+
+
+          return resoponse()->json($organised);
+
+        } catch(\Exception $e){
+            return response()->json([
+                'error' => 'dfcmvm',
+                "message" => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
+
+
 }
