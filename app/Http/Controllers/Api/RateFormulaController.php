@@ -143,28 +143,24 @@ class RateFormulaController extends Controller
                 if(!isset($organised[$category])){
                     $organised[$category]= [];
                 }
-
-
             $parsed = $this->parseFormula($formula->formula, $category);
-
-
-            $organised[$category][$section]=[
+            $formulaData=[
                 'id' => $formula->id,
                 'formula' => $formula->formula,
                 'multiplier'=>$parsed['multiplier'],
                 'divisor'=>$parsed['divisor'],
-                'type_multiplier'=>$parsed['type_multiplier'],
                 'created_at'=>$formula->created_at,
                 'updated_at'=>$formula->updated_at,
             ];
+            if($parsed['type_multiplier'] !== null){
+                $formulaData['type_multiplier'] = $parsed['type_multiplier'];
             }
-
-
-          return resoponse()->json($organised);
-
+            $organised[$category] [$section] = $formulaData;
+            }
+          return response()->json($organised);
         } catch(\Exception $e){
             return response()->json([
-                'error' => 'dfcmvm',
+                'error' => 'error is this',
                 "message" => $e->getMessage()
             ], 500);
         }
@@ -172,6 +168,40 @@ class RateFormulaController extends Controller
 
 
 
-
+   private function parseFormula($formulaString, $category)
+{
+    $result = [
+        'multiplier' => 0,
+        'divisor' => 1,
+        'type_multiplier' => null
+    ];
+    
+    if (empty($formulaString)) {
+        return $result;
+    }
+    
+    // Handle different formula types
+    if ($category === 'timing_belts') {
+        // Timing belt formula: size*type*450*0.0094+size*total_mm*0.0094
+        if (preg_match('/size\*type\*(\d+(?:\.\d+)?)\*(\d+(?:\.\d+)?)\+size\*total_mm\*(\d+(?:\.\d+)?)/', $formulaString, $matches)) {
+            $result['type_multiplier'] = floatval($matches[1]);
+            $result['multiplier'] = floatval($matches[2]);
+        }
+    } elseif ($category === 'poly_belts') {
+        // Poly belt formula: size/25.4*0.36
+        if (preg_match('/ribs\/(\d+(?:\.\d+)?)\*(\d+(?:\.\d+)?)/', $formulaString, $matches)) {
+            $result['divisor'] = floatval($matches[1]);
+            $result['multiplier'] = floatval($matches[2]);
+        }
+    } else {
+        // Standard formula: size/1*1.05
+        if (preg_match('/size\/(\d+(?:\.\d+)?)\*(\d+(?:\.\d+)?)/', $formulaString, $matches)) {
+            $result['divisor'] = floatval($matches[1]);
+            $result['multiplier'] = floatval($matches[2]);
+        }
+    }
+    
+    return $result;
+}
 
 }

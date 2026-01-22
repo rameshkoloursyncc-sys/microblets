@@ -278,11 +278,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
+import axios, { Axios } from 'axios'
+
 
 const props = defineProps<{
   sidebarCollapsed?: boolean
 }>()
+
 
 interface Notification { id: number; type: 'success'|'error'|'warning'; title: string; message: string }
 
@@ -449,6 +451,11 @@ const formulas = ref<Record<string, number>>({})
 const divisors = ref<Record<string, number>>({})
 const typeMultipliers = ref<Record<string, number>>({})
 
+const allFormulas = ref<Record<string, number>>({})
+
+
+
+
 // Global inventory settings
 const globalMinInventory = ref<number>(0)
 const specificMinInventory = ref<Record<string, number>>({})
@@ -510,6 +517,7 @@ const onBeltTypeChange = () => {
   divisors.value = { ...currentDefaultDivisors.value }
   typeMultipliers.value = { ...currentDefaultTypeMultipliers.value }
   // Load statistics for new belt type
+  updateCurrentFormulaFromLoaded()
   loadStatistics()
 }
 
@@ -558,6 +566,61 @@ const loadStatistics = async () => {
     showNotification('error', 'Error', `Failed to load statistics: ${err.response?.data?.message || err.message}`)
   }
 }
+
+const loadAllFormulas = async ()=>{
+  try{
+
+  const response = await axios.get('/api/rate-formulas/all')
+  allFormulas.value = response.data
+
+  console.log('reso[pes formrula s]', response, allFormulas)
+
+  updateCurrentFormulaFromLoaded()
+
+  }catch(e){
+    console.log('error :', e);
+  }
+}
+
+
+const updateCurrentFormulaFromLoaded = ()=>{
+
+  const categoryMap = {
+    'vee' : "vee_belts",
+    "poly" :"poly_belts",
+    "cogged":"cogged_belts",
+    "tpu":"tpu_belts",
+    "timing":"timing_belts",
+    "special":"special_belts"
+  }
+
+
+  const category = categoryMap[selectedBeltType.value]
+  const categoryFormulas = allFormulas.value[category] || {}
+
+
+  // Reset to defaults first
+  formulas.value = { ...currentDefaultFormulas.value }
+  divisors.value = { ...currentDefaultDivisors.value }
+  typeMultipliers.value = { ...currentDefaultTypeMultipliers.value }
+  
+  // Override with database values if they exist
+  Object.keys(categoryFormulas).forEach(section => {
+    const formula = categoryFormulas[section]
+    if (formula.multiplier) formulas.value[section] = formula.multiplier
+    if (formula.divisor) divisors.value[section] = formula.divisor
+    if (formula.type_multiplier) typeMultipliers.value[section] = formula.type_multiplier
+  })
+
+
+
+}
+
+
+
+
+
+
 
 // Update formula for specific section
 const updateSectionFormula = async (section: string) => {
@@ -612,6 +675,7 @@ const updateSectionFormula = async (section: string) => {
   } catch (err: any) {
     showNotification('error', 'Update Failed', err.response?.data?.message || 'Failed to update formula')
   } finally {
+    await loadAllFormulas()
     loading.value = false
   }
 }
@@ -919,12 +983,13 @@ const loadGlobalStats = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async() => {
   // Initialize with default formulas and divisors for TPU belts
   formulas.value = { ...currentDefaultFormulas.value }
   divisors.value = { ...currentDefaultDivisors.value }
   typeMultipliers.value = { ...currentDefaultTypeMultipliers.value }
   loadStatistics()
   loadGlobalStats()
+  await loadAllFormulas()
 })
 </script>

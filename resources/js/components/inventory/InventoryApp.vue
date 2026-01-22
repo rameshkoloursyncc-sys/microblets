@@ -596,7 +596,7 @@ const handleSearch = (searchData: { type: string; sectionQuery?: string; sizeQue
   // Check if it's a poly belt section
   const polySections = ['PJ', 'PK', 'PL', 'PM', 'PH', 'DPL', 'DPK']
   // Check if it's a timing belt section (check timing first to avoid conflicts with TPU)
-  const timingSections = ['XL', 'L', 'H', 'XH', 'T5', 'T10', '3M', '5M', '8M', '14M', 'DL', 'DH', 'D5M', 'D8M', 'NEOPRENE-XL', 'NEOPRENE-L', 'NEOPRENE-H', 'NEOPRENE-XH', 'NEOPRENE-T5', 'NEOPRENE-T10', 'NEOPRENE-3M', 'NEOPRENE-5M', 'NEOPRENE-8M', 'NEOPRENE-14M', 'NEOPRENE-DL', 'NEOPRENE-DH', 'NEOPRENE-D5M', 'NEOPRENE-D8M']
+  const timingSections = ['XL', 'L', 'H', 'XH', 'T5', 'T10', '3M', '5M', '8M', '14M', 'DL', 'DH', 'D5M', 'D8M', 'NEO-XL', 'NEOPRENE-L', 'NEOPRENE-H', 'NEOPRENE-XH', 'NEOPRENE-T5', 'NEOPRENE-T10', 'NEOPRENE-3M', 'NEOPRENE-5M', 'NEOPRENE-8M', 'NEOPRENE-14M', 'NEOPRENE-DL', 'NEOPRENE-DH', 'NEOPRENE-D5M', 'NEOPRENE-D8M']
   // Check if it's a TPU belt section (more specific sections to avoid conflicts)
   const tpuSections = ['8M RPP', 'S8M', 'AT5', 'AT10', 'T10', 'AT20']
   
