@@ -731,7 +731,7 @@ class DashboardController extends Controller
             
             if ($totalAlerts > 0 || $request->input('force', false)) {
                 foreach ($emails as $email) {
-                    \Mail::to(trim($email))->send(new \App\Mail\LowStockReport($lowStockData));
+                    \Mail::to(trim($email))->send(new \App\Mail\LowStockReportExcel($lowStockData));
                 }
                 
                 // Mark alerts as sent in StockAlertTracking table

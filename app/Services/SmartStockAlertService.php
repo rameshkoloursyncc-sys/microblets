@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\StockAlertTracking;
 use App\Mail\SmartStockReport;
+use App\Mail\SmartStockReportExcel;
 use Illuminate\Support\Facades\Mail;
 
 class SmartStockAlertService
@@ -49,7 +50,7 @@ class SmartStockAlertService
         $emails = array_map('trim', $emails);
 
         foreach ($emails as $email) {
-            Mail::to(trim($email))->send(new SmartStockReport($alertData));
+            Mail::to(trim($email))->send(new SmartStockReportExcel($alertData));
         }
 
         // Mark alerts as sent
@@ -160,9 +161,9 @@ class SmartStockAlertService
     }
 
     /**
-     * Prepare alert data with die calculations
+     * Prepare alert data with die calculations (public method)
      */
-    private function prepareAlertData($itemsNeedingAlerts)
+    public function prepareAlertData($itemsNeedingAlerts)
     {
         $alertData = [
             'generated_at' => now()->toDateTimeString(),

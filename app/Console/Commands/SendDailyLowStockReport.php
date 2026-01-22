@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\LowStockReport;
+use App\Mail\LowStockReportExcel;
 
 class SendDailyLowStockReport extends Command
 {
@@ -49,8 +50,8 @@ class SendDailyLowStockReport extends Command
                 $this->info("Found {$totalLowStock} low stock and {$totalOutOfStock} out of stock items. Sending report...");
                 
                 foreach ($emails as $email) {
-                    Mail::to(trim($email))->send(new LowStockReport($lowStockData));
-                    $this->info("Report sent to: {$email}");
+                    Mail::to(trim($email))->send(new LowStockReportExcel($lowStockData));
+                    $this->info("Excel report sent to: {$email}");
                 }
                 
                 // Mark alerts as sent in StockAlertTracking table
@@ -63,8 +64,8 @@ class SendDailyLowStockReport extends Command
                 // Optionally send a "all good" report on specific days (e.g., Monday)
                 if (now()->dayOfWeek === 1) { // Monday
                     foreach ($emails as $email) {
-                        Mail::to(trim($email))->send(new LowStockReport($lowStockData));
-                        $this->info("Weekly 'all good' report sent to: {$email}");
+                        Mail::to(trim($email))->send(new LowStockReportExcel($lowStockData));
+                        $this->info("Weekly 'all good' Excel report sent to: {$email}");
                     }
                 }
             }
