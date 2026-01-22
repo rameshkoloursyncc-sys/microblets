@@ -125,4 +125,11 @@ class CoggedBelt extends Model
     {
         return $query->where('balance_stock', 0);
     }
+
+    public function stockAlert()
+    {
+        return $this->hasOne(StockAlertTracking::class, 'product_id')
+            ->where('belt_type', 'cogged')  // Changed from 'cogged_belts' to 'cogged'
+            ->where('is_active', true);
+    }
 }

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Frontend Refresh</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+    <div id="app">
+        <h1>Frontend Refresh Test</h1>
+        <p>RefreshKey: {{ refreshKey }}</p>
+        <button @click="refreshTables">Refresh Tables</button>
+        
+        <div v-if="refreshKey > 0">
+            <h2>Component with RefreshKey: {{ refreshKey }}</h2>
+            <p>This should update when refreshKey changes</p>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, watch } = Vue;
+        
+        createApp({
+            setup() {
+                const refreshKey = ref(0);
+                
+                const refreshTables = () => {
+                    console.log('🔄 Current refreshKey before increment:', refreshKey.value);
+                    refreshKey.value++;
+                    console.log('🔄 New refreshKey after increment:', refreshKey.value);
+                };
+                
+                // Watch for refreshKey changes
+                watch(refreshKey, (newKey, oldKey) => {
+                    console.log('🔄 RefreshKey watcher triggered:', { newKey, oldKey });
+                });
+                
+                return {
+                    refreshKey,
+                    refreshTables
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

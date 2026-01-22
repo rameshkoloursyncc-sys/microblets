@@ -53,7 +53,7 @@
           </button>
 
           <!-- Date Range Filter -->
-          <div class="flex-col md:flex items-center gap-2 m-2">
+          <div class="md:flex-row md:flex items-center gap-2 m-2">
             <label class="text-xs text-gray-600 dark:text-gray-400">From: </label>
             <input 
               v-model="dateFrom" 

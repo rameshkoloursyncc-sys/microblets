@@ -757,8 +757,14 @@ const saveCell = async (product: PolyBelt, field: keyof PolyBelt) => {
 }
 
 const getRibsClass = (p: PolyBelt) => { 
-  if (p.ribs <= 0) return 'text-red-600'
-  if (p.ribs <= p.reorder_level) return 'text-yellow-600'
+
+  if (p.reorder_level !== null && p.reorder_level>=0 &&  p.ribs <= p.reorder_level){
+
+     if(p.stock_alert?.alert_sent){
+       return 'text-yellow-600'
+     }
+       if (p.ribs <= 0) return 'text-red-600'
+  } 
   return 'text-green-600'
 }
 

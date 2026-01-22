@@ -365,13 +365,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
-import { useCoggedBelts, type CoggedBelt, type Transaction } from '../../composables/useCoggedBelts'
+import { useCoggedBelts, type CoggedBelt, type StockAlert, type Transaction } from '../../composables/useCoggedBelts'
 
 const props = defineProps<{
   section?: string  // Optional: filter by specific section (A, B, C, etc.)
   title?: string
   sidebarCollapsed?: boolean
   globalSearch?: string  // Universal search from sidebar
+  refreshKey?: number  // Used to trigger data refresh
 }>()
 
 const {
@@ -416,7 +417,7 @@ const createForm = ref({
   section: props.section || '',
   size: '', 
   balance_stock: 0, 
-  reorder_level: null, 
+  reorder_level: undefined as number | undefined, 
   rate: undefined as number | undefined,
   remark: ''
 })
@@ -595,9 +596,15 @@ const saveCell = async (product: CoggedBelt, field: keyof CoggedBelt) => {
 }
 
 const getStockClass = (p: CoggedBelt) => { 
-  if (p.balance_stock <= 0) return 'text-red-600 font-semibold'
-  if (p.reorder_level !== null && p.reorder_level >= 1 && p.balance_stock <= p.reorder_level) return 'text-yellow-600 font-semibold'
-  return 'text-green-600 font-semibold'
+  // if (p.balance_stock <= 0) return 'text-red-600 font-bold'
+  if (p.reorder_level !== null && p.reorder_level >= 1 && p.balance_stock <= p.reorder_level) {
+    // Check if alert has been sent
+    if (p.stock_alert?.alert_sent) {
+      return 'text-yellow-600 font-bold' // Yellow if alert sent
+    }
+    return 'text-red-600 font-bold' // Red if low stock but no alert sent
+  }
+  return 'text-green-600 font-bold'
 }
 
 const createProduct = async () => {
@@ -609,7 +616,7 @@ const createProduct = async () => {
       section: props.section || '',
       size: '', 
       balance_stock: 0, 
-      reorder_level: null, 
+      reorder_level: undefined, 
       rate: undefined,
       remark: ''
     }
@@ -709,6 +716,15 @@ watch(() => props.globalSearch, (newGlobalSearch) => {
     searchTerm.value = newGlobalSearch
   } else {
     searchTerm.value = ''
+  }
+})
+
+// Watch for refreshKey changes to trigger data refresh
+watch(() => props.refreshKey, async (newKey, oldKey) => {
+  console.log('🔄 RefreshKey watcher triggered:', { newKey, oldKey, section: props.section })
+  if (newKey !== undefined && newKey !== oldKey) {
+    console.log('RefreshKey changed, refreshing data:', newKey)
+    await fetchProducts()
   }
 })
 

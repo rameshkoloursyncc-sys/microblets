@@ -153,4 +153,14 @@ class VeeBelt extends Model
     {
         return $query->where('balance_stock', 0);
     }
+
+    public function stockAlert()
+    {
+        return $this->hasOne
+        (StockAlertTracking::class, 'product_id')
+        ->where('belt_type', 'vee')
+        ->where("is_active", true);
+    }
+
+
 }

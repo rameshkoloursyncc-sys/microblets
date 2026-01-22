@@ -23,6 +23,7 @@ const alertMessage = ref<{type: 'success' | 'error', text: string} | null>(null)
 const sidebarCollapsed = ref(false)
 const globalSectionQuery = ref('')
 const globalSizeQuery = ref('')
+const refreshKey = ref(0) // Used to trigger table refreshes
 
 // Dashboard stats
 const finishedGoodsStats = ref({
@@ -77,6 +78,7 @@ onMounted(async () => {
       // Load dashboard stats
       console.log('🚀 App mounted, loading dashboard stats...')
       await loadDashboardStats()
+      await loadDieRequirements()
     }
   } catch (error) {
     console.error('Auth initialization error:', error)
@@ -103,6 +105,7 @@ watch(currentView, async (newView) => {
   if (newView === 'dashboard' && isAuthenticated.value) {
     console.log('📊 Dashboard view accessed, loading stats...')
     await loadDashboardStats()
+    await loadDieRequirements()
   }
 })
 
@@ -213,6 +216,15 @@ const loadDashboardStats = async () => {
   }
 }
 
+// Refresh all table data after sending alerts
+const refreshTables = () => {
+  console.log('🔄 Refreshing table data after alert sent...')
+  console.log('🔄 Current refreshKey before increment:', refreshKey.value)
+  // Force refresh by updating a reactive key that tables can watch
+  refreshKey.value++
+  console.log('🔄 New refreshKey after increment:', refreshKey.value)
+}
+
 // Send stock alert email
 const sendStockAlert = async () => {
   sendingAlert.value = true
@@ -231,6 +243,9 @@ const sendStockAlert = async () => {
         text: response.data.message
       }
       console.log('✅ Stock alert sent successfully:', response.data)
+      
+      // Trigger refresh of all table data to show updated alert status
+      refreshTables()
     } else {
       alertMessage.value = {
         type: 'error', 
@@ -250,6 +265,78 @@ const sendStockAlert = async () => {
     setTimeout(() => {
       alertMessage.value = null
     }, 5000)
+  }
+}
+
+// Send smart stock alert with die requirements
+const sendingSmartAlert = ref(false)
+const smartAlertMessage = ref<{type: 'success' | 'error', text: string} | null>(null)
+
+const sendSmartStockAlert = async () => {
+  sendingSmartAlert.value = true
+  smartAlertMessage.value = null
+  
+  try {
+    console.log('🏭 Sending smart stock alert report...')
+    
+    const response = await axios.post('/api/dashboard/send-smart-stock-alert', {
+      force: true // Force send for testing - will sync current data and send alerts
+      // emails will be taken from .env file automatically
+    })
+    
+    if (response.data.success) {
+      smartAlertMessage.value = {
+        type: 'success',
+        text: `Smart alert sent! ${response.data.alerts_sent} items processed, ${response.data.recipients?.length || 0} recipients.`
+      }
+      console.log('✅ Smart stock alert sent successfully:', response.data)
+      
+      // Trigger refresh of all table data to show updated alert status
+      refreshTables()
+    } else {
+      smartAlertMessage.value = {
+        type: 'error', 
+        text: response.data.message || 'Failed to send smart stock alert'
+      }
+    }
+  } catch (error: any) {
+    console.error('❌ Error sending smart stock alert:', error)
+    smartAlertMessage.value = {
+      type: 'error',
+      text: error.response?.data?.message || 'Failed to send smart stock alert'
+    }
+  } finally {
+    sendingSmartAlert.value = false
+    
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      smartAlertMessage.value = null
+    }, 5000)
+  }
+}
+
+// Load die requirements
+const dieRequirements = ref(null)
+const loadingDieRequirements = ref(false)
+
+const loadDieRequirements = async () => {
+  loadingDieRequirements.value = true
+  
+  try {
+    console.log('🔧 Loading die requirements...')
+    
+    const response = await axios.get('/api/dashboard/die-requirements')
+    
+    if (response.data.success) {
+      dieRequirements.value = response.data.data
+      console.log('✅ Die requirements loaded:', response.data.data)
+    } else {
+      console.error('❌ Failed to load die requirements:', response.data.message)
+    }
+  } catch (error: any) {
+    console.error('❌ Error loading die requirements:', error)
+  } finally {
+    loadingDieRequirements.value = false
   }
 }
 
@@ -427,18 +514,19 @@ const customViewMapping = computed(() => {
         title: 'Cogged Belts Search Results', 
         section: globalSectionQuery.value,
         globalSearch: globalSizeQuery.value,
-        key: `cogged-search-${globalSectionQuery.value}-${globalSizeQuery.value}` // Force re-render on change
+        refreshKey: refreshKey.value,
+        key: `cogged-search-${globalSectionQuery.value}-${globalSizeQuery.value}-${refreshKey.value}` // Force re-render on change
       } 
     },
-  'cogged-belts-ax': { component: CoggedBeltTable, props: { section: 'AX', title: 'AX Section Inventory' } },
-  'cogged-belts-bx': { component: CoggedBeltTable, props: { section: 'BX', title: 'BX Section Inventory' } },
-  'cogged-belts-cx': { component: CoggedBeltTable, props: { section: 'CX', title: 'CX Section Inventory' } },
-  'cogged-belts-xpa': { component: CoggedBeltTable, props: { section: 'XPA', title: 'XPA Section Inventory' } },
-  'cogged-belts-xpb': { component: CoggedBeltTable, props: { section: 'XPB', title: 'XPB Section Inventory' } },
-  'cogged-belts-xpc': { component: CoggedBeltTable, props: { section: 'XPC', title: 'XPC Section Inventory' } },
-  'cogged-belts-xpz': { component: CoggedBeltTable, props: { section: 'XPZ', title: 'XPZ Section Inventory' } },
-  'cogged-belts-3vx': { component: CoggedBeltTable, props: { section: '3VX', title: '3VX Section Inventory' } },
-  'cogged-belts-5vx': { component: CoggedBeltTable, props: { section: '5VX', title: '5VX Section Inventory' } },
+  'cogged-belts-ax': { component: CoggedBeltTable, props: { section: 'AX', title: 'AX Section Inventory', refreshKey: refreshKey.value } },
+  'cogged-belts-bx': { component: CoggedBeltTable, props: { section: 'BX', title: 'BX Section Inventory', refreshKey: refreshKey.value } },
+  'cogged-belts-cx': { component: CoggedBeltTable, props: { section: 'CX', title: 'CX Section Inventory', refreshKey: refreshKey.value } },
+  'cogged-belts-xpa': { component: CoggedBeltTable, props: { section: 'XPA', title: 'XPA Section Inventory', refreshKey: refreshKey.value } },
+  'cogged-belts-xpb': { component: CoggedBeltTable, props: { section: 'XPB', title: 'XPB Section Inventory', refreshKey: refreshKey.value } },
+  'cogged-belts-xpc': { component: CoggedBeltTable, props: { section: 'XPC', title: 'XPC Section Inventory', refreshKey: refreshKey.value } },
+  'cogged-belts-xpz': { component: CoggedBeltTable, props: { section: 'XPZ', title: 'XPZ Section Inventory', refreshKey: refreshKey.value } },
+  'cogged-belts-3vx': { component: CoggedBeltTable, props: { section: '3VX', title: '3VX Section Inventory', refreshKey: refreshKey.value } },
+  'cogged-belts-5vx': { component: CoggedBeltTable, props: { section: '5VX', title: '5VX Section Inventory', refreshKey: refreshKey.value } },
   
     // Poly Belts - Using new backend-connected PolyBeltTable
     'poly-belts-search': { 
@@ -773,7 +861,7 @@ onMounted(() => {
     :is="customViewMapping[currentView].component || customViewMapping[currentView]" 
     v-bind="customViewMapping[currentView].props || {}"
     :sidebar-collapsed="sidebarCollapsed"
-    :key="customViewMapping[currentView].props?.key || currentView"
+    :key="`${customViewMapping[currentView].props?.key || currentView}-${refreshKey}`"
   />
 </div>
 
@@ -988,25 +1076,42 @@ onMounted(() => {
               <div class="flex items-center justify-between mb-4">
                 <div>
                   <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Stock Alerts</h3>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">Send low stock and out of stock report via email</p>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">Send stock reports and die requirements via email</p>
                 </div>
-                <button 
-                  @click="sendStockAlert"
-                  :disabled="sendingAlert"
-                  class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-                >
-                  <svg v-if="sendingAlert" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2v10a2 2 0 002 2z"></path>
-                  </svg>
-                  {{ sendingAlert ? 'Sending...' : 'Send Stock Alert' }}
-                </button>
+                <div class="flex gap-3">
+                  <button 
+                    @click="sendStockAlert"
+                    :disabled="sendingAlert"
+                    class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                  >
+                    <svg v-if="sendingAlert" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    {{ sendingAlert ? 'Sending...' : 'Send Stock Alert' }}
+                  </button>
+                  
+                  <button 
+                    @click="sendSmartStockAlert"
+                    :disabled="sendingSmartAlert"
+                    class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                  >
+                    <svg v-if="sendingSmartAlert" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                    </svg>
+                    {{ sendingSmartAlert ? 'Sending...' : 'Send Smart Alert' }}
+                  </button>
+                </div>
               </div>
               
-              <!-- Alert Status -->
+              <!-- Alert Status Messages -->
               <div v-if="alertMessage" class="mt-4 p-3 rounded-lg" :class="alertMessage.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200' : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'">
                 <div class="flex items-center">
                   <svg v-if="alertMessage.type === 'success'" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -1015,7 +1120,53 @@ onMounted(() => {
                   <svg v-else class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                   </svg>
-                  <span>{{ alertMessage.text }}</span>
+                  <span class="font-medium">Stock Alert:</span>
+                  <span class="ml-1">{{ alertMessage.text }}</span>
+                </div>
+              </div>
+              
+              <div v-if="smartAlertMessage" class="mt-4 p-3 rounded-lg" :class="smartAlertMessage.type === 'success' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200' : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'">
+                <div class="flex items-center">
+                  <svg v-if="smartAlertMessage.type === 'success'" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                  </svg>
+                  <svg v-else class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                  </svg>
+                  <span class="font-medium">Smart Alert:</span>
+                  <span class="ml-1">{{ smartAlertMessage.text }}</span>
+                </div>
+              </div>
+
+              <!-- Die Requirements Summary -->
+              <div v-if="dieRequirements && Object.keys(dieRequirements).length > 0" class="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                <div class="flex items-center mb-3">
+                  <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                  </svg>
+                  <h4 class="text-lg font-semibold text-amber-800 dark:text-amber-200">Die Requirements Summary</h4>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div v-for="(sections, beltType) in dieRequirements" :key="beltType" class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-amber-200 dark:border-amber-700">
+                    <h5 class="font-medium text-gray-900 dark:text-white capitalize mb-2">{{ beltType }} Belts</h5>
+                    <div v-for="section in sections" :key="section.section" class="flex justify-between items-center text-sm py-1">
+                      <span class="text-gray-600 dark:text-gray-400">{{ section.section }}:</span>
+                      <div class="flex items-center">
+                        <span class="font-medium text-amber-700 dark:text-amber-300 mr-1">{{ section.total_dies }}</span>
+                        <span class="text-xs text-gray-500">dies</span>
+                        <span class="text-xs text-gray-400 ml-1">({{ section.items_count }} items)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div v-else-if="!loadingDieRequirements" class="mt-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <div class="flex items-center">
+                  <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                  </svg>
+                  <span class="text-green-800 dark:text-green-200 font-medium">🎉 No die requirements needed - all items are adequately stocked!</span>
                 </div>
               </div>
             </div>

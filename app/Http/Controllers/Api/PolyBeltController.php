@@ -19,6 +19,9 @@ class PolyBeltController extends Controller
     {
         $query = PolyBelt::query();
 
+        $query->with('stockAlert');
+
+
         // Filter by section if provided
         if ($request->has('section')) {
             $query->bySection($request->section);
@@ -62,6 +65,7 @@ class PolyBeltController extends Controller
     public function bySection(string $section)
     {
         return PolyBelt::bySection($section)
+            ->with('stockAlert')
             ->orderByRaw('CAST(size AS UNSIGNED) ASC')
             ->orderBy('ribs')
             ->get();

@@ -18,6 +18,8 @@ class TimingBeltController extends Controller
     public function index(Request $request)
     {
         $query = TimingBelt::query();
+        
+        $query->with('stockAlert');
 
         // Filter by section if provided
         if ($request->has('section')) {

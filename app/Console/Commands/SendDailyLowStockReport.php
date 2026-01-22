@@ -37,7 +37,7 @@ class SendDailyLowStockReport extends Command
             // Get email addresses from command option or config
             $emails = $this->option('email');
             if (empty($emails)) {
-                $emails = config('mail.low_stock_recipients', ['admin@example.com']);
+                $emails = explode(',', env('LOW_STOCK_EMAIL_RECIPIENTS', 'admin@example.com'));
             }
 
             // Send email if there are low stock or out of stock items
@@ -49,18 +49,21 @@ class SendDailyLowStockReport extends Command
                 $this->info("Found {$totalLowStock} low stock and {$totalOutOfStock} out of stock items. Sending report...");
                 
                 foreach ($emails as $email) {
-                    Mail::to($email)->send(new LowStockReport($lowStockData));
+                    Mail::to(trim($email))->send(new LowStockReport($lowStockData));
                     $this->info("Report sent to: {$email}");
                 }
                 
-                $this->info('✅ Stock alert report sent successfully!');
+                // Mark alerts as sent in StockAlertTracking table
+                $this->markStockAlertsAsSent($lowStockData);
+                
+                $this->info('✅ Stock alert report sent successfully and alerts marked as sent!');
             } else {
                 $this->info('ℹ️  No low stock or out of stock items found. No email sent.');
                 
                 // Optionally send a "all good" report on specific days (e.g., Monday)
                 if (now()->dayOfWeek === 1) { // Monday
                     foreach ($emails as $email) {
-                        Mail::to($email)->send(new LowStockReport($lowStockData));
+                        Mail::to(trim($email))->send(new LowStockReport($lowStockData));
                         $this->info("Weekly 'all good' report sent to: {$email}");
                     }
                 }
@@ -166,5 +169,59 @@ class SendDailyLowStockReport extends Command
             'total_alert_count' => array_sum(array_column($lowStockItems, 'count')) + array_sum(array_column($outOfStockItems, 'count')),
             'generated_at' => now()->toDateTimeString()
         ];
+    }
+
+    /**
+     * Mark stock alerts as sent in StockAlertTracking table
+     */
+    private function markStockAlertsAsSent($lowStockData)
+    {
+        try {
+            // First sync the stock alert tracking data
+            $smartAlertService = new \App\Services\SmartStockAlertService();
+            $smartAlertService->syncStockAlertTracking();
+            
+            // Get all low stock and out of stock items from the data
+            $allItems = array_merge(
+                $lowStockData['low_stock_items'] ?? [],
+                $lowStockData['out_of_stock_items'] ?? []
+            );
+            
+            // Map table names to belt types
+            $tableToType = [
+                'vee_belts' => 'vee',
+                'cogged_belts' => 'cogged',
+                'poly_belts' => 'poly',
+                'tpu_belts' => 'tpu',
+                'timing_belts' => 'timing',
+                'special_belts' => 'special'
+            ];
+            
+            $markedCount = 0;
+            foreach ($allItems as $table => $data) {
+                $beltType = $tableToType[$table] ?? null;
+                if (!$beltType || !isset($data['items'])) {
+                    continue;
+                }
+                
+                foreach ($data['items'] as $item) {
+                    // Find the corresponding tracking record and mark as sent
+                    $tracking = \App\Models\StockAlertTracking::where('belt_type', $beltType)
+                        ->where('product_id', $item->id)
+                        ->where('is_active', true)
+                        ->first();
+                    
+                    if ($tracking) {
+                        $tracking->markAlertSent();
+                        $markedCount++;
+                    }
+                }
+            }
+            
+            $this->info("Marked {$markedCount} alerts as sent in tracking system.");
+            
+        } catch (\Exception $e) {
+            $this->warn("Error marking stock alerts as sent: " . $e->getMessage());
+        }
     }
 }

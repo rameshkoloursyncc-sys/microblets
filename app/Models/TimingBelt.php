@@ -201,4 +201,12 @@ class TimingBelt extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+
+    public function stockAlert()
+    {
+        return $this->hasOne(StockAlertTracking::class, 'product_id')
+        ->where("belts_type", 'timing')
+        ->where("is_active", true);
+    }
 }

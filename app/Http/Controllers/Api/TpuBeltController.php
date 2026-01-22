@@ -18,6 +18,7 @@ class TpuBeltController extends Controller
     public function index(Request $request)
     {
         $query = TpuBelt::query();
+        $query->with('stockAlert');
 
         // Filter by section if provided
         if ($request->has('section')) {

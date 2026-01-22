@@ -96,6 +96,80 @@
         </div>
       </div>
 
+      
+        <!-- Global Die Settings -->
+    <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          {{ beltTypeConfig[selectedBeltType].name }} Die Configuration
+        </h2>
+        
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          Configure how much stock each die produces for each section. This is used for calculating die requirements in smart alerts.
+        </p>
+        
+        <!-- Debug info (remove in production) -->
+        <div class="mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs">
+          <strong>Debug:</strong> 
+          Loaded configs: {{ Object.keys(allDieConfigurations).length }} belt types, 
+          Current belt ({{ selectedBeltType }}): {{ Object.keys(currentDefaultDieConfigs).length }} sections,
+          Input values: {{ Object.keys(dieConfigurations).length }} sections
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div v-for="section in currentSections" :key="section" class="border rounded-lg p-4">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {{ section }} Section
+            </label>
+
+            <div class="mb-2">
+              <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                Stock per Die:
+              </label>
+              <input 
+                v-model.number="dieConfigurations[section]" 
+                type="number" 
+                step="0.01" 
+                min="0.01"
+                class="w-full p-2 border rounded bg-white dark:bg-gray-700 dark:text-white text-sm"
+                :placeholder="(currentDefaultDieConfigs[section] || 30).toString()"
+              />
+            </div>
+            
+            <div class="text-xs text-gray-500 mb-2">
+              Current: {{ currentDefaultDieConfigs[section] || dieConfigurations[section] || 30 }} units per die
+            </div>
+            
+            <button 
+              @click="updateDieConfiguration(section)" 
+              class="w-full px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+              :disabled="loading"
+            >
+              Update Die Config
+            </button>
+          </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="mt-6 flex gap-3">
+          <button 
+            @click="loadDieConfigurations" 
+            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+            :disabled="loading"
+          >
+            {{ loading ? 'Loading...' : 'Refresh Configurations' }}
+          </button>
+          <button 
+            @click="seedDefaultDieConfigurations" 
+            class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
+            :disabled="loading"
+          >
+            Reset to Defaults
+          </button>
+        </div>
+      </div>
+
+
+
       <!-- Rate Formula Management -->
       <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
@@ -453,7 +527,9 @@ const typeMultipliers = ref<Record<string, number>>({})
 
 const allFormulas = ref<Record<string, number>>({})
 
-
+// Die configuration variables
+const dieConfigurations = ref<Record<string, number>>({})
+const allDieConfigurations = ref<Record<string, Record<string, number>>>({})
 
 
 // Global inventory settings
@@ -481,6 +557,7 @@ const currentSectionsWithDivisor = computed(() => beltTypeConfig[selectedBeltTyp
 const currentJsonFiles = computed(() => beltTypeConfig[selectedBeltType.value].jsonFiles)
 const currentApiEndpoint = computed(() => beltTypeConfig[selectedBeltType.value].apiEndpoint)
 const currentFormulaType = computed(() => beltTypeConfig[selectedBeltType.value].formulaType)
+const currentDefaultDieConfigs = computed(() => allDieConfigurations.value[selectedBeltType.value] || {})
 
 const activeSections = computed(() => {
   return Object.values(sectionCounts.value).filter(count => count > 0).length
@@ -516,6 +593,14 @@ const onBeltTypeChange = () => {
   formulas.value = { ...currentDefaultFormulas.value }
   divisors.value = { ...currentDefaultDivisors.value }
   typeMultipliers.value = { ...currentDefaultTypeMultipliers.value }
+  // Reset die configurations for new belt type
+  dieConfigurations.value = { ...allDieConfigurations.value[selectedBeltType.value] || {} }
+  
+  // If no die configurations loaded yet, populate with current values from database
+  if (Object.keys(dieConfigurations.value).length === 0 && Object.keys(allDieConfigurations.value).length > 0) {
+    dieConfigurations.value = { ...allDieConfigurations.value[selectedBeltType.value] || {} }
+  }
+  
   // Load statistics for new belt type
   updateCurrentFormulaFromLoaded()
   loadStatistics()
@@ -983,6 +1068,88 @@ const loadGlobalStats = async () => {
   }
 }
 
+// Die Configuration Methods
+const loadDieConfigurations = async () => {
+  try {
+    const response = await axios.get('/api/die-configurations')
+    if (response.data.success) {
+      // Transform the API response to match our expected structure
+      const transformedData: Record<string, Record<string, number>> = {}
+      
+      for (const [beltType, sections] of Object.entries(response.data.data)) {
+        transformedData[beltType] = {}
+        if (Array.isArray(sections)) {
+          sections.forEach((config: any) => {
+            transformedData[beltType][config.section] = parseFloat(config.stock_per_die)
+          })
+        }
+      }
+      
+      allDieConfigurations.value = transformedData
+      // Set current die configurations for selected belt type
+      dieConfigurations.value = { ...allDieConfigurations.value[selectedBeltType.value] || {} }
+      
+      console.log('Die configurations loaded:', transformedData)
+      console.log('Current belt type configurations:', dieConfigurations.value)
+    }
+  } catch (error: any) {
+    console.error('Error loading die configurations:', error)
+    showNotification('error', 'Error', 'Failed to load die configurations')
+  }
+}
+
+const updateDieConfiguration = async (section: string) => {
+  if (!dieConfigurations.value[section] || dieConfigurations.value[section] <= 0) {
+    showNotification('error', 'Invalid Value', 'Stock per die must be greater than 0')
+    return
+  }
+
+  loading.value = true
+  try {
+    const response = await axios.post('/api/die-configurations', {
+      belt_type: selectedBeltType.value,
+      section: section,
+      stock_per_die: dieConfigurations.value[section],
+      notes: `Updated via settings page on ${new Date().toLocaleString()}`
+    })
+
+    if (response.data.success) {
+      // Update local data structures
+      if (!allDieConfigurations.value[selectedBeltType.value]) {
+        allDieConfigurations.value[selectedBeltType.value] = {}
+      }
+      allDieConfigurations.value[selectedBeltType.value][section] = dieConfigurations.value[section]
+      
+      showNotification('success', 'Success', `Die configuration for ${section} section updated successfully`)
+    }
+  } catch (error: any) {
+    console.error('Error updating die configuration:', error)
+    showNotification('error', 'Error', 'Failed to update die configuration')
+  } finally {
+    loading.value = false
+  }
+}
+
+const seedDefaultDieConfigurations = async () => {
+  if (!confirm('Reset all die configurations to default values? This will overwrite existing configurations.')) return
+  
+  loading.value = true
+  try {
+    const response = await axios.post('/api/die-configurations/seed-defaults')
+    if (response.data.success) {
+      await loadDieConfigurations()
+      // Also update current die configurations for selected belt type
+      dieConfigurations.value = { ...allDieConfigurations.value[selectedBeltType.value] || {} }
+      showNotification('success', 'Success', 'Default die configurations seeded successfully')
+    }
+  } catch (error: any) {
+    console.error('Error seeding default die configurations:', error)
+    showNotification('error', 'Error', 'Failed to seed default die configurations')
+  } finally {
+    loading.value = false
+  }
+}
+
 onMounted(async() => {
   // Initialize with default formulas and divisors for TPU belts
   formulas.value = { ...currentDefaultFormulas.value }
@@ -991,5 +1158,6 @@ onMounted(async() => {
   loadStatistics()
   loadGlobalStats()
   await loadAllFormulas()
+  await loadDieConfigurations()
 })
 </script>

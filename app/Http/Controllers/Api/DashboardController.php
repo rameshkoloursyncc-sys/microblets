@@ -717,10 +717,13 @@ class DashboardController extends Controller
             $lowStockData = $this->getStockAlertData();
             
             // Get email addresses from request or config
-            $emails = $request->input('emails', config('mail.low_stock_recipients', ['admin@example.com']));
+            $emails = $request->input('emails', explode(',', env('LOW_STOCK_EMAIL_RECIPIENTS', 'admin@example.com')));
             if (is_string($emails)) {
                 $emails = explode(',', $emails);
             }
+            
+            // Clean up email addresses (trim whitespace)
+            $emails = array_map('trim', $emails);
             
             $totalLowStock = $lowStockData['total_low_stock_count'] ?? 0;
             $totalOutOfStock = $lowStockData['total_out_of_stock_count'] ?? 0;
@@ -730,6 +733,9 @@ class DashboardController extends Controller
                 foreach ($emails as $email) {
                     \Mail::to(trim($email))->send(new \App\Mail\LowStockReport($lowStockData));
                 }
+                
+                // Mark alerts as sent in StockAlertTracking table
+                $this->markStockAlertsAsSent($lowStockData);
                 
                 return response()->json([
                     'success' => true,
@@ -855,5 +861,118 @@ class DashboardController extends Controller
             'total_alert_count' => array_sum(array_column($lowStockItems, 'count')) + array_sum(array_column($outOfStockItems, 'count')),
             'generated_at' => now()->toDateTimeString()
         ];
+
+
+
+
+
+
+
     }
+
+    /**
+ * Send smart stock alerts
+ */
+public function sendSmartStockAlert(Request $request)
+{
+    try {
+        $smartAlertService = new \App\Services\SmartStockAlertService();
+        
+        $emails = $request->input('emails', explode(',', env('LOW_STOCK_EMAIL_RECIPIENTS', 'admin@example.com')));
+        $force = $request->input('force', false);
+        
+        // Clean up email addresses (trim whitespace)
+        if (is_array($emails)) {
+            $emails = array_map('trim', $emails);
+        }
+        
+        if ($force) {
+            $result = $smartAlertService->sendSmartAlertsForced($emails);
+        } else {
+            $result = $smartAlertService->sendSmartAlerts($emails);
+        }
+        
+        return response()->json($result);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error sending smart stock alerts: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+/**
+ * Get die requirements summary
+ */
+public function getDieRequirements()
+{
+    try {
+        $smartAlertService = new \App\Services\SmartStockAlertService();
+        $summary = $smartAlertService->getDieRequirementsUnalerted();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $summary
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error getting die requirements: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+/**
+ * Mark stock alerts as sent in StockAlertTracking table
+ */
+private function markStockAlertsAsSent($lowStockData)
+{
+    try {
+        // First sync the stock alert tracking data
+        $smartAlertService = new \App\Services\SmartStockAlertService();
+        $smartAlertService->syncStockAlertTracking();
+        
+        // Get all low stock and out of stock items from the data
+        $allItems = array_merge(
+            $lowStockData['low_stock_items'] ?? [],
+            $lowStockData['out_of_stock_items'] ?? []
+        );
+        
+        // Map table names to belt types
+        $tableToType = [
+            'vee_belts' => 'vee',
+            'cogged_belts' => 'cogged',
+            'poly_belts' => 'poly',
+            'tpu_belts' => 'tpu',
+            'timing_belts' => 'timing',
+            'special_belts' => 'special'
+        ];
+        
+        foreach ($allItems as $table => $data) {
+            $beltType = $tableToType[$table] ?? null;
+            if (!$beltType || !isset($data['items'])) {
+                continue;
+            }
+            
+            foreach ($data['items'] as $item) {
+                // Find the corresponding tracking record and mark as sent
+                $tracking = \App\Models\StockAlertTracking::where('belt_type', $beltType)
+                    ->where('product_id', $item->id)
+                    ->where('is_active', true)
+                    ->first();
+                
+                if ($tracking) {
+                    $tracking->markAlertSent();
+                }
+            }
+        }
+        
+    } catch (\Exception $e) {
+        \Log::warning("Error marking stock alerts as sent: " . $e->getMessage());
+    }
+}
+
+
 }

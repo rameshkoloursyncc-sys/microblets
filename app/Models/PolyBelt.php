@@ -148,4 +148,12 @@ class PolyBelt extends Model
         return $this->hasOne(RateFormula::class, 'section', 'section')
             ->where('category', 'poly_belts');
     }
+
+
+    public function stockAlert()
+{
+    return $this->hasOne(StockAlertTracking::class, 'product_id')
+        ->where('belt_type', 'ploy')
+        ->where('is_active', true);
+}
 }

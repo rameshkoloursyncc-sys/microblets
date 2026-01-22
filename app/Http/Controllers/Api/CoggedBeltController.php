@@ -19,6 +19,9 @@ class CoggedBeltController extends Controller
     {
         $query = CoggedBelt::query();
 
+        // Include stock alert relationship
+        $query->with('stockAlert');
+
         // Filter by section if provided
         if ($request->has('section')) {
             $query->bySection($request->section);
@@ -61,6 +64,7 @@ class CoggedBeltController extends Controller
     public function bySection(string $section)
     {
         return CoggedBelt::bySection($section)
+            ->with('stockAlert')
             ->orderByRaw('CAST(size AS UNSIGNED) ASC')
             ->get();
     }
@@ -174,6 +178,18 @@ class CoggedBeltController extends Controller
                     'description' => "Stock updated from {$oldStock} to {$validated['balance_stock']}",
                     'user_id' => session('user')['id'] ?? null,
                 ]);
+
+                // Check and reset stock alert if stock is replenished above reorder level
+                if ($veeBelt->reorder_level && $validated['balance_stock'] >= $veeBelt->reorder_level) {
+                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'cogged')
+                        ->where('product_id', $veeBelt->id)
+                        ->where('is_active', true)
+                        ->first();
+                    
+                    if ($tracking && $tracking->alert_sent) {
+                        $tracking->resetAlert();
+                    }
+                }
             }
 
             // Create transaction if rate changed
@@ -384,6 +400,18 @@ class CoggedBeltController extends Controller
                 }
 
                 $veeBelt->save();
+
+                // Check and reset stock alert if stock is replenished above reorder level
+                if ($veeBelt->reorder_level && $veeBelt->balance_stock >= $veeBelt->reorder_level) {
+                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'cogged')
+                        ->where('product_id', $veeBelt->id)
+                        ->where('is_active', true)
+                        ->first();
+                    
+                    if ($tracking && $tracking->alert_sent) {
+                        $tracking->resetAlert();
+                    }
+                }
 
                 // Create transaction
                 InventoryTransaction::create([

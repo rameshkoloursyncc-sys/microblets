@@ -19,6 +19,8 @@ class VeeBeltController extends Controller
     {
         $query = VeeBelt::query();
 
+        $query->with('stockAlert');
+
         // Filter by section if provided
         if ($request->has('section')) {
             $query->bySection($request->section);
@@ -60,6 +62,7 @@ class VeeBeltController extends Controller
     public function bySection(string $section)
     {
         return VeeBelt::bySection($section)
+            ->with('stockAlert')
             ->orderByRaw('CAST(size AS UNSIGNED) ASC')
             ->get();
     }

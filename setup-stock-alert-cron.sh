@@ -21,37 +21,43 @@ echo "   - ramesh.koloursyncc@gmail.com"
 
 echo ""
 echo "⏰ Available Cron Schedule Options:"
-echo "1. Daily at 8:00 AM IST (Current Laravel scheduler)"
-echo "2. Twice daily (8:00 AM and 6:00 PM IST)"
-echo "3. Every 6 hours"
-echo "4. Every weekday at 8:00 AM IST"
-echo "5. Custom schedule"
-echo "6. Test email now (no cron setup)"
+echo "1. Daily at 5:00 PM IST (Recommended)"
+echo "2. Daily at 8:00 AM IST"
+echo "3. Twice daily (8:00 AM and 5:00 PM IST)"
+echo "4. Every 6 hours"
+echo "5. Every weekday at 5:00 PM IST"
+echo "6. Custom schedule"
+echo "7. Test email now (no cron setup)"
 
 echo ""
-read -p "Choose an option (1-6): " choice
+read -p "Choose an option (1-7): " choice
 
 case $choice in
     1)
+        CRON_SCHEDULE="0 17 * * *"
+        DESCRIPTION="Daily at 5:00 PM IST (Recommended)"
+        ;;
+    2)
         CRON_SCHEDULE="0 8 * * *"
         DESCRIPTION="Daily at 8:00 AM IST"
         ;;
-    2)
-        CRON_SCHEDULE="0 8,18 * * *"
-        DESCRIPTION="Twice daily (8:00 AM and 6:00 PM IST)"
-        ;;
     3)
+        CRON_SCHEDULE="0 8,17 * * *"
+        DESCRIPTION="Twice daily (8:00 AM and 5:00 PM IST)"
+        ;;
+    4)
         CRON_SCHEDULE="0 */6 * * *"
         DESCRIPTION="Every 6 hours"
         ;;
-    4)
-        CRON_SCHEDULE="0 8 * * 1-5"
-        DESCRIPTION="Every weekday at 8:00 AM IST"
-        ;;
     5)
+        CRON_SCHEDULE="0 17 * * 1-5"
+        DESCRIPTION="Every weekday at 5:00 PM IST"
+        ;;
+    6)
         echo ""
         echo "📝 Cron Schedule Format: minute hour day month weekday"
         echo "Examples:"
+        echo "  0 17 * * *    = Daily at 5:00 PM"
         echo "  0 8 * * *     = Daily at 8:00 AM"
         echo "  0 */4 * * *   = Every 4 hours"
         echo "  0 9 * * 1     = Every Monday at 9:00 AM"
@@ -59,7 +65,7 @@ case $choice in
         read -p "Enter custom cron schedule: " CRON_SCHEDULE
         DESCRIPTION="Custom schedule: $CRON_SCHEDULE"
         ;;
-    6)
+    7)
         echo ""
         echo "🧪 Testing email functionality..."
         php artisan debug:email rameshnda09@gmail.com

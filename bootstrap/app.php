@@ -29,7 +29,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(prepend: [
             \Illuminate\Session\Middleware\StartSession::class,
         ]);
+
+        // Register stock alert middleware with alias
+        $middleware->alias([
+            'stock.alert' => \App\Http\Middleware\StockAlertMiddleware::class,
+        ]);
     })
+    
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

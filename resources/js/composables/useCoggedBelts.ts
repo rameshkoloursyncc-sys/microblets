@@ -1,6 +1,22 @@
 import { ref, computed } from 'vue'
 import axios from '../lib/axios'
 
+export interface StockAlert {
+  id: number
+  belt_type: string
+  section: string
+  product_id: number
+  product_sku: string
+  current_stock: number
+  reorder_level: number
+  stock_per_die: number
+  dies_needed: number
+  alert_sent: boolean
+  alert_sent_at: string | null
+  is_active: boolean
+  alert_history: any[]
+}
+
 export interface CoggedBelt {
   id: number
   section: string
@@ -18,6 +34,7 @@ export interface CoggedBelt {
   updated_by?: number
   created_at?: string
   updated_at?: string
+  stock_alert?: StockAlert | null
 }
 
 export interface Transaction {

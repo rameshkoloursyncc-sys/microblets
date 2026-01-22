@@ -1,6 +1,26 @@
 import { ref, computed } from 'vue'
 import axios from '../lib/axios'
 
+export interface StockAlert {
+
+  id: number
+  belt_type: string
+  section: string
+  product_id: number
+  product_sku: string
+  current_stock: number
+  reorder_level: number
+  stock_per_die: number
+  dies_needed: number
+  alert_sent: boolean
+  alert_sent_at: string | null
+  is_active: boolean
+  alert_history: any[]
+
+}
+
+
+
 export interface VeeBelt {
   id: number
   section: string
@@ -18,6 +38,7 @@ export interface VeeBelt {
   updated_by?: number
   created_at?: string
   updated_at?: string
+  stock_alert?: StockAlert | null
 }
 
 export interface Transaction {
@@ -47,14 +68,14 @@ export function useVeeBelts(section?: string) {
     loading.value = true
     error.value = null
     try {
-      const url = section 
+      const url = section
         ? `/api/vee-belts/section/${section}`
         : '/api/vee-belts?paginate=false'
-      
+
       console.log('Fetching from URL:', url, 'for section:', section)
       const response = await axios.get(url)
       console.log('Response received:', response.status, 'Data length:', response.data?.length)
-      
+
       // Transform data to ensure numeric types
       products.value = response.data.map((item: any) => ({
         ...item,
