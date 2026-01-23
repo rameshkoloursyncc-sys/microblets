@@ -40,7 +40,7 @@ export interface TimingBelt {
   updated_by?: number
   created_at?: string
   updated_at?: string
-  stock_alert?: StockAlert | 0
+  stock_alert?: StockAlert | null
 }
 
 export interface Transaction {

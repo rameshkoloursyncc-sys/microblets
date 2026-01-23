@@ -570,6 +570,7 @@ const props = defineProps<{
   title?: string
   sidebarCollapsed?: boolean
   globalSearch?: string
+  refreshKey?: number  // For triggering table refreshes
 }>()
 
 const {
@@ -735,10 +736,24 @@ const saveCell = async (product: TimingBelt | null | undefined, field: keyof Tim
 
 const getStockClass = (p: TimingBelt | null | undefined) => { 
   if (!p) return 'text-gray-400'
+  
+  // Check if stock alert has been sent
+  const alertSent = p.stockAlert?.alert_sent || false
+  
+  // Check if stock is below reorder level
+  const isLowStock = p.reorder_level && p.total_mm <= p.reorder_level
+  
   const currentStock = p.total_mm || 0
-  if (currentStock <= 0) return 'text-black-600'
-  if (currentStock <= (p.reorder_level || 5)) return 'text-yellow-600'
-  return 'text-black-600'
+  if (currentStock <= 0) {
+    // Out of stock
+    return alertSent ? 'text-yellow-600' : 'text-red-600'
+  } else if (isLowStock) {
+    // Low stock
+    return alertSent ? 'text-yellow-600' : 'text-red-600'
+  } else {
+    // Normal stock
+    return 'text-green-600'
+  }
 }
 
 const getSleeveStockClass = (p: TimingBelt | null | undefined) => { 
@@ -1125,6 +1140,14 @@ watch(() => props.globalSearch, (newGlobalSearch) => {
     searchTerm.value = newGlobalSearch
   } else {
     searchTerm.value = ''
+  }
+})
+
+// Watch for refreshKey changes to refresh data
+watch(() => props.refreshKey, async (newRefreshKey) => {
+  console.log('🔄 TimingBeltTable refreshKey changed to:', newRefreshKey)
+  if (newRefreshKey !== undefined) {
+    await fetchProducts()
   }
 })
 </script>

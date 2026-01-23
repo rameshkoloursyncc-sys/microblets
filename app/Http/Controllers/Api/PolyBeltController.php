@@ -171,6 +171,18 @@ class PolyBeltController extends Controller
                     'description' => "Ribs updated from {$oldRibs} to {$validated['ribs']}",
                     'user_id' => session('user')['id'] ?? null,
                 ]);
+
+                // Check and reset stock alert if ribs are replenished above reorder level
+                if ($polyBelt->reorder_level && $validated['ribs'] >= $polyBelt->reorder_level) {
+                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'poly')
+                        ->where('product_id', $polyBelt->id)
+                        ->where('is_active', true)
+                        ->first();
+                    
+                    if ($tracking && $tracking->alert_sent) {
+                        $tracking->resetAlert();
+                    }
+                }
             }
 
             // Create transaction if rate_per_rib changed
@@ -385,6 +397,18 @@ class PolyBeltController extends Controller
                 }
 
                 $polyBelt->save();
+
+                // Check and reset stock alert if ribs are replenished above reorder level
+                if ($polyBelt->reorder_level && $polyBelt->ribs >= $polyBelt->reorder_level) {
+                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'poly')
+                        ->where('product_id', $polyBelt->id)
+                        ->where('is_active', true)
+                        ->first();
+                    
+                    if ($tracking && $tracking->alert_sent) {
+                        $tracking->resetAlert();
+                    }
+                }
 
                 // Create transaction
                 InventoryTransaction::create([

@@ -164,7 +164,7 @@
                       @keyup.esc="cancelEdit" 
                       class="w-full p-1 border rounded" 
                       placeholder="Enter size"
-                      @focus="$event.target.select()"
+                      @focus="($event.target as HTMLInputElement)?.select()"
                       :disabled="savingCell === `${p.id}-size`"
                     />
                   </div>
@@ -439,6 +439,7 @@ const props = defineProps<{
   title?: string
   sidebarCollapsed?: boolean
   globalSearch?: string  // Universal search from sidebar
+  refreshKey?: number  // For triggering table refreshes
 }>()
 
 const {
@@ -483,7 +484,7 @@ const createForm = ref({
   section: props.section || '',
   size: 0, 
   ribs: 0,
-  reorder_level: null, 
+  reorder_level: 0, 
   rate_per_rib: undefined as number | undefined,
   remark: ''
 })
@@ -549,13 +550,13 @@ const visibleProducts = computed(() => {
       const [sectionPart, sizePart] = searchParts
       list = list.filter(p => 
         p.section.toLowerCase() === sectionPart && 
-        p.size.toLowerCase().includes(sizePart)
+        p.size.toString().includes(sizePart)
       )
     } else {
       // Single search term: match section OR size OR ribs
       list = list.filter(p => 
         p.section.toLowerCase().includes(q) || 
-        p.size.toLowerCase().includes(q) ||
+        p.size.toString().includes(q) ||
         p.ribs.toString().includes(q)
       )
     }
@@ -756,17 +757,17 @@ const saveCell = async (product: PolyBelt, field: keyof PolyBelt) => {
   }
 }
 
-const getRibsClass = (p: PolyBelt) => { 
+// const getRibsClass = (p: PolyBelt) => { 
 
-  if (p.reorder_level !== null && p.reorder_level>=0 &&  p.ribs <= p.reorder_level){
+//   if (p.reorder_level !== null && p.reorder_level>=0 &&  p.ribs <= p.reorder_level){
 
-     if(p.stock_alert?.alert_sent){
-       return 'text-yellow-600'
-     }
-       if (p.ribs <= 0) return 'text-red-600'
-  } 
-  return 'text-green-600'
-}
+//      if(p.stock_alert?.alert_sent){
+//        return 'text-yellow-600'
+//      }
+//        if (p.ribs <= 0) return 'text-red-600'
+//   } 
+//   return 'text-green-600'
+// }
 
 const createProduct = async () => {
   try {
@@ -777,7 +778,7 @@ const createProduct = async () => {
       section: props.section || '',
       size: 0, 
       ribs: 0,
-      reorder_level: null, 
+      reorder_level: 0, 
       rate_per_rib: undefined,
       remark: ''
     }
@@ -928,6 +929,27 @@ const downloadJSON = () => {
   showNotification('success', 'Downloaded', `Downloaded ${exportData.length} products`)
 }
 
+const getRibsClass = (p: PolyBelt) => {
+  if (!p) return 'text-gray-400'
+  
+  // Check if stock alert has been sent
+  const alertSent = p.stock_alert?.alert_sent || false
+  
+  // Check if ribs are at or below reorder level
+  const isLowStock = p.reorder_level && p.ribs <= p.reorder_level
+  
+  if (p.ribs <= 0) {
+    // Out of stock
+    return alertSent ? 'text-yellow-600 font-bold' : 'text-red-600 font-bold'
+  } else if (isLowStock) {
+    // Low stock
+    return alertSent ? 'text-yellow-600 font-bold' : 'text-red-600 font-bold'
+  } else {
+    // Normal stock
+    return 'text-green-600 font-bold'
+  }
+}
+
 onMounted(async () => {
   console.log('PolyBeltTable mounted, section:', props.section, 'title:', props.title, 'globalSearch:', props.globalSearch)
   try {
@@ -956,6 +978,14 @@ watch(() => props.globalSearch, (newGlobalSearch) => {
     searchTerm.value = newGlobalSearch
   } else {
     searchTerm.value = ''
+  }
+})
+
+// Watch for refreshKey changes to refresh data
+watch(() => props.refreshKey, async (newRefreshKey) => {
+  console.log('🔄 PolyBeltTable refreshKey changed to:', newRefreshKey)
+  if (newRefreshKey !== undefined) {
+    await fetchProducts()
   }
 })
 

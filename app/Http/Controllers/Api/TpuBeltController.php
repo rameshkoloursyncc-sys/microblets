@@ -56,6 +56,7 @@ class TpuBeltController extends Controller
     public function getBySection($section)
     {
         $tpuBelts = TpuBelt::bySection($section)
+                          ->with('stockAlert')
                           ->orderByRaw('CAST(width AS UNSIGNED) ASC')
                           ->get();
 
@@ -304,6 +305,18 @@ class TpuBeltController extends Controller
                     $changeDescription = "{$request->action} {$widthChange} width (from {$oldWidth} to {$tpuBelt->width})";
                 }
                 $tpuBelt->save();
+
+                // Check and reset stock alert if meter is replenished above reorder level
+                if ($tpuBelt->reorder_level && $tpuBelt->meter >= $tpuBelt->reorder_level) {
+                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'tpu')
+                        ->where('product_id', $tpuBelt->id)
+                        ->where('is_active', true)
+                        ->first();
+                    
+                    if ($tracking && $tracking->alert_sent) {
+                        $tracking->resetAlert();
+                    }
+                }
 
                 // Create transaction record
                 InventoryTransaction::create([

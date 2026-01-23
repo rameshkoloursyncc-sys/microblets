@@ -15,6 +15,7 @@ class TpuBelt extends Model
         'meter',
         'in_meter',
         'out_meter',
+        'reorder_level',
         'rate',
         'value',
         'remark',
@@ -28,6 +29,7 @@ class TpuBelt extends Model
         'meter' => 'decimal:2',
         'in_meter' => 'decimal:2',
         'out_meter' => 'decimal:2',
+        'reorder_level' => 'integer',
         'rate' => 'decimal:2',
         'value' => 'decimal:2',
     ];
@@ -88,6 +90,23 @@ class TpuBelt extends Model
     }
 
     /**
+     * Scope: Low stock items (low meter)
+     */
+    public function scopeLowStock($query)
+    {
+        return $query->whereColumn('meter', '<=', 'reorder_level')
+            ->where('meter', '>', 0);
+    }
+
+    /**
+     * Scope: Out of stock items (no meter)
+     */
+    public function scopeOutOfStock($query)
+    {
+        return $query->where('meter', 0);
+    }
+
+    /**
      * Get the user who created this record
      */
     public function creator()
@@ -104,10 +123,10 @@ class TpuBelt extends Model
     }
 
 
-    public function stockALert()
+    public function stockAlert()
     {
         return $this->hasOne(StockAlertTracking::class, 'product_id')
-        ->where('belts_type', 'tpu')
-        ->where("is_active", true);
+            ->where('belt_type', 'tpu')
+            ->where('is_active', true);
     }
 }

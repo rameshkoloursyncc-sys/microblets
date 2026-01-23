@@ -49,6 +49,7 @@ class TimingBeltController extends Controller
     public function getBySection($section)
     {
         $timingBelts = TimingBelt::bySection($section)
+                                 ->with('stockAlert')
                                  ->orderByRaw('CAST(size AS UNSIGNED) ASC')
                                  ->get();
 
@@ -312,6 +313,18 @@ class TimingBeltController extends Controller
                 }
                 
                 $timingBelt->save();
+
+                // Check and reset stock alert if total_mm is replenished above reorder level
+                if ($timingBelt->reorder_level && $timingBelt->total_mm >= $timingBelt->reorder_level) {
+                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'timing')
+                        ->where('product_id', $timingBelt->id)
+                        ->where('is_active', true)
+                        ->first();
+                    
+                    if ($tracking && $tracking->alert_sent) {
+                        $tracking->resetAlert();
+                    }
+                }
 
                 // Create transaction record
                 InventoryTransaction::create([

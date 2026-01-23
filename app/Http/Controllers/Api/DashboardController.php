@@ -713,8 +713,8 @@ class DashboardController extends Controller
     public function sendStockAlert(Request $request)
     {
         try {
-            // Get low stock data using the same logic as the command
-            $lowStockData = $this->getStockAlertData();
+            // Use the same logic as Smart Alerts since that's working
+            $smartAlertService = new \App\Services\SmartStockAlertService();
             
             // Get email addresses from request or config
             $emails = $request->input('emails', explode(',', env('LOW_STOCK_EMAIL_RECIPIENTS', 'admin@example.com')));
@@ -725,25 +725,31 @@ class DashboardController extends Controller
             // Clean up email addresses (trim whitespace)
             $emails = array_map('trim', $emails);
             
-            $totalLowStock = $lowStockData['total_low_stock_count'] ?? 0;
-            $totalOutOfStock = $lowStockData['total_out_of_stock_count'] ?? 0;
-            $totalAlerts = $lowStockData['total_alert_count'] ?? 0;
+            // Get the alert data using the working Smart Alert logic
+            $alertData = $smartAlertService->getAlertData();
             
-            if ($totalAlerts > 0 || $request->input('force', false)) {
+            // Debug: Log the data structure
+            \Log::info('Send Stock Alert - Using Smart Alert Data:', $alertData);
+            
+            $totalItems = $alertData['total_items'] ?? 0;
+            
+            if ($totalItems > 0 || $request->input('force', false)) {
                 foreach ($emails as $email) {
-                    \Mail::to(trim($email))->send(new \App\Mail\LowStockReportExcel($lowStockData));
+                    // Use the Smart Alert Excel format since it's working
+                    \Mail::to(trim($email))->send(new \App\Mail\SmartStockReportExcel($alertData));
                 }
                 
-                // Mark alerts as sent in StockAlertTracking table
-                $this->markStockAlertsAsSent($lowStockData);
+                // Mark alerts as sent using Smart Alert service
+                $smartAlertService->markAlertsAsSent($alertData);
+                
+                // Trigger refresh of all table data to show updated alert status
                 
                 return response()->json([
                     'success' => true,
-                    'message' => "Stock alert report sent successfully to " . count($emails) . " recipient(s)",
+                    'message' => "Excel stock report sent successfully to " . count($emails) . " recipient(s). Items: {$totalItems}",
                     'data' => [
-                        'total_low_stock' => $totalLowStock,
-                        'total_out_of_stock' => $totalOutOfStock,
-                        'total_alerts' => $totalAlerts,
+                        'total_items' => $totalItems,
+                        'total_dies_needed' => $alertData['total_dies_needed'] ?? 0,
                         'recipients' => $emails,
                         'sent_at' => now()->toDateTimeString()
                     ]
@@ -753,14 +759,14 @@ class DashboardController extends Controller
                     'success' => true,
                     'message' => 'No stock alerts found. Use force=true to send anyway.',
                     'data' => [
-                        'total_low_stock' => $totalLowStock,
-                        'total_out_of_stock' => $totalOutOfStock,
-                        'total_alerts' => $totalAlerts
+                        'total_items' => $totalItems,
+                        'debug_data' => $alertData
                     ]
                 ]);
             }
 
         } catch (\Exception $e) {
+            \Log::error('Send Stock Alert Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error sending stock alert report: ' . $e->getMessage()
@@ -974,5 +980,146 @@ private function markStockAlertsAsSent($lowStockData)
     }
 }
 
+/**
+ * Download Excel report without sending email
+ */
+public function downloadExcelReport(Request $request)
+{
+    try {
+        // Use the same logic as Smart Alerts since that's working
+        $smartAlertService = new \App\Services\SmartStockAlertService();
+        $alertData = $smartAlertService->getAlertData();
+        
+        // Debug: Log the data structure
+        \Log::info('Download Excel - Using Smart Alert Data:', $alertData);
+        
+        // Check if we have any data
+        $totalItems = $alertData['total_items'] ?? 0;
+        
+        if ($totalItems === 0) {
+            // If no data, return a message
+            return response()->json([
+                'success' => false,
+                'message' => 'No low stock or out of stock items found. Total items: ' . $totalItems,
+                'debug_data' => $alertData
+            ], 200);
+        }
+        
+        // Use the ExcelExportService to generate the Excel file (Smart Alert version)
+        $excelService = new \App\Services\ExcelExportService();
+        $spreadsheet = $excelService->generateSmartStockAlertExcel($alertData);
+        
+        // Convert spreadsheet to binary content
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        
+        // Create temporary file
+        $tempFile = tempnam(sys_get_temp_dir(), 'stock_report_');
+        $writer->save($tempFile);
+        
+        // Get file content
+        $excelContent = file_get_contents($tempFile);
+        
+        // Clean up temp file
+        unlink($tempFile);
+        
+        // Set filename with current date
+        $filename = 'stock-report-' . date('Y-m-d') . '.xlsx';
+        
+        return response($excelContent)
+            ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Cache-Control', 'max-age=0');
+            
+    } catch (\Exception $e) {
+        \Log::error('Download Excel Error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Error generating Excel report: ' . $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+}
+
+/**
+ * Debug stock data to see what's being returned
+ */
+public function debugStockData(Request $request)
+{
+    try {
+        $lowStockData = $this->getStockAlertData();
+        
+        // Also get some sample data from each table to see the structure
+        $debugInfo = [];
+        
+        $beltTypes = [
+            'vee_belts' => ['stock_column' => 'balance_stock', 'size_column' => 'size'],
+            'cogged_belts' => ['stock_column' => 'balance_stock', 'size_column' => 'size'],
+            'poly_belts' => ['stock_column' => 'ribs', 'size_column' => 'size'],
+            'tpu_belts' => ['stock_column' => 'meter', 'size_column' => 'width'],
+            'timing_belts' => ['stock_column' => 'total_mm', 'size_column' => 'size'],
+        ];
+        
+        foreach ($beltTypes as $table => $config) {
+            try {
+                // Get table structure
+                $columns = DB::getSchemaBuilder()->getColumnListing($table);
+                
+                // Get sample records
+                $sampleRecords = DB::table($table)
+                    ->select(['id', 'section', $config['size_column'], $config['stock_column'], 'reorder_level'])
+                    ->limit(5)
+                    ->get();
+                
+                // Count records with reorder_level set
+                $withReorderLevel = DB::table($table)
+                    ->whereNotNull('reorder_level')
+                    ->where('reorder_level', '>=', 1)
+                    ->count();
+                
+                // Count low stock items
+                $lowStockCount = DB::table($table)
+                    ->whereNotNull('reorder_level')
+                    ->where('reorder_level', '>=', 1)
+                    ->whereRaw("{$config['stock_column']} > 0")
+                    ->whereRaw("{$config['stock_column']} <= reorder_level")
+                    ->count();
+                
+                // Count out of stock items
+                $outOfStockCount = DB::table($table)
+                    ->whereNotNull('reorder_level')
+                    ->where('reorder_level', '>=', 1)
+                    ->whereRaw("{$config['stock_column']} = 0")
+                    ->count();
+                
+                $debugInfo[$table] = [
+                    'columns' => $columns,
+                    'sample_records' => $sampleRecords,
+                    'total_records' => DB::table($table)->count(),
+                    'with_reorder_level' => $withReorderLevel,
+                    'low_stock_count' => $lowStockCount,
+                    'out_of_stock_count' => $outOfStockCount,
+                    'stock_column' => $config['stock_column'],
+                    'size_column' => $config['size_column']
+                ];
+                
+            } catch (\Exception $e) {
+                $debugInfo[$table] = ['error' => $e->getMessage()];
+            }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'low_stock_data' => $lowStockData,
+            'debug_info' => $debugInfo
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Debug error: ' . $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+}
 
 }

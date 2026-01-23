@@ -151,9 +151,9 @@ class PolyBelt extends Model
 
 
     public function stockAlert()
-{
-    return $this->hasOne(StockAlertTracking::class, 'product_id')
-        ->where('belt_type', 'ploy')
-        ->where('is_active', true);
-}
+    {
+        return $this->hasOne(StockAlertTracking::class, 'product_id')
+            ->where('belt_type', 'poly')
+            ->where('is_active', true);
+    }
 }

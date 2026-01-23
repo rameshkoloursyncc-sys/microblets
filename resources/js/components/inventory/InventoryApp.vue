@@ -168,7 +168,7 @@ const loadDashboardStats = async () => {
       outOfStock: 0
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error loading dashboard stats:', error)
     console.error('Error details:', error.response?.data || error.message)
     
@@ -271,6 +271,7 @@ const sendStockAlert = async () => {
 // Send smart stock alert with die requirements
 const sendingSmartAlert = ref(false)
 const smartAlertMessage = ref<{type: 'success' | 'error', text: string} | null>(null)
+const downloadingExcel = ref(false)
 
 const sendSmartStockAlert = async () => {
   sendingSmartAlert.value = true
@@ -312,6 +313,51 @@ const sendSmartStockAlert = async () => {
     setTimeout(() => {
       smartAlertMessage.value = null
     }, 5000)
+  }
+}
+
+// Download Excel report without sending email
+const downloadExcelReport = async () => {
+  downloadingExcel.value = true
+  
+  try {
+    console.log('📥 Downloading Excel report...')
+    
+    const response = await axios.get('/api/dashboard/download-excel-report', {
+      responseType: 'blob' // Important for file downloads
+    })
+    
+    // Create blob link to download
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    
+    // Set filename with current date
+    const date = new Date().toISOString().split('T')[0]
+    link.setAttribute('download', `stock-report-${date}.xlsx`)
+    
+    // Trigger download
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+    
+    console.log('✅ Excel report downloaded successfully')
+    
+  } catch (error: any) {
+    console.error('❌ Error downloading Excel report:', error)
+    // Show error message in the same alert area
+    alertMessage.value = {
+      type: 'error',
+      text: 'Failed to download Excel report'
+    }
+    
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      alertMessage.value = null
+    }, 5000)
+  } finally {
+    downloadingExcel.value = false
   }
 }
 
@@ -535,7 +581,8 @@ const customViewMapping = computed(() => {
         title: 'Poly Belts Search Results', 
         section: globalSectionQuery.value,
         globalSearch: globalSizeQuery.value,
-        key: `poly-search-${globalSectionQuery.value}-${globalSizeQuery.value}` // Force re-render on change
+        refreshKey: refreshKey.value,
+        key: `poly-search-${globalSectionQuery.value}-${globalSizeQuery.value}-${refreshKey.value}` // Force re-render on change
       } 
     },
     
@@ -546,16 +593,17 @@ const customViewMapping = computed(() => {
         title: 'TPU Belts Search Results', 
         section: globalSectionQuery.value,
         globalSearch: globalSizeQuery.value,
-        key: `tpu-search-${globalSectionQuery.value}-${globalSizeQuery.value}` // Force re-render on change
+        refreshKey: refreshKey.value,
+        key: `tpu-search-${globalSectionQuery.value}-${globalSizeQuery.value}-${refreshKey.value}` // Force re-render on change
       } 
     },
-  'poly-belts-pj': { component: PolyBeltTable, props: { section: 'PJ', title: 'PJ Section Inventory' } },
-  'poly-belts-pk': { component: PolyBeltTable, props: { section: 'PK', title: 'PK Section Inventory' } },
-  'poly-belts-pl': { component: PolyBeltTable, props: { section: 'PL', title: 'PL Section Inventory' } },
-  'poly-belts-pm': { component: PolyBeltTable, props: { section: 'PM', title: 'PM Section Inventory' } },
-  'poly-belts-ph': { component: PolyBeltTable, props: { section: 'PH', title: 'PH Section Inventory' } },
-  'poly-belts-dpl': { component: PolyBeltTable, props: { section: 'DPL', title: 'DPL Section Inventory' } },
-  'poly-belts-dpk': { component: PolyBeltTable, props: { section: 'DPK', title: 'DPK Section Inventory' } },
+  'poly-belts-pj': { component: PolyBeltTable, props: { section: 'PJ', title: 'PJ Section Inventory', refreshKey: refreshKey.value } },
+  'poly-belts-pk': { component: PolyBeltTable, props: { section: 'PK', title: 'PK Section Inventory', refreshKey: refreshKey.value } },
+  'poly-belts-pl': { component: PolyBeltTable, props: { section: 'PL', title: 'PL Section Inventory', refreshKey: refreshKey.value } },
+  'poly-belts-pm': { component: PolyBeltTable, props: { section: 'PM', title: 'PM Section Inventory', refreshKey: refreshKey.value } },
+  'poly-belts-ph': { component: PolyBeltTable, props: { section: 'PH', title: 'PH Section Inventory', refreshKey: refreshKey.value } },
+  'poly-belts-dpl': { component: PolyBeltTable, props: { section: 'DPL', title: 'DPL Section Inventory', refreshKey: refreshKey.value } },
+  'poly-belts-dpk': { component: PolyBeltTable, props: { section: 'DPK', title: 'DPK Section Inventory', refreshKey: refreshKey.value } },
   
   'vee-belts-b-page': { component: VeeBeltTable, props: { section: 'B', title: 'B Section Inventory' } },
   'vee-belts-c-page': { component: VeeBeltTable, props: { section: 'C', title: 'C Section Inventory' } },
@@ -569,18 +617,18 @@ const customViewMapping = computed(() => {
   'vee-belts-5v-page': { component: VeeBeltTable, props: { section: '5V', title: '5V Section Inventory' } },
   'vee-belts-8v-page': { component: VeeBeltTable, props: { section: '8V', title: '8V Section Inventory' } },
 
-  'tpu-belts-t8m-page': { component: TpuBeltTable, props: { section: '8M', title: '8M Section Inventory' } },
-  'tpu-belts-t5m-page': { component: TpuBeltTable, props: { section: '5M', title: '5M Section Inventory' } },
-  'tpu-belts-t8m-RPP-page': { component: TpuBeltTable, props: { section: '8M RPP', title: '8M RPP Section Inventory' } },
-  'tpu-belts-ts8m-page': { component: TpuBeltTable, props: { section: 'S8M', title: 'S8M Section Inventory' } },
-  'tpu-belts-t14m-page': { component: TpuBeltTable, props: { section: '14M', title: '14M Section Inventory' } },
-  'tpu-belts-txl-page': { component: TpuBeltTable, props: { section: 'XL', title: 'XL Section Inventory' } },
-  'tpu-belts-tlm-page': { component: TpuBeltTable, props: { section: 'L', title: 'L Section Inventory' } },
-  'tpu-belts-thm-page': { component: TpuBeltTable, props: { section: 'H', title: 'H Section Inventory' } },
-  'tpu-belts-at5m-page': { component: TpuBeltTable, props: { section: 'AT5', title: 'AT5 Section Inventory' } },
-  'tpu-belts-at10m-page': { component: TpuBeltTable, props: { section: 'AT10', title: 'AT10 Section Inventory' } },
-  'tpu-belts-at20m-page': { component: TpuBeltTable, props: { section: 'AT20', title: 'AT20 Section Inventory' } },
-  'tpu-belts-t10M-page': { component: TpuBeltTable, props: { section: 'T10', title: 'T10 Section Inventory' } },
+  'tpu-belts-t8m-page': { component: TpuBeltTable, props: { section: '8M', title: '8M Section Inventory', refreshKey: refreshKey.value } },
+  'tpu-belts-t5m-page': { component: TpuBeltTable, props: { section: '5M', title: '5M Section Inventory', refreshKey: refreshKey.value } },
+  'tpu-belts-t8m-RPP-page': { component: TpuBeltTable, props: { section: '8M RPP', title: '8M RPP Section Inventory', refreshKey: refreshKey.value } },
+  'tpu-belts-ts8m-page': { component: TpuBeltTable, props: { section: 'S8M', title: 'S8M Section Inventory', refreshKey: refreshKey.value } },
+  'tpu-belts-t14m-page': { component: TpuBeltTable, props: { section: '14M', title: '14M Section Inventory', refreshKey: refreshKey.value } },
+  'tpu-belts-txl-page': { component: TpuBeltTable, props: { section: 'XL', title: 'XL Section Inventory', refreshKey: refreshKey.value } },
+  'tpu-belts-tlm-page': { component: TpuBeltTable, props: { section: 'L', title: 'L Section Inventory', refreshKey: refreshKey.value } },
+  'tpu-belts-thm-page': { component: TpuBeltTable, props: { section: 'H', title: 'H Section Inventory', refreshKey: refreshKey.value } },
+  'tpu-belts-at5m-page': { component: TpuBeltTable, props: { section: 'AT5', title: 'AT5 Section Inventory', refreshKey: refreshKey.value } },
+  'tpu-belts-at10m-page': { component: TpuBeltTable, props: { section: 'AT10', title: 'AT10 Section Inventory', refreshKey: refreshKey.value } },
+  'tpu-belts-at20m-page': { component: TpuBeltTable, props: { section: 'AT20', title: 'AT20 Section Inventory', refreshKey: refreshKey.value } },
+  'tpu-belts-t10M-page': { component: TpuBeltTable, props: { section: 'T10', title: 'T10 Section Inventory', refreshKey: refreshKey.value } },
   
   // Timing Belts - Using new backend-connected TimingBeltTable
   'timing-belts-search': { 
@@ -589,37 +637,38 @@ const customViewMapping = computed(() => {
       title: 'Timing Belts Search Results', 
       section: globalSectionQuery.value,
       globalSearch: globalSizeQuery.value,
-      key: `timing-search-${globalSectionQuery.value}-${globalSizeQuery.value}` // Force re-render on change
+      refreshKey: refreshKey.value,
+      key: `timing-search-${globalSectionQuery.value}-${globalSizeQuery.value}-${refreshKey.value}` // Force re-render on change
     } 
   },
-  'timing-belts-xl': { component: TimingBeltTable, props: { section: 'XL', title: 'XL Section Inventory' } },
-  'timing-belts-l': { component: TimingBeltTable, props: { section: 'L', title: 'L Section Inventory' } },
-  'timing-belts-h': { component: TimingBeltTable, props: { section: 'H', title: 'H Section Inventory' } },
-  'timing-belts-xh': { component: TimingBeltTable, props: { section: 'XH', title: 'XH Section Inventory' } },
-  'timing-belts-t5': { component: TimingBeltTable, props: { section: 'T5', title: 'T5 Section Inventory' } },
-  'timing-belts-t10': { component: TimingBeltTable, props: { section: 'T10', title: 'T10 Section Inventory' } },
-  'timing-belts-3m': { component: TimingBeltTable, props: { section: '3M', title: '3M Section Inventory' } },
-  'timing-belts-5m': { component: TimingBeltTable, props: { section: '5M', title: '5M Section Inventory' } },
-  'timing-belts-8m': { component: TimingBeltTable, props: { section: '8M', title: '8M Section Inventory' } },
-  'timing-belts-14m': { component: TimingBeltTable, props: { section: '14M', title: '14M Section Inventory' } },
-  'timing-belts-dl': { component: TimingBeltTable, props: { section: 'DL', title: 'DL Section Inventory' } },
-  'timing-belts-dh': { component: TimingBeltTable, props: { section: 'DH', title: 'DH Section Inventory' } },
-  'timing-belts-d5m': { component: TimingBeltTable, props: { section: 'D5M', title: 'D5M Section Inventory' } },
-  'timing-belts-d8m': { component: TimingBeltTable, props: { section: 'D8M', title: 'D8M Section Inventory' } },
-  'timing-belts-neoprene-xl': { component: TimingBeltTable, props: { section: 'NEOPRENE-XL', title: 'Neoprene XL Section Inventory' } },
-  'timing-belts-neoprene-l': { component: TimingBeltTable, props: { section: 'NEOPRENE-L', title: 'Neoprene L Section Inventory' } },
-  'timing-belts-neoprene-h': { component: TimingBeltTable, props: { section: 'NEOPRENE-H', title: 'Neoprene H Section Inventory' } },
-  'timing-belts-neoprene-xh': { component: TimingBeltTable, props: { section: 'NEOPRENE-XH', title: 'Neoprene XH Section Inventory' } },
-  'timing-belts-neoprene-t5': { component: TimingBeltTable, props: { section: 'NEOPRENE-T5', title: 'Neoprene T5 Section Inventory' } },
-  'timing-belts-neoprene-t10': { component: TimingBeltTable, props: { section: 'NEOPRENE-T10', title: 'Neoprene T10 Section Inventory' } },
-  'timing-belts-neoprene-3m': { component: TimingBeltTable, props: { section: 'NEOPRENE-3M', title: 'Neoprene 3M Section Inventory' } },
-  'timing-belts-neoprene-5m': { component: TimingBeltTable, props: { section: 'NEOPRENE-5M', title: 'Neoprene 5M Section Inventory' } },
-  'timing-belts-neoprene-8m': { component: TimingBeltTable, props: { section: 'NEOPRENE-8M', title: 'Neoprene 8M Section Inventory' } },
-  'timing-belts-neoprene-14m': { component: TimingBeltTable, props: { section: 'NEOPRENE-14M', title: 'Neoprene 14M Section Inventory' } },
-  'timing-belts-neoprene-dl': { component: TimingBeltTable, props: { section: 'NEOPRENE-DL', title: 'Neoprene DL Section Inventory' } },
-  'timing-belts-neoprene-dh': { component: TimingBeltTable, props: { section: 'NEOPRENE-DH', title: 'Neoprene DH Section Inventory' } },
-  'timing-belts-neoprene-d5m': { component: TimingBeltTable, props: { section: 'NEOPRENE-D5M', title: 'Neoprene D5M Section Inventory' } },
-  'timing-belts-neoprene-d8m': { component: TimingBeltTable, props: { section: 'NEOPRENE-D8M', title: 'Neoprene D8M Section Inventory' } },
+  'timing-belts-xl': { component: TimingBeltTable, props: { section: 'XL', title: 'XL Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-l': { component: TimingBeltTable, props: { section: 'L', title: 'L Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-h': { component: TimingBeltTable, props: { section: 'H', title: 'H Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-xh': { component: TimingBeltTable, props: { section: 'XH', title: 'XH Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-t5': { component: TimingBeltTable, props: { section: 'T5', title: 'T5 Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-t10': { component: TimingBeltTable, props: { section: 'T10', title: 'T10 Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-3m': { component: TimingBeltTable, props: { section: '3M', title: '3M Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-5m': { component: TimingBeltTable, props: { section: '5M', title: '5M Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-8m': { component: TimingBeltTable, props: { section: '8M', title: '8M Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-14m': { component: TimingBeltTable, props: { section: '14M', title: '14M Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-dl': { component: TimingBeltTable, props: { section: 'DL', title: 'DL Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-dh': { component: TimingBeltTable, props: { section: 'DH', title: 'DH Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-d5m': { component: TimingBeltTable, props: { section: 'D5M', title: 'D5M Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-d8m': { component: TimingBeltTable, props: { section: 'D8M', title: 'D8M Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-neoprene-xl': { component: TimingBeltTable, props: { section: 'NEOPRENE-XL', title: 'Neoprene XL Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-neoprene-l': { component: TimingBeltTable, props: { section: 'NEOPRENE-L', title: 'Neoprene L Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-neoprene-h': { component: TimingBeltTable, props: { section: 'NEOPRENE-H', title: 'Neoprene H Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-neoprene-xh': { component: TimingBeltTable, props: { section: 'NEOPRENE-XH', title: 'Neoprene XH Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-neoprene-t5': { component: TimingBeltTable, props: { section: 'NEOPRENE-T5', title: 'Neoprene T5 Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-neoprene-t10': { component: TimingBeltTable, props: { section: 'NEOPRENE-T10', title: 'Neoprene T10 Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-neoprene-3m': { component: TimingBeltTable, props: { section: 'NEOPRENE-3M', title: 'Neoprene 3M Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-neoprene-5m': { component: TimingBeltTable, props: { section: 'NEOPRENE-5M', title: 'Neoprene 5M Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-neoprene-8m': { component: TimingBeltTable, props: { section: 'NEOPRENE-8M', title: 'Neoprene 8M Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-neoprene-14m': { component: TimingBeltTable, props: { section: 'NEOPRENE-14M', title: 'Neoprene 14M Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-neoprene-dl': { component: TimingBeltTable, props: { section: 'NEOPRENE-DL', title: 'Neoprene DL Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-neoprene-dh': { component: TimingBeltTable, props: { section: 'NEOPRENE-DH', title: 'Neoprene DH Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-neoprene-d5m': { component: TimingBeltTable, props: { section: 'NEOPRENE-D5M', title: 'Neoprene D5M Section Inventory', refreshKey: refreshKey.value } },
+  'timing-belts-neoprene-d8m': { component: TimingBeltTable, props: { section: 'NEOPRENE-D8M', title: 'Neoprene D8M Section Inventory', refreshKey: refreshKey.value } },
   
   // Special Belts - Using new backend-connected SpecialBeltTable
   'special-belts-search': { 
@@ -1075,23 +1124,23 @@ onMounted(() => {
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
               <div class="flex items-center justify-between mb-4">
                 <div>
-                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Stock Alerts</h3>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">Send stock reports and die requirements via email</p>
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Excel Stock Reports</h3>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">Send comprehensive Excel stock reports with die requirements via email</p>
                 </div>
                 <div class="flex gap-3">
                   <button 
                     @click="sendStockAlert"
                     :disabled="sendingAlert"
-                    class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                    class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-lg transition-colors duration-200"
                   >
                     <svg v-if="sendingAlert" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2v10a2 2 0 002 2z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
-                    {{ sendingAlert ? 'Sending...' : 'Send Stock Alert' }}
+                    {{ sendingAlert ? 'Sending Excel...' : 'Email Excel Report' }}
                   </button>
                   
                   <button 
@@ -1104,9 +1153,24 @@ onMounted(() => {
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
-                    {{ sendingSmartAlert ? 'Sending...' : 'Send Smart Alert' }}
+                    {{ sendingSmartAlert ? 'Sending Smart Excel...' : 'Email Smart Excel Report' }}
+                  </button>
+                  
+                  <button 
+                    @click="downloadExcelReport"
+                    :disabled="downloadingExcel"
+                    class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+                  >
+                    <svg v-if="downloadingExcel" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    {{ downloadingExcel ? 'Downloading...' : 'Download Excel Report' }}
                   </button>
                 </div>
               </div>

@@ -124,7 +124,7 @@ class SmartStockAlertService
                         // Update existing record
                         $tracking->update([
                             'current_stock' => $item->current_stock,
-                            'reorder_level' => $item->reorder_level,
+                            'min-inventory' => $item->reorder_level,
                             'stock_per_die' => $stockPerDie,
                             'dies_needed' => $diesNeeded,
                             'is_active' => true,

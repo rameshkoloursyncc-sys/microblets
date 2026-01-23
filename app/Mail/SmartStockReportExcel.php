@@ -43,9 +43,9 @@ class SmartStockReportExcel extends Mailable
         $totalDies = $this->alertData['total_dies_needed'] ?? 0;
         
         return new Envelope(
-            subject: "🏭 Smart Stock Alert - {$totalItems} Items Need {$totalDies} Dies",
+            subject: "Microbelts Daily Stock Report - {$totalItems} Items Need {$totalDies} Dies",
         );
-    }
+    }   
 
     /**
      * Get the message content definition.

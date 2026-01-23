@@ -405,6 +405,7 @@ const props = defineProps<{
   title?: string
   sidebarCollapsed?: boolean
   globalSearch?: string  // Universal search from sidebar
+  refreshKey?: number  // For triggering table refreshes
 }>()
 
 const {
@@ -620,9 +621,26 @@ const saveCell = async (product: TpuBelt, field: keyof TpuBelt) => {
 }
 
 const getMeterClass = (p: TpuBelt) => { 
-  if (p.meter <= 0) return 'text-red-600'
-  return 'text-green-600'
+  if (!p) return 'text-gray-400'
+  
+  // Check if stock alert has been sent
+  const alertSent = p.stock_alert?.alert_sent || false
+  
+  // Check if stock is below reorder level
+  const isLowStock = p.reorder_level && p.meter <= p.reorder_level
+  
+  if (p.meter <= 0) {
+    // Out of stock
+    return alertSent ? 'text-yellow-600' : 'text-red-600'
+  } else if (isLowStock) {
+    // Low stock
+    return alertSent ? 'text-yellow-600' : 'text-red-600'
+  } else {
+    // Normal stock
+    return 'text-green-600'
+  }
 }
+
 
 const createProduct = async () => {
   try {
@@ -817,6 +835,14 @@ watch(() => props.globalSearch, (newGlobalSearch) => {
     searchTerm.value = newGlobalSearch
   } else {
     searchTerm.value = ''
+  }
+})
+
+// Watch for refreshKey changes to refresh data
+watch(() => props.refreshKey, async (newRefreshKey) => {
+  console.log('🔄 TpuBeltTable refreshKey changed to:', newRefreshKey)
+  if (newRefreshKey !== undefined) {
+    await fetchProducts()
   }
 })
 </script>

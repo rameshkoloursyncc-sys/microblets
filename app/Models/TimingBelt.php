@@ -206,7 +206,7 @@ class TimingBelt extends Model
     public function stockAlert()
     {
         return $this->hasOne(StockAlertTracking::class, 'product_id')
-        ->where("belts_type", 'timing')
-        ->where("is_active", true);
+            ->where('belt_type', 'timing')
+            ->where('is_active', true);
     }
 }

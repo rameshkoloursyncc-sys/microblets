@@ -24,6 +24,7 @@ export interface TpuBelt {
   meter: number
   in_meter?: number
   out_meter?: number
+  reorder_level?: number
   rate: number
   value: number
   remark?: string
