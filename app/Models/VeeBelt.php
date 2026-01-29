@@ -156,10 +156,9 @@ class VeeBelt extends Model
 
     public function stockAlert()
     {
-        return $this->hasOne
-        (StockAlertTracking::class, 'product_id')
-        ->where('belt_type', 'vee')
-        ->where("is_active", true);
+        return $this->hasOne(\App\Models\StockAlertTracking::class, 'product_id')
+            ->where('belt_type', 'vee')
+            ->where('is_active', true);
     }
 
 

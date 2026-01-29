@@ -124,8 +124,6 @@ return [
     |
     */
 
-    'low_stock_recipients' => env('LOW_STOCK_EMAIL_RECIPIENTS') ? 
-        explode(',', env('LOW_STOCK_EMAIL_RECIPIENTS')) : 
-        ['admin@example.com'],
+    'low_stock_recipients' => 'ramesh.koloursyncc@gmail.com,microbelts@gmail.com',
 
 ];

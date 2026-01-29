@@ -11,27 +11,28 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Queue\SerializesModels;
 use App\Services\ExcelExportService;
 
-class SmartStockReportExcel extends Mailable
+class ProductionPlanningExcel extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $alertData;
+    public $planningData;
     public $excelFilePath;
     public $excelFileName;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($alertData)
+    public function __construct($planningData)
     {
-        $this->alertData = $alertData;
+        $this->planningData = $planningData;
         
-        // Generate Excel file
+        // Generate Excel file using production planning method
         $excelService = new ExcelExportService();
-        $fileInfo = $excelService->generateSmartStockAlertFile($alertData);
+        $spreadsheet = $excelService->generateProductionPlanningOnlyExcel($planningData);
         
-        $this->excelFilePath = $fileInfo['path'];
-        $this->excelFileName = $fileInfo['filename'];
+        // Save to temp file
+        $this->excelFileName = 'production_planning_' . date('Y-m-d') . '.xlsx';
+        $this->excelFilePath = $excelService->saveToTempFile($spreadsheet, $this->excelFileName);
     }
 
     /**
@@ -39,20 +40,12 @@ class SmartStockReportExcel extends Mailable
      */
     public function envelope(): Envelope
     {
-        $totalItems = $this->alertData['total_items'] ?? 0;
-        $totalDies = $this->alertData['total_dies_needed'] ?? 0;
-        
-        // Check if this is just an inventory summary (no alerts)
-        if ($totalItems === 0) {
-            $subject = "Microbelts Daily Inventory Summary - " . now()->format('d M Y');
-        } else {
-            $subject = "Microbelts Stock Alert - {$totalItems} Items Need {$totalDies} Dies";
-        }
+        $totalDies = $this->planningData['total_dies_needed'] ?? 0;
         
         return new Envelope(
-            subject: $subject,
+            subject: "Microbelts Production Planning - {$totalDies} Dies Required - " . now()->format('d M Y'),
         );
-    }   
+    }
 
     /**
      * Get the message content definition.
@@ -60,9 +53,9 @@ class SmartStockReportExcel extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.smart-stock-report-excel',
+            view: 'emails.production-planning-excel',
             with: [
-                'alertData' => $this->alertData,
+                'planningData' => $this->planningData,
                 'excelFileName' => $this->excelFileName
             ]
         );

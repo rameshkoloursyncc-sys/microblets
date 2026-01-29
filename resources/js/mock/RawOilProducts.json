@@ -1,0 +1,47 @@
+[
+  {
+    "description": "DEG",
+    "packing": "230 ltr",
+    "balance_stock": 160,
+    "rate": 149,
+    "min_inventory": 120,
+    "value": 23840,
+    "remark": "half barrel"
+  },
+  {
+    "description": "Gumilease 6411B",
+    "packing": "20 ltr",
+    "balance_stock": 20,
+    "rate": 870,
+    "min_inventory": 20,
+    "value": 17400,
+    "remark": "1 can"
+  },
+  {
+    "description": "Gumilease spray 1805A",
+    "packing": "10 bottle",
+    "balance_stock": 8,
+    "rate": 355,
+    "min_inventory": 12,
+    "value": 2840,
+    "remark": "8 bottle"
+  },
+  {
+    "description": "TAP OIL",
+    "packing": "40 kg",
+    "balance_stock": 0,
+    "rate": 415,
+    "min_inventory": 40,
+    "value": 0,
+    "remark": "1 barrel"
+  },
+  {
+    "description": "ELASTO 710",
+    "packing": "205 kg",
+    "balance_stock": 615,
+    "rate": 68,
+    "min_inventory": 1200,
+    "value": 41820,
+    "remark": "205 kg * 3 drum"
+  }
+]

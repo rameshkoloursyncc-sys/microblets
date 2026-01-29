@@ -75,9 +75,19 @@ class ExcelExportService
         
         // Check if there are items to process
         if (empty($alertData['belt_types'])) {
-            $sheet->setCellValue('A' . $row, 'No items currently require die production alerts.');
-            $sheet->mergeCells('A' . $row . ':H' . $row);
-            $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            // No alerts, but show inventory summary if available
+            if (isset($alertData['inventory_summary']) && !empty($alertData['inventory_summary'])) {
+                $sheet->setCellValue('A' . $row, $alertData['message'] ?? 'No items currently require die production alerts.');
+                $sheet->mergeCells('A' . $row . ':H' . $row);
+                $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                
+                // Add inventory summary even when no alerts
+                $row = $this->addInventoryValueSummary($sheet, $row, $alertData['inventory_summary']);
+            } else {
+                $sheet->setCellValue('A' . $row, 'No items currently require die production alerts.');
+                $sheet->mergeCells('A' . $row . ':H' . $row);
+                $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            }
             
             // Auto-size columns
             foreach (range('A', 'H') as $col) {
@@ -100,11 +110,10 @@ class ExcelExportService
         $row++;
         
         // Set headers
-        $col = 'A';
-        foreach ($headers as $header) {
+        foreach ($headers as $index => $header) {
+            $col = chr(65 + $index); // A, B, C, D, etc.
             $sheet->setCellValue($col . $row, $header);
             $sheet->getStyle($col . $row)->applyFromArray($subHeaderStyle);
-            $col++;
         }
         
         $row++;
@@ -145,28 +154,63 @@ class ExcelExportService
             }
         }
         
-        // Add summary by belt type
-        $row += 2;
-        $sheet->setCellValue('A' . $row, 'PRODUCTION PLANNING SUMMARY');
-        $sheet->mergeCells('A' . $row . ':H' . $row);
-        $sheet->getStyle('A' . $row)->applyFromArray($headerStyle);
+        // // Add production planning summary with individual die entries
+        // $row += 2;
+        // $sheet->setCellValue('A' . $row, 'PRODUCTION PLANNING SUMMARY');
+        // $sheet->mergeCells('A' . $row . ':H' . $row);
+        // $sheet->getStyle('A' . $row)->applyFromArray($headerStyle);
         
-        $row++;
-        $sheet->setCellValue('A' . $row, 'Belt Type');
-        $sheet->setCellValue('B' . $row, 'Total Dies Needed');
-        $sheet->setCellValue('C' . $row, 'Sections Affected');
-        $sheet->setCellValue('D' . $row, 'Items Count');
-        $sheet->getStyle('A' . $row . ':D' . $row)->applyFromArray($subHeaderStyle);
+        // $row++;
+        // $sheet->setCellValue('A' . $row, 'SIZE');
+        // $sheet->setCellValue('B' . $row, 'MAKE');
+        // $sheet->setCellValue('C' . $row, 'PARTY');
+        // $sheet->getStyle('A' . $row . ':C' . $row)->applyFromArray($subHeaderStyle);
         
-        $row++;
+        // $row++;
         
-        foreach ($alertData['belt_types'] as $beltType => $beltData) {
-            $sheet->setCellValue('A' . $row, $beltData['name']);
-            $sheet->setCellValue('B' . $row, $beltData['total_dies']);
-            $sheet->setCellValue('C' . $row, count($beltData['sections']));
-            $sheet->setCellValue('D' . $row, $beltData['total_items']);
-            $sheet->getStyle('A' . $row . ':D' . $row)->applyFromArray($dataStyle);
-            $row++;
+        // // Process each belt type and create individual die entries
+        // foreach ($alertData['belt_types'] as $beltType => $beltData) {
+        //     foreach ($beltData['sections'] as $section => $sectionData) {
+        //         foreach ($sectionData['items'] as $item) {
+        //             // Create individual rows for each die needed
+        //             for ($i = 0; $i < $item->dies_needed; $i++) {
+        //                 // Create SIZE from section + size (extract size from product_sku)
+        //                 $size = $section;
+        //                 if ($item->product_sku) {
+        //                     // Extract size from SKU (format: SECTION-SIZE)
+        //                     $skuParts = explode('-', $item->product_sku);
+        //                     if (count($skuParts) >= 2) {
+        //                         $sizeValue = $skuParts[1];
+                                
+        //                         // Handle decimal sizes (remove unnecessary .00)
+        //                         if (is_numeric($sizeValue)) {
+        //                             $numericSize = floatval($sizeValue);
+        //                             // If it's a whole number, don't show decimals
+        //                             if ($numericSize == intval($numericSize)) {
+        //                                 $sizeValue = intval($numericSize);
+        //                             } else {
+        //                                 // Keep necessary decimals, remove trailing zeros
+        //                                 $sizeValue = rtrim(rtrim(number_format($numericSize, 2), '0'), '.');
+        //                             }
+        //                         }
+                                
+        //                         $size = $skuParts[0] . $sizeValue; // e.g., B80, PJ1245, PK688
+        //                     }
+        //                 }
+                        
+        //                 $sheet->setCellValue('A' . $row, $size);
+        //                 $sheet->setCellValue('B' . $row, 'MICRO');
+        //                 $sheet->setCellValue('C' . $row, 'STOCK');
+        //                 $sheet->getStyle('A' . $row . ':C' . $row)->applyFromArray($dataStyle);
+        //                 $row++;
+        //             }
+        //         }
+        //     }
+        // }
+        
+        // Add inventory value summary if data is provided
+        if (isset($alertData['inventory_summary']) && !empty($alertData['inventory_summary'])) {
+            $row = $this->addInventoryValueSummary($sheet, $row, $alertData['inventory_summary']);
         }
         
         // Add footer notes
@@ -309,11 +353,10 @@ class ExcelExportService
             $row++;
             
             // Set headers
-            $col = 'A';
-            foreach ($headers as $header) {
+            foreach ($headers as $index => $header) {
+                $col = chr(65 + $index); // A, B, C, D, etc.
                 $sheet->setCellValue($col . $row, $header);
                 $sheet->getStyle($col . $row)->applyFromArray($subHeaderStyle);
-                $col++;
             }
             
             $row++;
@@ -357,11 +400,10 @@ class ExcelExportService
             $row++;
             
             // Set headers
-            $col = 'A';
-            foreach ($headers as $header) {
+            foreach ($headers as $index => $header) {
+                $col = chr(65 + $index); // A, B, C, D, etc.
                 $sheet->setCellValue($col . $row, $header);
                 $sheet->getStyle($col . $row)->applyFromArray($subHeaderStyle);
-                $col++;
             }
             
             $row++;
@@ -388,6 +430,12 @@ class ExcelExportService
                 $row++;
             }
         }
+
+
+        // Add inventory value summary if data is provided
+if (isset($lowStockData['inventory_summary']) && !empty($lowStockData['inventory_summary'])) {
+    $row = $this->addInventoryValueSummary($sheet, $row, $lowStockData['inventory_summary']);
+}
         
         // Add footer notes
         $row += 2;
@@ -444,4 +492,235 @@ class ExcelExportService
             'size' => filesize($filePath)
         ];
     }
+
+  /**
+ * Add inventory value summary to existing Excel report
+ */
+public function addInventoryValueSummary($sheet, $startRow, $inventoryData)
+{
+    if (empty($inventoryData)) {
+        return $startRow; // Return same row if no data
+    }
+
+    // Styling (reuse existing styles)
+    $headerStyle = [
+        'font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'FFFFFF']],
+        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '2196F3']],
+        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
+    ];
+    
+    $subHeaderStyle = [
+        'font' => ['bold' => true, 'size' => 11],
+        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F5F5F5']],
+        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
+    ];
+    
+    $dataStyle = [
+        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        'alignment' => ['vertical' => Alignment::VERTICAL_CENTER]
+    ];
+
+    $row = $startRow + 2;
+    
+    // Inventory Value Summary Header
+    $sheet->setCellValue('A' . $row, 'INVENTORY VALUE SUMMARY');
+    $sheet->mergeCells('A' . $row . ':H' . $row);
+    $sheet->getStyle('A' . $row)->applyFromArray($headerStyle);
+    
+    $row++;
+    
+    // Overall Totals Section
+    $sheet->setCellValue('A' . $row, 'OVERALL TOTALS');
+    $sheet->mergeCells('A' . $row . ':H' . $row);
+    $sheet->getStyle('A' . $row)->applyFromArray($subHeaderStyle);
+    
+    $row++;
+    
+    $totals = $inventoryData['totals'] ?? [];
+    
+    $sheet->setCellValue('A' . $row, 'Total Inventory Value:');
+    $sheet->setCellValue('B' . $row, '₹' . number_format($totals['total_value'] ?? 0, 2));
+    $sheet->setCellValue('D' . $row, 'Total Products:');
+    $sheet->setCellValue('E' . $row, number_format($totals['total_products'] ?? 0));
+    $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray($dataStyle);
+    
+    $row++;
+    
+    $sheet->setCellValue('A' . $row, 'In Stock Items:');
+    $sheet->setCellValue('B' . $row, number_format($totals['in_stock'] ?? 0));
+    $sheet->setCellValue('D' . $row, 'Low Stock Items:');
+    $sheet->setCellValue('E' . $row, number_format($totals['low_stock'] ?? 0));
+    $sheet->getStyle('A' . $row . ':E' . $row)->applyFromArray($dataStyle);
+    
+    $row++;
+    
+    $sheet->setCellValue('A' . $row, 'Out of Stock Items:');
+    $sheet->setCellValue('B' . $row, number_format($totals['out_of_stock'] ?? 0));
+    $sheet->getStyle('A' . $row . ':B' . $row)->applyFromArray($dataStyle);
+    
+    $row += 2;
+    
+    // Belt Type Breakdown Section (Same as Dashboard)
+    $sheet->setCellValue('A' . $row, 'BELT TYPE BREAKDOWN');
+    $sheet->mergeCells('A' . $row . ':H' . $row);
+    $sheet->getStyle('A' . $row)->applyFromArray($subHeaderStyle);
+    
+    $row++;
+    
+    // Headers for belt type table
+    $sheet->setCellValue('A' . $row, 'Belt Type');
+    $sheet->setCellValue('B' . $row, 'Total Value');
+    $sheet->setCellValue('C' . $row, 'Products');
+    $sheet->setCellValue('D' . $row, 'In Stock');
+    $sheet->setCellValue('E' . $row, 'Low Stock');
+    $sheet->setCellValue('F' . $row, 'Out of Stock');
+    $sheet->getStyle('A' . $row . ':F' . $row)->applyFromArray($subHeaderStyle);
+    
+    $row++;
+    
+    // Belt type data (same as dashboard)
+    $beltTypes = $inventoryData['belt_types'] ?? [];
+    $detailedStats = $inventoryData['detailed_stats'] ?? [];
+    
+    $beltTypeNames = [
+        'vee' => 'Vee Belts',
+        'cogged' => 'Cogged Belts', 
+        'poly' => 'Poly Belts',
+        'tpu' => 'TPU Belts',
+        'timing' => 'Timing Belts',
+        'special' => 'Special Belts'
+    ];
+    
+    foreach ($beltTypeNames as $key => $name) {
+        $value = $beltTypes[$key] ?? 0;
+        $stats = $detailedStats[$key . '_belts'] ?? [];
+        
+        $sheet->setCellValue('A' . $row, $name);
+        $sheet->setCellValue('B' . $row, '₹' . number_format($value, 2));
+        $sheet->setCellValue('C' . $row, number_format($stats['total_products'] ?? 0));
+        $sheet->setCellValue('D' . $row, number_format($stats['in_stock'] ?? 0));
+        $sheet->setCellValue('E' . $row, number_format($stats['low_stock'] ?? 0));
+        $sheet->setCellValue('F' . $row, number_format($stats['out_of_stock'] ?? 0));
+        $sheet->getStyle('A' . $row . ':F' . $row)->applyFromArray($dataStyle);
+        
+        // Add color coding for values
+        if ($value > 0) {
+            $sheet->getStyle('B' . $row)->applyFromArray([
+                'font' => ['color' => ['rgb' => '2E7D32']] // Green for positive values
+            ]);
+        }
+        
+        $row++;
+    }
+    
+    return $row; // Return the last row used
+}
+
+
+
+
+/**
+ * Generate production planning Excel (SIZE, MAKE, PARTY only)
+ */
+public function generateProductionPlanningOnlyExcel($planningData)
+{
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    
+    // Set document properties
+    $spreadsheet->getProperties()
+        ->setCreator('Microbelts Inventory System')
+        ->setTitle('Production Planning Summary')
+        ->setSubject('Dies Required for Production')
+        ->setDescription('Daily production planning requirements');
+
+    // Set sheet title
+    $sheet->setTitle('Production Planning');
+    
+    // Header styling
+    $headerStyle = [
+        'font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'FFFFFF']],
+        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '2196F3']],
+        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
+    ];
+    
+    $subHeaderStyle = [
+        'font' => ['bold' => true, 'size' => 11],
+        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F5F5F5']],
+        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
+    ];
+    
+    $dataStyle = [
+        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+        'alignment' => ['vertical' => Alignment::VERTICAL_CENTER]
+    ];
+
+    // Title
+    $sheet->setCellValue('A1', 'Production Planning Summary');
+    $sheet->mergeCells('A1:C1');
+    $sheet->getStyle('A1')->applyFromArray([
+        'font' => ['bold' => true, 'size' => 16],
+        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
+    ]);
+    
+    $sheet->setCellValue('A2', 'Generated: ' . \Carbon\Carbon::parse($planningData['generated_at'] ?? now())->setTimezone('Asia/Kolkata')->format('d M Y, h:i A') . ' IST');
+    $sheet->mergeCells('A2:C2');
+    $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+    
+    $row = 4;
+    
+    // Headers
+    $sheet->setCellValue('A' . $row, 'SIZE');
+    $sheet->setCellValue('B' . $row, 'MAKE');
+    $sheet->setCellValue('C' . $row, 'PARTY');
+    $sheet->getStyle('A' . $row . ':C' . $row)->applyFromArray($subHeaderStyle);
+    
+    $row++;
+    
+    // Production planning data (same logic as existing)
+    if (isset($planningData['belt_types'])) {
+        foreach ($planningData['belt_types'] as $beltType => $beltData) {
+            foreach ($beltData['sections'] as $section => $sectionData) {
+                foreach ($sectionData['items'] as $item) {
+                    for ($i = 0; $i < $item->dies_needed; $i++) {
+                        $size = $section;
+                        if ($item->product_sku) {
+                            $skuParts = explode('-', $item->product_sku);
+                            if (count($skuParts) >= 2) {
+                                $sizeValue = $skuParts[1];
+                                
+                                // Handle decimal sizes
+                                if (is_numeric($sizeValue)) {
+                                    $numericSize = floatval($sizeValue);
+                                    if ($numericSize == intval($numericSize)) {
+                                        $sizeValue = intval($numericSize);
+                                    } else {
+                                        $sizeValue = rtrim(rtrim(number_format($numericSize, 2), '0'), '.');
+                                    }
+                                }
+                                
+                                $size = $skuParts[0] . $sizeValue;
+                            }
+                        }
+                        
+                        $sheet->setCellValue('A' . $row, $size);
+                        $sheet->setCellValue('B' . $row, 'MICRO');
+                        $sheet->setCellValue('C' . $row, 'STOCK');
+                        $sheet->getStyle('A' . $row . ':C' . $row)->applyFromArray($dataStyle);
+                        $row++;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Auto-size columns
+    foreach (range('A', 'C') as $col) {
+        $sheet->getColumnDimension($col)->setAutoSize(true);
+    }
+    
+    return $spreadsheet;
+}
 }

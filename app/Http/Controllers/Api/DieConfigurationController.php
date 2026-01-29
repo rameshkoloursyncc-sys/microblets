@@ -36,7 +36,7 @@ class DieConfigurationController extends Controller
     {
         try {
             $validated = $request->validate([
-                'belt_type' => 'required|string|in:vee,cogged,poly,tpu,timing,special',
+                'belt_type' => 'required|string|in:vee,cogged,poly,tpu,timing,special,rawcarbon',
                 'section' => 'required|string|max:20',
                 'stock_per_die' => 'required|numeric|min:0.01|max:9999.99',
                 'notes' => 'nullable|string|max:500'

@@ -15,6 +15,7 @@ import SpecialBeltTable from './SpecialBeltTable.vue'
 import SettingsPage from './SettingsPage.vue'
 import LoginPage from '../auth/LoginPage.vue'
 import UserManagement from '../auth/UserManagement.vue'
+import RawCarbonTable from './tables/RawCarbonTable.vue'
 const currentView = ref('inventory')
 
 // Stock alert functionality
@@ -526,7 +527,7 @@ const navigationMapping: Record<string, { title: string; categories: string[] }>
   'raw-hybrid-belts': { title: 'Raw Material - Hybrid Belts (8M PK, 8M PL)', categories: ['8M PK Section', '8M PL Section'] },
   'raw-coating-belts': { title: 'Raw Material - Coating Belts (Poly, Flat, Timing)', categories: ['Poly Coating Section', 'Flat Coating Section', 'Timing Coating Section'] },
   // Raw Material Categories
-  'raw-material-carbon': { title: 'Raw Material - Carbon', categories: ['Carbon'] },
+  'raw-material-carbons': { title: 'Raw Material - Carbon', categories: ['Carbon'] },
   'raw-material-chemical': { title: 'Raw Material - Chemical', categories: ['Chemical'] },
   'raw-material-cord': { title: 'Raw Material - Soft/Stiff Cord', categories: ['Soft/Stiff Cord'] },
   'raw-material-fabric': { title: 'Raw Material - Fabric', categories: ['Fabric'] },
@@ -694,6 +695,20 @@ const customViewMapping = computed(() => {
   
   // User management page (admin only)
   'user-management': { component: UserManagement, props: {} },
+  
+  // Raw Material Categories
+  'raw-material-carbon': { component: RawCarbonTable, props: { section: 'Carbon', title: 'Raw Material - Carbon' } },
+  'raw-material-chemical': { component: RawCarbonTable, props: { section: 'Chemical', title: 'Raw Material - Chemical' } },
+  'raw-material-cord': { component: RawCarbonTable, props: { section: 'Cord', title: 'Raw Material - Soft/Stiff Cord' } },
+  'raw-material-fabric': { component: RawCarbonTable, props: { section: 'Fabric', title: 'Raw Material - Fabric' } },
+  'raw-material-oil': { component: RawCarbonTable, props: { section: 'Oil', title: 'Raw Material - Oil' } },
+  'raw-material-others': { component: RawCarbonTable, props: { section: 'Others', title: 'Raw Material - Others' } },
+  'raw-material-resin': { component: RawCarbonTable, props: { section: 'Resin', title: 'Raw Material - Resin' } },
+  'raw-material-tpu': { component: RawCarbonTable, props: { section: 'TPU', title: 'Raw Material - TPU' } },
+  'raw-material-fibre-glass-cord': { component: RawCarbonTable, props: { section: 'Fibre Glass Cord', title: 'Raw Material - Fibre Glass Cord' } },
+  'raw-material-steel-wire': { component: RawCarbonTable, props: { section: 'Steel Wire', title: 'Raw Material - Steel Wire' } },
+  'raw-material-packing': { component: RawCarbonTable, props: { section: 'Packing', title: 'Raw Material - Packing Material' } },
+  'raw-material-open': { component: RawCarbonTable, props: { section: 'Open', title: 'Raw Material - Open' } },
   }
 });
 const handleNavigation = (view: string) => {

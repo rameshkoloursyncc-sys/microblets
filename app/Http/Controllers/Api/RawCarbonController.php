@@ -3,22 +3,23 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\VeeBelt;
+use App\Models\RawCarbon;
 use App\Models\InventoryTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
-class VeeBeltController extends Controller
+class RawCarbonController extends Controller
 {
     /**
-     * Get all vee belts or filter by section
+     * Get all cogged belts or filter by section
      */
     public function index(Request $request)
     {
-        $query = VeeBelt::query();
+        $query = RawCarbon::query();
 
+        // Include stock alert relationship
         $query->with('stockAlert');
 
         // Filter by section if provided
@@ -41,12 +42,13 @@ class VeeBeltController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('section', 'like', "%{$search}%")
-                  ->orWhere('size', 'like', "%{$search}%");
+                  ->orWhere('packing', 'like', "%{$search}%");
             });
         }
 
-        // Sort by size (width) in ascending order
-        $query->orderByRaw('CAST(size AS UNSIGNED) ASC');
+        // Sort
+        // Sort by packing (width) in ascending order
+        $query->orderByRaw('CAST(packing AS UNSIGNED) ASC');
 
         // Paginate or get all
         if ($request->boolean('paginate', true)) {
@@ -61,9 +63,20 @@ class VeeBeltController extends Controller
      */
     public function bySection(string $section)
     {
-        return VeeBelt::bySection($section)
+        return RawCarbon::bySection($section)
             ->with('stockAlert')
-            ->orderByRaw('CAST(size AS UNSIGNED) ASC')
+            ->orderByRaw('CAST(packing AS UNSIGNED) ASC')
+            ->get();
+    }
+
+    /**
+     * Get raw materials by specific category
+     */
+    public function byCategory(string $category)
+    {
+        return RawCarbon::where('category', $category)
+            ->with('stockAlert')
+            ->orderByRaw('CAST(packing AS UNSIGNED) ASC')
             ->get();
     }
 
@@ -73,17 +86,17 @@ class VeeBeltController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'section' => 'required|string|max:10',
-            'size' => 'required|string|max:20',
-            'balance_stock' => 'required|integer|min:0',
+            'section' => 'required|string|max:50',
+            'packing' => 'required|string|max:20',
+            'balance_stock' => 'required|numeric|min:0',
             'reorder_level' => 'nullable|integer|min:0',
             'rate' => 'nullable|numeric|min:0',
             'remark' => 'nullable|string',
         ]);
 
         // Check if already exists
-        $existing = VeeBelt::where('section', $validated['section'])
-            ->where('size', $validated['size'])
+        $existing = RawCarbon::where('section', $validated['section'])
+            ->where('packing', $validated['packing'])
             ->first();
 
         if ($existing) {
@@ -97,20 +110,20 @@ class VeeBeltController extends Controller
         try {
             // Calculate rate if not provided
             if (!isset($validated['rate'])) {
-                $veeBelt = new VeeBelt($validated);
-                $validated['rate'] = $veeBelt->calculateRate();
+                $rawCarbon = new RawCarbon($validated);
+                $validated['rate'] = $rawCarbon->calculateRate();
             }
 
             // Calculate value
             $validated['value'] = $validated['balance_stock'] * $validated['rate'];
 
-            $veeBelt = VeeBelt::create($validated);
+            $rawCarbon = RawCarbon::create($validated);
 
             // Create transaction record
             if ($validated['balance_stock'] > 0) {
                 InventoryTransaction::create([
-                    'category' => 'vee_belts',
-                    'product_id' => $veeBelt->id,
+                    'category' => 'rawcarbon',
+                    'product_id' => $rawCarbon->id,
                     'type' => 'IN',
                     'quantity' => $validated['balance_stock'],
                     'stock_before' => 0,
@@ -125,7 +138,7 @@ class VeeBeltController extends Controller
 
             return response()->json([
                 'message' => 'Product created successfully',
-                'product' => $veeBelt->fresh()
+                'product' => $rawCarbon->fresh()
             ], 201);
 
         } catch (\Exception $e) {
@@ -142,12 +155,12 @@ class VeeBeltController extends Controller
      */
     public function update(Request $request, int $id)
     {
-        $veeBelt = VeeBelt::findOrFail($id);
+        $rawCarbon = RawCarbon::findOrFail($id);
 
         $validated = $request->validate([
-            'section' => 'sometimes|string|max:10',
-            'size' => 'sometimes|string|max:20',
-            'balance_stock' => 'sometimes|integer|min:0',
+            'section' => 'sometimes|string|max:50',
+            'packing' => 'sometimes|string|max:20',
+            'balance_stock' => 'sometimes|numeric|min:0',
             'reorder_level' => 'sometimes|integer|min:0',
             'rate' => 'sometimes|numeric|min:0',
             'remark' => 'nullable|string',
@@ -155,10 +168,10 @@ class VeeBeltController extends Controller
 
         DB::beginTransaction();
         try {
-            $oldStock = $veeBelt->balance_stock;
-            $oldRate = $veeBelt->rate;
+            $oldStock = $rawCarbon->balance_stock;
+            $oldRate = $rawCarbon->rate;
 
-            $veeBelt->update($validated);
+            $rawCarbon->update($validated);
 
             // Create transaction if stock changed
             if (isset($validated['balance_stock']) && $oldStock != $validated['balance_stock']) {
@@ -166,21 +179,21 @@ class VeeBeltController extends Controller
                 $quantity = abs($validated['balance_stock'] - $oldStock);
 
                 InventoryTransaction::create([
-                    'category' => 'vee_belts',
-                    'product_id' => $veeBelt->id,
+                    'category' => 'rawcarbon',
+                    'product_id' => $rawCarbon->id,
                     'type' => $type,
                     'quantity' => $quantity,
                     'stock_before' => $oldStock,
                     'stock_after' => $validated['balance_stock'],
-                    'rate' => $veeBelt->rate,
+                    'rate' => $rawCarbon->rate,
                     'description' => "Stock updated from {$oldStock} to {$validated['balance_stock']}",
                     'user_id' => session('user')['id'] ?? null,
                 ]);
 
-                // Reset alert if stock goes above reorder level
-                if ($veeBelt->reorder_level && $validated['balance_stock'] >= $veeBelt->reorder_level) {
-                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'vee')
-                        ->where('product_id', $veeBelt->id)
+                // Check and reset stock alert if stock is replenished above reorder level
+                if ($rawCarbon->reorder_level && $validated['balance_stock'] >= $rawCarbon->reorder_level) {
+                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'rawcarbon')
+                        ->where('product_id', $rawCarbon->id)
                         ->where('is_active', true)
                         ->first();
                     
@@ -193,11 +206,11 @@ class VeeBeltController extends Controller
             // Create transaction if rate changed
             if (isset($validated['rate']) && $oldRate != $validated['rate']) {
                 InventoryTransaction::create([
-                    'category' => 'vee_belts',
-                    'product_id' => $veeBelt->id,
+                    'category' => 'rawcarbon',
+                    'product_id' => $rawCarbon->id,
                     'type' => 'EDIT',
-                    'stock_before' => $veeBelt->balance_stock,
-                    'stock_after' => $veeBelt->balance_stock,
+                    'stock_before' => $rawCarbon->balance_stock,
+                    'stock_after' => $rawCarbon->balance_stock,
                     'rate' => $validated['rate'],
                     'description' => "Rate updated from ₹{$oldRate} to ₹{$validated['rate']}",
                     'user_id' => session('user')['id'] ?? null,
@@ -208,7 +221,7 @@ class VeeBeltController extends Controller
 
             return response()->json([
                 'message' => 'Product updated successfully',
-                'product' => $veeBelt->fresh()
+                'product' => $rawCarbon->fresh()
             ]);
 
         } catch (\Exception $e) {
@@ -225,8 +238,8 @@ class VeeBeltController extends Controller
      */
     public function destroy(int $id)
     {
-        $veeBelt = VeeBelt::findOrFail($id);
-        $veeBelt->delete();
+        $rawCarbon = RawCarbon::findOrFail($id);
+        $rawCarbon->delete();
 
         return response()->json([
             'message' => 'Product deleted successfully'
@@ -238,12 +251,9 @@ class VeeBeltController extends Controller
      */
     public function bulkImport(Request $request)
     {
-        // Pre-process products to convert size to string
+        // Pre-process products to handle field mapping
         $products = $request->input('products', []);
         foreach ($products as &$product) {
-            if (isset($product['size'])) {
-                $product['size'] = (string) $product['size'];
-            }
             // Map balanceStock to balance_stock if present
             if (isset($product['balanceStock'])) {
                 $product['balance_stock'] = $product['balanceStock'];
@@ -255,13 +265,14 @@ class VeeBeltController extends Controller
         
         $validated = $request->validate([
             'products' => 'required|array',
-            'products.*.section' => 'required|string|max:10',
-            'products.*.size' => 'required|string|max:20',
-            'products.*.balance_stock' => 'required|integer|min:0',
+            'products.*.section' => 'required|string|max:50',
+            'products.*.packing' => 'required|string|max:20',
+            'products.*.balance_stock' => 'required|numeric|min:0',
             'products.*.reorder_level' => 'nullable|integer|min:0',
             'products.*.rate' => 'nullable|numeric|min:0',
             'products.*.remark' => 'nullable|string',
             'mode' => 'required|in:append,replace',
+            'category' => 'nullable|string', // Add category parameter
         ]);
 
         DB::beginTransaction();
@@ -269,11 +280,19 @@ class VeeBeltController extends Controller
             $addedCount = 0;
             $updatedCount = 0;
             $skippedCount = 0;
+            
+            // Get category override if provided
+            $categoryOverride = $validated['category'] ?? null;
 
             foreach ($validated['products'] as $productData) {
+                // Override category if provided
+                if ($categoryOverride) {
+                    $productData['category'] = $categoryOverride;
+                }
+                
                 // Check if exists
-                $existing = VeeBelt::where('section', $productData['section'])
-                    ->where('size', $productData['size'])
+                $existing = RawCarbon::where('section', $productData['section'])
+                    ->where('packing', $productData['packing'])
                     ->first();
 
                 if ($existing) {
@@ -284,7 +303,7 @@ class VeeBeltController extends Controller
                     // Create transaction
                     if ($oldStock != $productData['balance_stock']) {
                         InventoryTransaction::create([
-                            'category' => 'vee_belts',
+                            'category' => 'rawcarbon',
                             'product_id' => $existing->id,
                             'type' => $productData['balance_stock'] > $oldStock ? 'IN' : 'OUT',
                             'quantity' => abs($productData['balance_stock'] - $oldStock),
@@ -300,17 +319,17 @@ class VeeBeltController extends Controller
                 } else {
                     // Create new
                     if (!isset($productData['rate'])) {
-                        $temp = new VeeBelt($productData);
+                        $temp = new RawCarbon($productData);
                         $productData['rate'] = $temp->calculateRate();
                     }
 
                     $productData['value'] = $productData['balance_stock'] * $productData['rate'];
-                    $veeBelt = VeeBelt::create($productData);
+                    $rawCarbon = RawCarbon::create($productData);
 
                     if ($productData['balance_stock'] > 0) {
                         InventoryTransaction::create([
-                            'category' => 'vee_belts',
-                            'product_id' => $veeBelt->id,
+                            'category' => 'rawcarbon',
+                            'product_id' => $rawCarbon->id,
                             'type' => 'IN',
                             'quantity' => $productData['balance_stock'],
                             'stock_before' => 0,
@@ -348,15 +367,15 @@ class VeeBeltController extends Controller
      */
     public function transactions(int $id)
     {
-        $veeBelt = VeeBelt::findOrFail($id);
+        $rawCarbon = RawCarbon::findOrFail($id);
 
-        $transactions = InventoryTransaction::forProduct('vee_belts', $id)
+        $transactions = InventoryTransaction::forProduct('rawcarbon', $id)
             ->with('user:id,name')
             ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json([
-            'product' => $veeBelt,
+            'product' => $rawCarbon,
             'transactions' => $transactions
         ]);
     }
@@ -368,9 +387,9 @@ class VeeBeltController extends Controller
     {
         $validated = $request->validate([
             'product_ids' => 'required|array',
-            'product_ids.*' => 'required|integer|exists:vee_belts,id',
+            'product_ids.*' => 'required|integer|exists:raw_carbons,id',
             'type' => 'required|in:IN,OUT',
-            'quantity' => 'required|integer|min:1',
+            'quantity' => 'required|numeric|min:0.001', // Changed to numeric to support decimals
         ]);
 
         DB::beginTransaction();
@@ -378,14 +397,14 @@ class VeeBeltController extends Controller
             $results = [];
 
             foreach ($validated['product_ids'] as $productId) {
-                $veeBelt = VeeBelt::findOrFail($productId);
-                $oldStock = $veeBelt->balance_stock;
+                $rawCarbon = RawCarbon::findOrFail($productId);
+                $oldStock = $rawCarbon->balance_stock;
 
                 if ($validated['type'] === 'IN') {
-                    $veeBelt->balance_stock += $validated['quantity'];
-                    $veeBelt->in_stock += $validated['quantity'];
+                    $rawCarbon->balance_stock += $validated['quantity'];
+                    $rawCarbon->in_stock += $validated['quantity'];
                 } else {
-                    if ($veeBelt->balance_stock < $validated['quantity']) {
+                    if ($rawCarbon->balance_stock < $validated['quantity']) {
                         $results[] = [
                             'product_id' => $productId,
                             'success' => false,
@@ -393,16 +412,16 @@ class VeeBeltController extends Controller
                         ];
                         continue;
                     }
-                    $veeBelt->balance_stock -= $validated['quantity'];
-                    $veeBelt->out_stock += $validated['quantity'];
+                    $rawCarbon->balance_stock -= $validated['quantity'];
+                    $rawCarbon->out_stock += $validated['quantity'];
                 }
 
-                $veeBelt->save();
+                $rawCarbon->save();
 
-                // Reset alert if stock goes above reorder level during IN operation
-                if ($validated['type'] === 'IN' && $veeBelt->reorder_level && $veeBelt->balance_stock >= $veeBelt->reorder_level) {
-                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'vee')
-                        ->where('product_id', $veeBelt->id)
+                // Check and reset stock alert if stock is replenished above reorder level
+                if ($rawCarbon->reorder_level && $rawCarbon->balance_stock >= $rawCarbon->reorder_level) {
+                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'rawcarbon')
+                        ->where('product_id', $rawCarbon->id)
                         ->where('is_active', true)
                         ->first();
                     
@@ -413,13 +432,13 @@ class VeeBeltController extends Controller
 
                 // Create transaction
                 InventoryTransaction::create([
-                    'category' => 'vee_belts',
-                    'product_id' => $veeBelt->id,
+                    'category' => 'rawcarbon',
+                    'product_id' => $rawCarbon->id,
                     'type' => $validated['type'],
                     'quantity' => $validated['quantity'],
                     'stock_before' => $oldStock,
-                    'stock_after' => $veeBelt->balance_stock,
-                    'rate' => $veeBelt->rate,
+                    'stock_after' => $rawCarbon->balance_stock,
+                    'rate' => $rawCarbon->rate,
                     'description' => "{$validated['type']} operation: {$validated['quantity']} units",
                     'user_id' => session('user')['id'] ?? null,
                 ]);
@@ -427,9 +446,9 @@ class VeeBeltController extends Controller
                 $results[] = [
                     'product_id' => $productId,
                     'success' => true,
-                    'new_stock' => $veeBelt->balance_stock,
-                    'in_stock' => $veeBelt->in_stock,
-                    'out_stock' => $veeBelt->out_stock,
+                    'new_stock' => $rawCarbon->balance_stock,
+                    'in_stock' => $rawCarbon->in_stock,
+                    'out_stock' => $rawCarbon->out_stock,
                 ];
             }
 
@@ -462,7 +481,7 @@ class VeeBeltController extends Controller
         try {
             DB::beginTransaction();
 
-            $updated = VeeBelt::where('section', $request->section)
+            $updated = \App\Models\RawCarbon::where('section', $request->section)
                              ->update(['rate' => $request->rate]);
 
             DB::commit();
@@ -510,38 +529,54 @@ class VeeBeltController extends Controller
 
             DB::beginTransaction();
 
+            $category = $request->section; // The category name (Carbon, Chemical, etc.)
+            \Log::info('Seeding raw materials', [
+                'requested_section' => $request->section,
+                'filename' => $request->filename,
+                'category_to_set' => $category
+            ]);
+            
             $imported = 0;
             $skipped = 0;
+            
             foreach ($jsonData as $item) {
-                $rawSection = $item['section'] ?? $item['name'] ?? $request->section;
+                $section = $item['section'] ?? $item['name'];
+                $packing = $item['packing'];
                 
-                // Clean section name - extract just the section code (e.g., "SPA (Special)" -> "SPA")
-                $section = trim(explode('(', $rawSection)[0]);
-                $size = $item['size'];
-                
-                // Check if product already exists
-                $existing = VeeBelt::where('section', $section)
-                                  ->where('size', $size)
-                                  ->first();
+                // Check if product already exists (by section and packing since sections are unique)
+                $existing = \App\Models\RawCarbon::where('section', $section)
+                                                 ->where('packing', $packing)
+                                                 ->first();
                 
                 if ($existing) {
                     $skipped++;
                     continue;
                 }
                 
-                VeeBelt::create([
+                \App\Models\RawCarbon::create([
                     'section' => $section,
-                    'size' => $size,
+                    'category' => $category, // Set the category from the request (overrides JSON category)
+                    'packing' => $packing,
                     'balance_stock' => $item['balance_stock'] ?? $item['stock'] ?? 0,
+                    'in_stock' => $item['in_stock'] ?? 0,
+                    'out_stock' => $item['out_stock'] ?? 0,
                     'rate' => $item['rate'],
+                    'value' => $item['value'] ?? ($item['balance_stock'] ?? 0) * ($item['rate'] ?? 0),
                     'remark' => $item['remark'] ?? null,
+                    // Note: sku is auto-generated as appended attribute, don't save it
+                ]);
+                
+                \Log::info('Created raw material', [
+                    'section' => $section,
+                    'category' => $category,
+                    'packing' => $packing
                 ]);
                 $imported++;
             }
 
             DB::commit();
 
-            $message = "Successfully seeded {$imported} products for {$request->section} section";
+            $message = "Successfully seeded {$imported} products for {$category} category";
             if ($skipped > 0) {
                 $message .= " ({$skipped} duplicates skipped)";
             }
@@ -562,36 +597,36 @@ class VeeBeltController extends Controller
     }
 
     /**
-     * Clear all products from a specific section
+     * Clear all products from a specific category
      */
-    public function clearSection($section)
+    public function clearSection($category)
     {
         try {
-            $deleted = VeeBelt::where('section', $section)->delete();
+            $deleted = \App\Models\RawCarbon::where('category', $category)->delete();
 
             return response()->json([
-                'message' => "Cleared {$deleted} products from {$section} section",
+                'message' => "Cleared {$deleted} products from {$category} category",
                 'deleted_count' => $deleted
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Failed to clear section',
+                'message' => 'Failed to clear category',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Clear all vee belt data
+     * Clear all cogged belt data
      */
     public function clearAll()
     {
         try {
-            $deleted = VeeBelt::query()->delete();
+            $deleted = \App\Models\RawCarbon::query()->delete();
 
             return response()->json([
-                'message' => "Cleared all vee belt data ({$deleted} products)",
+                'message' => "Cleared all cogged belt data ({$deleted} products)",
                 'deleted_count' => $deleted
             ]);
 
@@ -616,7 +651,7 @@ class VeeBeltController extends Controller
             DB::beginTransaction();
 
             // Get the rate formula for this section
-            $formula = \App\Models\RateFormula::where('category', 'vee_belts')
+            $formula = \App\Models\RateFormula::where('category', 'rawcarbon')
                                              ->where('section', $request->section)
                                              ->where('is_active', true)
                                              ->first();
@@ -634,7 +669,7 @@ class VeeBeltController extends Controller
             
             // Handle both string and array formats for backward compatibility
             if (is_array($formulaData)) {
-                // Old array format: {"type": "multiply", "multiplier": 1.05} or {"type": "divide_multiply", "divisor": 10, "multiplier": 1.50}
+                // Old array format
                 if ($formulaData['type'] === 'divide_multiply') {
                     $divisor = (float) ($formulaData['divisor'] ?? 10);
                     $multiplier = (float) ($formulaData['multiplier'] ?? 1);
@@ -642,14 +677,14 @@ class VeeBeltController extends Controller
                     $multiplier = (float) ($formulaData['multiplier'] ?? 1);
                 }
             } else {
-                // New string format: "size/10*1.50" or "size*1.05"
+                // New string format
                 $formulaStr = $formulaData;
-                if (preg_match('/size\/([0-9.]+)\*([0-9.]+)/', $formulaStr, $matches)) {
-                    // Format: "size/10*1.50" -> divisor=10, multiplier=1.50
+                if (preg_match('/packing\/([0-9.]+)\*([0-9.]+)/', $formulaStr, $matches)) {
+                    // Format: "packing/10*2.15" -> divisor=10, multiplier=2.15
                     $divisor = (float) $matches[1];
                     $multiplier = (float) $matches[2];
-                } elseif (preg_match('/size\*([0-9.]+)/', $formulaStr, $matches)) {
-                    // Format: "size*1.05" -> multiplier=1.05
+                } elseif (preg_match('/packing\*([0-9.]+)/', $formulaStr, $matches)) {
+                    // Format: "packing*1.95" -> multiplier=1.95
                     $multiplier = (float) $matches[1];
                 } else {
                     return response()->json([
@@ -659,11 +694,11 @@ class VeeBeltController extends Controller
             }
 
             // Update all products in this section
-            $products = VeeBelt::where('section', $request->section)->get();
+            $products = \App\Models\RawCarbon::where('section', $request->section)->get();
             $updated = 0;
 
             foreach ($products as $product) {
-                $newRate = ((float) $product->size / $divisor) * $multiplier;
+                $newRate = ((float) $product->packing / $divisor) * $multiplier;
                 $product->update([
                     'rate' => $newRate,
                     'value' => $product->balance_stock * $newRate
@@ -676,8 +711,7 @@ class VeeBeltController extends Controller
             return response()->json([
                 'message' => "Recalculated rates for {$updated} products in {$request->section} section",
                 'updated_count' => $updated,
-                'multiplier_used' => $multiplier,
-                'divisor_used' => $divisor
+                'multiplier_used' => $multiplier
             ]);
 
         } catch (\Exception $e) {
@@ -697,14 +731,14 @@ class VeeBeltController extends Controller
         try {
             DB::beginTransaction();
 
-            // Get all active formulas for vee belts
-            $formulas = \App\Models\RateFormula::where('category', 'vee_belts')
+            // Get all active formulas for cogged belts
+            $formulas = \App\Models\RateFormula::where('category', 'rawcarbon')
                                               ->where('is_active', true)
                                               ->get()
                                               ->keyBy('section');
 
             $totalUpdated = 0;
-            $sections = ['A', 'B', 'C', 'D', 'E', 'SPA', 'SPB', 'SPC', 'SPZ', '3V', '5V', '8V'];
+            $sections = ['AX', 'BX', 'CX', 'XPA', 'XPB', 'XPC', 'XPZ', '3VX', '5VX'];
 
             foreach ($sections as $section) {
                 if (!isset($formulas[$section])) {
@@ -731,10 +765,12 @@ class VeeBeltController extends Controller
                 } else {
                     // New string format
                     $formulaStr = $formulaData;
-                    if (preg_match('/size\/([0-9.]+)\*([0-9.]+)/', $formulaStr, $matches)) {
+                    if (preg_match('/packing\/([0-9.]+)\*([0-9.]+)/', $formulaStr, $matches)) {
+                        // Format: "packing/10*2.15" -> divisor=10, multiplier=2.15
                         $divisor = (float) $matches[1];
                         $multiplier = (float) $matches[2];
-                    } elseif (preg_match('/size\*([0-9.]+)/', $formulaStr, $matches)) {
+                    } elseif (preg_match('/packing\*([0-9.]+)/', $formulaStr, $matches)) {
+                        // Format: "packing*1.95" -> multiplier=1.95
                         $multiplier = (float) $matches[1];
                     } else {
                         continue; // Skip invalid formulas
@@ -742,10 +778,10 @@ class VeeBeltController extends Controller
                 }
 
                 // Update all products in this section
-                $products = VeeBelt::where('section', $section)->get();
+                $products = \App\Models\RawCarbon::where('section', $section)->get();
 
                 foreach ($products as $product) {
-                    $newRate = ((float) $product->size / $divisor) * $multiplier;
+                    $newRate = ((float) $product->packing / $divisor) * $multiplier;
                     $product->update([
                         'rate' => $newRate,
                         'value' => $product->balance_stock * $newRate
@@ -789,14 +825,14 @@ class VeeBeltController extends Controller
         try {
             DB::beginTransaction();
 
-            $updated = VeeBelt::query()->update([
+            $updated = \App\Models\RawCarbon::query()->update([
                 'reorder_level' => $request->min_inventory
             ]);
 
             DB::commit();
 
             return response()->json([
-                'message' => "Updated minimum inventory level to {$request->min_inventory} for {$updated} Vee belt products",
+                'message' => "Updated minimum inventory level to {$request->min_inventory} for {$updated} Cogged belt products",
                 'updated_count' => $updated
             ]);
 

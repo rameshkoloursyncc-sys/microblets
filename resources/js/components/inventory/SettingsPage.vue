@@ -27,6 +27,7 @@
           <option value="tpu">TPU Belts</option>
           <option value="timing">Timing Belts</option>
           <option value="special">Special Belts</option>
+          <option value="raw">Raw Materials</option>
         </select>
       </div>
 
@@ -108,12 +109,12 @@
         </p>
         
         <!-- Debug info (remove in production) -->
-        <div class="mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs">
+        <!-- <div class="mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs">
           <strong>Debug:</strong> 
           Loaded configs: {{ Object.keys(allDieConfigurations).length }} belt types, 
           Current belt ({{ selectedBeltType }}): {{ Object.keys(currentDefaultDieConfigs).length }} sections,
           Input values: {{ Object.keys(dieConfigurations).length }} sections
-        </div>
+        </div> -->
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div v-for="section in currentSections" :key="section" class="border rounded-lg p-4">
@@ -276,7 +277,7 @@
       </div>
 
       <!-- Data Seeding -->
-     <!--  <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           {{ beltTypeConfig[selectedBeltType].name }} Data Seeding
         </h2>
@@ -335,7 +336,7 @@
           </div>
         </div>
       </div>
-         --> 
+         
   </div>
 
     <!--  Notifications -->
@@ -516,6 +517,24 @@ const beltTypeConfig = {
     jsonFiles: {
       'Conical C': 'ConicalCProducts.json', 'Harvester': 'HarvesterProducts.json',
       'RAX': 'RAXProducts.json', 'RBX': 'RBXProducts.json'
+    }
+  },
+  raw: {
+    name: 'Raw Materials',
+    apiEndpoint: '/api/rawcarbon',
+    sections: ['Carbon', 'Chemical', 'Cord', 'Fabric', 'Oil', 'Others', 'Resin', 'TPU', 'Fibre Glass Cord', 'Steel Wire', 'Packing'],
+    formulaType: 'simple_rate', // Raw materials use direct rate, no formula calculation
+    defaultFormulas: {
+      'Carbon': 1.0, 'Chemical': 1.0, 'Cord': 1.0, 'Fabric': 1.0, 'Oil': 1.0, 'Others': 1.0,
+      'Resin': 1.0, 'TPU': 1.0, 'Fibre Glass Cord': 1.0, 'Steel Wire': 1.0, 'Packing': 1.0
+    },
+    defaultDivisors: {
+      'Carbon': 1, 'Chemical': 1, 'Cord': 1, 'Fabric': 1, 'Oil': 1, 'Others': 1,
+      'Resin': 1, 'TPU': 1, 'Fibre Glass Cord': 1, 'Steel Wire': 1, 'Packing': 1
+    },
+    sectionsWithDivisor: ['Carbon', 'Chemical', 'Cord', 'Fabric', 'Oil', 'Others', 'Resin', 'TPU', 'Fibre Glass Cord', 'Steel Wire', 'Packing'],
+    jsonFiles: {
+      'Carbon': 'RawCarbonProducts.json' , 'Chemical': 'RawChemicalProducts.json' , 'Oil': 'RawOilProducts.json'
     }
   }
 }

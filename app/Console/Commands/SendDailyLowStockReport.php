@@ -32,41 +32,104 @@ class SendDailyLowStockReport extends Command
         $this->info('Generating daily stock alert report (low stock + out of stock)...');
 
         try {
-            // Get low stock data
-            $lowStockData = $this->getLowStockData();
+
+        $smartAlertService = new \App\Services\SmartStockAlertService();
+
+
+            try {
+    $inventoryData = $smartAlertService->getInventoryValueSummary();
+    $this->info('✅ Inventory value data retrieved successfully');
+} catch (\Exception $e) {
+    $this->warn('⚠️  Could not get inventory data: ' . $e->getMessage());
+    $inventoryData = [];
+}
+
+
+
+
+
+
+            // Use Smart Alert System (same as dashboard) - respects alert_sent status
+            $smartAlertService = new \App\Services\SmartStockAlertService();
             
             // Get email addresses from command option or config
             $emails = $this->option('email');
             if (empty($emails)) {
-                $emails = explode(',', env('LOW_STOCK_EMAIL_RECIPIENTS', 'admin@example.com'));
-            }
-
-            // Send email if there are low stock or out of stock items
-            $totalLowStock = $lowStockData['total_low_stock_count'] ?? 0;
-            $totalOutOfStock = $lowStockData['total_out_of_stock_count'] ?? 0;
-            $totalAlerts = $lowStockData['total_alert_count'] ?? 0;
-            
-            if ($totalAlerts > 0) {
-                $this->info("Found {$totalLowStock} low stock and {$totalOutOfStock} out of stock items. Sending report...");
+                // Use config with fallback handling for both string and array
+                $emailRecipients = config('mail.low_stock_recipients', 'ramesh.koloursyncc@gmail.com,microbelts@gmail.com');
                 
-                foreach ($emails as $email) {
-                    Mail::to(trim($email))->send(new LowStockReportExcel($lowStockData));
-                    $this->info("Excel report sent to: {$email}");
+                // Handle both string and array formats
+                if (is_array($emailRecipients)) {
+                    $emails = $emailRecipients;
+                } else {
+                    $emails = explode(',', $emailRecipients);
+                }
+            }
+            
+            // Clean up email addresses (trim whitespace)
+            $emails = array_map('trim', $emails);
+            
+            $this->info('📧 Email recipients: ' . implode(', ', $emails));
+
+            // Sync and get items that actually need alerts (not already sent)
+            $smartAlertService->syncStockAlertTracking();
+            $itemsNeedingAlerts = $smartAlertService->getItemsNeedingAlerts();
+            
+            if (!$itemsNeedingAlerts->isEmpty()) {
+                // Prepare alert data with inventory summary
+                $alertData = $smartAlertService->prepareAlertData($itemsNeedingAlerts);
+                
+                // Add inventory value summary
+                try {
+                    $inventoryData = $smartAlertService->getInventoryValueSummary();
+                    if (!empty($inventoryData)) {
+                        $alertData['inventory_summary'] = $inventoryData;
+                    }
+                } catch (\Exception $e) {
+                    $this->warn('⚠️  Could not add inventory summary: ' . $e->getMessage());
                 }
                 
-                // Mark alerts as sent in StockAlertTracking table
-                $this->markStockAlertsAsSent($lowStockData);
+                $totalItems = $alertData['total_items'] ?? 0;
+                $this->info("Found {$totalItems} items needing alerts (not previously sent). Sending reports...");
                 
-                $this->info('✅ Stock alert report sent successfully and alerts marked as sent!');
+                foreach ($emails as $email) {
+                    // Email 1: Smart Stock Alert Excel (with inventory summary)
+                    Mail::to(trim($email))->send(new \App\Mail\SmartStockReportExcel($alertData));
+                    $this->info("Smart stock alert report sent to: {$email}");
+
+                    // Email 2: Production Planning Excel
+                    Mail::to(trim($email))->send(new \App\Mail\ProductionPlanningExcel($alertData));
+                    $this->info("Production planning report sent to: {$email}");
+                }
+                
+                // Mark alerts as sent using Smart Alert Service
+                $smartAlertService->markAlertsAsSent($itemsNeedingAlerts);
+                
+                $this->info('✅ Stock alert reports sent successfully and alerts marked as sent!');
             } else {
-                $this->info('ℹ️  No low stock or out of stock items found. No email sent.');
+                $this->info('ℹ️  No new alerts to send - all low stock items have already been alerted.');
+                $this->info('📊 Sending daily inventory summary report...');
                 
-                // Optionally send a "all good" report on specific days (e.g., Monday)
-                if (now()->dayOfWeek === 1) { // Monday
+                // Always send daily inventory summary even when no alerts
+                try {
+                    $inventoryData = $smartAlertService->getInventoryValueSummary();
+                    $dailyInventoryData = [
+                        'generated_at' => now()->toDateTimeString(),
+                        'total_items' => 0,
+                        'total_dies_needed' => 0,
+                        'belt_types' => [],
+                        'inventory_summary' => $inventoryData,
+                        'message' => 'Daily Inventory Summary - No New Stock Alerts'
+                    ];
+                    
                     foreach ($emails as $email) {
-                        Mail::to(trim($email))->send(new LowStockReportExcel($lowStockData));
-                        $this->info("Weekly 'all good' Excel report sent to: {$email}");
+                        Mail::to(trim($email))->send(new \App\Mail\SmartStockReportExcel($dailyInventoryData));
+                        $this->info("Daily inventory summary sent to: {$email}");
                     }
+                    
+                    $this->info('✅ Daily inventory summary sent successfully!');
+                } catch (\Exception $e) {
+                    $this->warn("Could not send daily inventory summary: " . $e->getMessage());
                 }
             }
 
@@ -76,153 +139,5 @@ class SendDailyLowStockReport extends Command
         }
 
         return 0;
-    }
-
-    private function getLowStockData()
-    {
-        $lowStockItems = [];
-        $outOfStockItems = [];
-
-        // Get low stock and out of stock items from all belt types
-        $beltTypes = [
-            'vee_belts' => ['stock_column' => 'balance_stock', 'size_column' => 'size', 'name' => 'Vee Belts'],
-            'cogged_belts' => ['stock_column' => 'balance_stock', 'size_column' => 'size', 'name' => 'Cogged Belts'],
-            'poly_belts' => ['stock_column' => 'ribs', 'size_column' => 'size', 'name' => 'Poly Belts'],
-            'tpu_belts' => ['stock_column' => 'meter', 'size_column' => 'width', 'name' => 'TPU Belts'],
-            'timing_belts' => ['stock_column' => 'total_mm', 'size_column' => 'size', 'name' => 'Timing Belts'],
-            'special_belts' => ['stock_column' => 'balance_stock', 'size_column' => 'size', 'name' => 'Special Belts']
-        ];
-
-        foreach ($beltTypes as $table => $config) {
-            try {
-                // Check if table exists and has required columns
-                $columns = DB::getSchemaBuilder()->getColumnListing($table);
-                if (!in_array($config['stock_column'], $columns)) {
-                    $config['stock_column'] = 'balance_stock'; // fallback
-                }
-                if (!in_array($config['size_column'], $columns)) {
-                    $config['size_column'] = 'size'; // fallback
-                }
-
-                // Build select array based on available columns
-                $selectColumns = [
-                    'id',
-                    'section',
-                    $config['size_column'] . ' as size',
-                    $config['stock_column'] . ' as current_stock',
-                    'reorder_level'
-                ];
-
-                // Add optional columns if they exist
-                if (in_array('sku', $columns)) {
-                    $selectColumns[] = 'sku';
-                }
-                if (in_array('value', $columns)) {
-                    $selectColumns[] = 'value';
-                }
-
-                // Get LOW STOCK items (reorder_level >= 1 AND current_stock > 0 AND current_stock <= reorder_level)
-                $lowStockQuery = DB::table($table)
-                    ->select($selectColumns)
-                    ->whereNotNull('reorder_level')
-                    ->where('reorder_level', '>=', 1)
-                    ->whereRaw("{$config['stock_column']} > 0")
-                    ->whereRaw("{$config['stock_column']} <= reorder_level")
-                    ->orderBy('section')
-                    ->orderBy($config['size_column'])
-                    ->get();
-
-                // Get OUT OF STOCK items (reorder_level >= 1 AND current_stock = 0)
-                $outOfStockQuery = DB::table($table)
-                    ->select($selectColumns)
-                    ->whereNotNull('reorder_level')
-                    ->where('reorder_level', '>=', 1)
-                    ->whereRaw("{$config['stock_column']} = 0")
-                    ->orderBy('section')
-                    ->orderBy($config['size_column'])
-                    ->get();
-
-                if ($lowStockQuery->count() > 0) {
-                    $lowStockItems[$table] = [
-                        'name' => $config['name'],
-                        'items' => $lowStockQuery->toArray(),
-                        'count' => $lowStockQuery->count()
-                    ];
-                }
-
-                if ($outOfStockQuery->count() > 0) {
-                    $outOfStockItems[$table] = [
-                        'name' => $config['name'],
-                        'items' => $outOfStockQuery->toArray(),
-                        'count' => $outOfStockQuery->count()
-                    ];
-                }
-            } catch (\Exception $e) {
-                $this->warn("Error processing {$table}: " . $e->getMessage());
-            }
-        }
-
-        return [
-            'low_stock_items' => $lowStockItems,
-            'out_of_stock_items' => $outOfStockItems,
-            'total_low_stock_count' => array_sum(array_column($lowStockItems, 'count')),
-            'total_out_of_stock_count' => array_sum(array_column($outOfStockItems, 'count')),
-            'total_alert_count' => array_sum(array_column($lowStockItems, 'count')) + array_sum(array_column($outOfStockItems, 'count')),
-            'generated_at' => now()->toDateTimeString()
-        ];
-    }
-
-    /**
-     * Mark stock alerts as sent in StockAlertTracking table
-     */
-    private function markStockAlertsAsSent($lowStockData)
-    {
-        try {
-            // First sync the stock alert tracking data
-            $smartAlertService = new \App\Services\SmartStockAlertService();
-            $smartAlertService->syncStockAlertTracking();
-            
-            // Get all low stock and out of stock items from the data
-            $allItems = array_merge(
-                $lowStockData['low_stock_items'] ?? [],
-                $lowStockData['out_of_stock_items'] ?? []
-            );
-            
-            // Map table names to belt types
-            $tableToType = [
-                'vee_belts' => 'vee',
-                'cogged_belts' => 'cogged',
-                'poly_belts' => 'poly',
-                'tpu_belts' => 'tpu',
-                'timing_belts' => 'timing',
-                'special_belts' => 'special'
-            ];
-            
-            $markedCount = 0;
-            foreach ($allItems as $table => $data) {
-                $beltType = $tableToType[$table] ?? null;
-                if (!$beltType || !isset($data['items'])) {
-                    continue;
-                }
-                
-                foreach ($data['items'] as $item) {
-                    // Find the corresponding tracking record and mark as sent
-                    $tracking = \App\Models\StockAlertTracking::where('belt_type', $beltType)
-                        ->where('product_id', $item->id)
-                        ->where('is_active', true)
-                        ->first();
-                    
-                    if ($tracking) {
-                        $tracking->markAlertSent();
-                        $markedCount++;
-                    }
-                }
-            }
-            
-            $this->info("Marked {$markedCount} alerts as sent in tracking system.");
-            
-        } catch (\Exception $e) {
-            $this->warn("Error marking stock alerts as sent: " . $e->getMessage());
-        }
     }
 }

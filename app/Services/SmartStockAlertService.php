@@ -40,8 +40,18 @@ class SmartStockAlertService
         // Prepare alert data
         $alertData = $this->prepareAlertData($itemsNeedingAlerts);
 
+        // Add inventory value summary to alert data
+        try {
+            $inventoryData = $this->getInventoryValueSummary();
+            if (!empty($inventoryData)) {
+                $alertData['inventory_summary'] = $inventoryData;
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Could not add inventory summary to smart alerts: ' . $e->getMessage());
+        }
+
         // Send emails
-        $emails = $emails ?? explode(',', env('LOW_STOCK_EMAIL_RECIPIENTS', 'ramesh.koloursyncc@gmail.com'));
+        $emails = $emails ?? explode(',', config('mail.low_stock_recipients', 'ramesh.koloursyncc@gmail.com,microbelts@gmail.com'));
         if (is_string($emails)) {
             $emails = explode(',', $emails);
         }
@@ -50,7 +60,11 @@ class SmartStockAlertService
         $emails = array_map('trim', $emails);
 
         foreach ($emails as $email) {
+            // Email 1: Smart Stock Alert Excel (existing)
             Mail::to(trim($email))->send(new SmartStockReportExcel($alertData));
+            
+            // Email 2: Production Planning Excel (new)
+            Mail::to(trim($email))->send(new \App\Mail\ProductionPlanningExcel($alertData));
         }
 
         // Mark alerts as sent
@@ -75,7 +89,8 @@ class SmartStockAlertService
             'poly_belts' => ['stock_column' => 'ribs', 'size_column' => 'size', 'name' => 'poly'],
             'tpu_belts' => ['stock_column' => 'meter', 'size_column' => 'width', 'name' => 'tpu'],
             'timing_belts' => ['stock_column' => 'total_mm', 'size_column' => 'size', 'name' => 'timing'],
-            'special_belts' => ['stock_column' => 'balance_stock', 'size_column' => 'size', 'name' => 'special']
+            'special_belts' => ['stock_column' => 'balance_stock', 'size_column' => 'size', 'name' => 'special'],
+            'raw_carbons' => ['stock_column' => 'balance_stock', 'size_column' => 'packing', 'name' => 'rawcarbon']
         ];
 
         foreach ($beltTypes as $table => $config) {
@@ -199,9 +214,9 @@ class SmartStockAlertService
     }
 
     /**
-     * Mark alerts as sent
+     * Mark alerts as sent (public method for cron job)
      */
-    private function markAlertsAsSent($itemsNeedingAlerts)
+    public function markAlertsAsSent($itemsNeedingAlerts)
     {
         foreach ($itemsNeedingAlerts->flatten() as $tracking) {
             $tracking->markAlertSent();
@@ -257,6 +272,7 @@ class SmartStockAlertService
     }
 
     /**
+    /**
      * Reset alerts for replenished items
      */
     public function resetReplenishedAlerts()
@@ -270,5 +286,27 @@ class SmartStockAlertService
         }
 
         return $replenishedItems->count();
+    }
+
+    /**
+     * Get inventory value summary for daily report
+     */
+    public function getInventoryValueSummary()
+    {
+        try {
+            // Use the existing DashboardController logic
+            $controller = new \App\Http\Controllers\Api\DashboardController();
+            $response = $controller->getInventoryStats();
+            
+            if ($response->getStatusCode() === 200) {
+                $data = json_decode($response->getContent(), true);
+                return $data['data'] ?? [];
+            }
+            
+            return [];
+        } catch (\Exception $e) {
+            \Log::warning('Error getting inventory value summary: ' . $e->getMessage());
+            return [];
+        }
     }
 }

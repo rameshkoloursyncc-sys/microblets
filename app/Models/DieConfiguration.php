@@ -55,12 +55,18 @@ class DieConfiguration extends Model
      */
     public static function getAllGrouped(): array
     {
-        return self::where('is_active', true)
-            ->orderBy('belt_type')
-            ->orderBy('section')
-            ->get()
-            ->groupBy('belt_type')
-            ->toArray();
+        try {
+            return self::where('is_active', true)
+                ->orderBy('belt_type')
+                ->orderBy('section')
+                ->get()
+                ->groupBy('belt_type')
+                ->toArray();
+        } catch (\Exception $e) {
+            // Return empty array if table doesn't exist or has issues
+            \Log::warning('DieConfiguration::getAllGrouped error: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
@@ -95,6 +101,11 @@ class DieConfiguration extends Model
             'special' => [
                 'Conical C' => 20, 'Harvester' => 15, 'RAX' => 35, 'RBX' => 30,
                 'R3VX' => 25, 'R5VX' => 20, '8M PK' => 30, '8M PL' => 25
+            ],
+            'rawcarbon' => [
+                'Carbon' => 50, 'Chemical' => 40, 'Cord' => 60, 'Fabric' => 45, 'Oil' => 30,
+                'Others' => 35, 'Resin' => 40, 'TPU' => 25, 'Fibre Glass Cord' => 55,
+                'Steel Wire' => 50, 'Packing' => 100
             ]
         ];
 

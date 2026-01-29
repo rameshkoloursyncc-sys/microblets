@@ -717,7 +717,7 @@ class DashboardController extends Controller
             $smartAlertService = new \App\Services\SmartStockAlertService();
             
             // Get email addresses from request or config
-            $emails = $request->input('emails', explode(',', env('LOW_STOCK_EMAIL_RECIPIENTS', 'admin@example.com')));
+            $emails = $request->input('emails', explode(',', config('mail.low_stock_recipients', 'ramesh.koloursyncc@gmail.com,microbelts@gmail.com')));
             if (is_string($emails)) {
                 $emails = explode(',', $emails);
             }
@@ -725,8 +725,10 @@ class DashboardController extends Controller
             // Clean up email addresses (trim whitespace)
             $emails = array_map('trim', $emails);
             
-            // Get the alert data using the working Smart Alert logic
-            $alertData = $smartAlertService->getAlertData();
+            // Get the alert data using the correct Smart Alert logic
+            $smartAlertService->syncStockAlertTracking();
+            $itemsNeedingAlerts = $smartAlertService->getItemsNeedingAlerts();
+            $alertData = $smartAlertService->prepareAlertData($itemsNeedingAlerts);
             
             // Debug: Log the data structure
             \Log::info('Send Stock Alert - Using Smart Alert Data:', $alertData);
@@ -735,18 +737,18 @@ class DashboardController extends Controller
             
             if ($totalItems > 0 || $request->input('force', false)) {
                 foreach ($emails as $email) {
-                    // Use the Smart Alert Excel format since it's working
+                    // Email 1: Smart Alert Excel (existing)
                     \Mail::to(trim($email))->send(new \App\Mail\SmartStockReportExcel($alertData));
+                    
+                    // Email 2: Production Planning Excel (new)
+                    \Mail::to(trim($email))->send(new \App\Mail\ProductionPlanningExcel($alertData));
                 }
-                
-                // Mark alerts as sent using Smart Alert service
-                $smartAlertService->markAlertsAsSent($alertData);
                 
                 // Trigger refresh of all table data to show updated alert status
                 
                 return response()->json([
                     'success' => true,
-                    'message' => "Excel stock report sent successfully to " . count($emails) . " recipient(s). Items: {$totalItems}",
+                    'message' => "Two Excel reports sent successfully to " . count($emails) . " recipient(s) - Stock Alert & Production Planning. Items: {$totalItems}",
                     'data' => [
                         'total_items' => $totalItems,
                         'total_dies_needed' => $alertData['total_dies_needed'] ?? 0,
@@ -884,7 +886,7 @@ public function sendSmartStockAlert(Request $request)
     try {
         $smartAlertService = new \App\Services\SmartStockAlertService();
         
-        $emails = $request->input('emails', explode(',', env('LOW_STOCK_EMAIL_RECIPIENTS', 'admin@example.com')));
+        $emails = $request->input('emails', explode(',', config('mail.low_stock_recipients', 'ramesh.koloursyncc@gmail.com,microbelts@gmail.com')));
         $force = $request->input('force', false);
         
         // Clean up email addresses (trim whitespace)
@@ -988,7 +990,9 @@ public function downloadExcelReport(Request $request)
     try {
         // Use the same logic as Smart Alerts since that's working
         $smartAlertService = new \App\Services\SmartStockAlertService();
-        $alertData = $smartAlertService->getAlertData();
+        $smartAlertService->syncStockAlertTracking();
+        $itemsNeedingAlerts = $smartAlertService->getItemsNeedingAlerts();
+        $alertData = $smartAlertService->prepareAlertData($itemsNeedingAlerts);
         
         // Debug: Log the data structure
         \Log::info('Download Excel - Using Smart Alert Data:', $alertData);
