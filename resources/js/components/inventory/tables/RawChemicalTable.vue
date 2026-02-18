@@ -128,10 +128,10 @@
 
       <!-- Table -->
       <!-- NEW -->
-<div class="flex-1 bg-white dark:bg-gray-800 shadow rounded overflow-hidden">
+<div class="flex-1 bg-white dark:bg-gray-800 shadow rounded overflow-hidden mb-6">
   <!-- Sticky Table Header -->
   <div class="flex-1 bg-white dark:bg-gray-800 shadow rounded overflow-hidden">
-  <div class="overflow-y-auto max-h-[calc(100vh-400px)]">
+  <div class="overflow-y-auto max-h-[calc(100vh-400px)] pb-4">
     <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
       <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase sticky top-0 z-20">
         <tr>
@@ -580,6 +580,13 @@ const visibleProducts = computed(() => {
       )
     }
   }
+
+  // Sort alphabetically by section (description)
+  list.sort((a, b) => {
+    const sectionA = a.section.toLowerCase()
+    const sectionB = b.section.toLowerCase()
+    return sectionA.localeCompare(sectionB)
+  })
 
   return list
 })

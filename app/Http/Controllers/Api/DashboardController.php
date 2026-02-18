@@ -276,6 +276,63 @@ class DashboardController extends Controller
         }
     }
 
+    /**
+     * Get raw materials inventory statistics
+     */
+    public function getRawMaterialsStats()
+    {
+        try {
+            // Get all raw materials categories
+            $categories = ['Carbon', 'Chemical', 'Cord - Cogged Belt', 'Cord - Timing Belt', 'Cord - Vee Belt', 
+                          'Fabric - Cogged Belt', 'Fabric - Timing Belt', 'Fabric - Vee Belt', 'Fabric - TPU Belt',
+                          'Oil', 'Others', 'Resin', 'TPU', 'Fibre Glass Cord', 'Steel Wire', 'Packing', 'Open'];
+            
+            // Calculate totals
+            $result = DB::table('raw_carbons')
+                ->select([
+                    DB::raw('COUNT(*) as total_products'),
+                    DB::raw('SUM(CASE WHEN balance_stock > 0 THEN 1 ELSE 0 END) as in_stock'),
+                    DB::raw('SUM(CASE WHEN reorder_level IS NOT NULL AND reorder_level > 1 AND balance_stock > 0 AND balance_stock <= reorder_level THEN 1 ELSE 0 END) as low_stock'),
+                    DB::raw('SUM(CASE WHEN balance_stock = 0 THEN 1 ELSE 0 END) as out_of_stock'),
+                    DB::raw('SUM(COALESCE(value, 0)) as total_value')
+                ])
+                ->first();
+
+            // Get category-wise breakdown
+            $categoryValues = [];
+            foreach ($categories as $category) {
+                $categoryResult = DB::table('raw_carbons')
+                    ->where('category', $category)
+                    ->select(DB::raw('SUM(COALESCE(value, 0)) as total_value'))
+                    ->first();
+                
+                $categoryValues[$category] = $categoryResult->total_value ?? 0;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'totals' => [
+                        'total_value' => round($result->total_value ?? 0, 2),
+                        'total_products' => $result->total_products ?? 0,
+                        'in_stock' => $result->in_stock ?? 0,
+                        'low_stock' => $result->low_stock ?? 0,
+                        'out_of_stock' => $result->out_of_stock ?? 0,
+                    ],
+                    'category_values' => array_map(function($value) {
+                        return round($value, 2);
+                    }, $categoryValues)
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error calculating raw materials stats: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function getVeeBeltTotalDebug()
     {
         try {

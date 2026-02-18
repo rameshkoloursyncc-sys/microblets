@@ -47,7 +47,27 @@ const rawMaterialsStats = ref({
   totalProducts: 0,
   inStock: 0,
   lowStock: 0,
-  outOfStock: 0
+  outOfStock: 0,
+  totalValue: 0,
+  categoryValues: {
+    'Carbon': 0,
+    'Chemical': 0,
+    'Cord - Cogged Belt': 0,
+    'Cord - Timing Belt': 0,
+    'Cord - Vee Belt': 0,
+    'Fabric - Cogged Belt': 0,
+    'Fabric - Timing Belt': 0,
+    'Fabric - Vee Belt': 0,
+    'Fabric - TPU Belt': 0,
+    'Oil': 0,
+    'Others': 0,
+    'Resin': 0,
+    'TPU': 0,
+    'Fibre Glass Cord': 0,
+    'Steel Wire': 0,
+    'Packing': 0,
+    'Open': 0
+  }
 })
 
 // Authentication
@@ -161,12 +181,27 @@ const loadDashboardStats = async () => {
       throw new Error(response.data.message || 'Failed to load stats')
     }
 
-    // For now, set raw materials to placeholder (no API available yet)
-    rawMaterialsStats.value = {
-      totalProducts: 0,
-      inStock: 0,
-      lowStock: 0,
-      outOfStock: 0
+    // Load raw materials stats
+    try {
+      const rawMaterialsResponse = await axios.get('/api/dashboard/raw-materials-stats')
+      
+      if (rawMaterialsResponse.data.success) {
+        const rawData = rawMaterialsResponse.data.data
+        
+        rawMaterialsStats.value = {
+          totalProducts: rawData.totals.total_products,
+          inStock: rawData.totals.in_stock,
+          lowStock: rawData.totals.low_stock,
+          outOfStock: rawData.totals.out_of_stock,
+          totalValue: rawData.totals.total_value,
+          categoryValues: rawData.category_values
+        }
+        
+        console.log('✅ Raw materials stats loaded successfully:', rawMaterialsStats.value)
+      }
+    } catch (rawError: any) {
+      console.error('❌ Error loading raw materials stats:', rawError)
+      // Keep default values on error
     }
 
   } catch (error: any) {
@@ -699,8 +734,18 @@ const customViewMapping = computed(() => {
   // Raw Material Categories
   'raw-material-carbon': { component: RawCarbonTable, props: { section: 'Carbon', title: 'Raw Material - Carbon' } },
   'raw-material-chemical': { component: RawCarbonTable, props: { section: 'Chemical', title: 'Raw Material - Chemical' } },
-  'raw-material-cord': { component: RawCarbonTable, props: { section: 'Cord', title: 'Raw Material - Soft/Stiff Cord' } },
-  'raw-material-fabric': { component: RawCarbonTable, props: { section: 'Fabric', title: 'Raw Material - Fabric' } },
+  
+  // Cord subsections
+  'raw-material-cord-cogged': { component: RawCarbonTable, props: { section: 'Cord - Cogged Belt', title: 'Raw Material - Cogged Belt Cord' } },
+  'raw-material-cord-timing': { component: RawCarbonTable, props: { section: 'Cord - Timing Belt', title: 'Raw Material - Timing Belt Cord' } },
+  'raw-material-cord-vee': { component: RawCarbonTable, props: { section: 'Cord - Vee Belt', title: 'Raw Material - Vee Belt Cord' } },
+  
+  // Fabric subsections
+  'raw-material-fabric-cogged': { component: RawCarbonTable, props: { section: 'Fabric - Cogged Belt', title: 'Raw Material - Cogged Belt Fabric' } },
+  'raw-material-fabric-timing': { component: RawCarbonTable, props: { section: 'Fabric - Timing Belt', title: 'Raw Material - Timing Belt Fabric' } },
+  'raw-material-fabric-vee': { component: RawCarbonTable, props: { section: 'Fabric - Vee Belt', title: 'Raw Material - Vee Belt Fabric' } },
+  'raw-material-fabric-tpu': { component: RawCarbonTable, props: { section: 'Fabric - TPU Belt', title: 'Raw Material - TPU Belt Fabric' } },
+  
   'raw-material-oil': { component: RawCarbonTable, props: { section: 'Oil', title: 'Raw Material - Oil' } },
   'raw-material-others': { component: RawCarbonTable, props: { section: 'Others', title: 'Raw Material - Others' } },
   'raw-material-resin': { component: RawCarbonTable, props: { section: 'Resin', title: 'Raw Material - Resin' } },
@@ -1322,6 +1367,207 @@ onMounted(() => {
                 <div class="ml-4">
                   <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Out of Stock</p>
                   <p class="text-2xl font-semibold text-gray-900 dark:text-white">{{ rawMaterialsStats.outOfStock.toLocaleString() }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Raw Materials Inventory Value -->
+          <div class="mt-8">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Raw Materials Inventory Value</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              <!-- Total Value -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-purple-100 dark:bg-purple-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Total Value</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(rawMaterialsStats.totalValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Carbon -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-gray-100 dark:bg-gray-700 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Carbon</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(rawMaterialsStats.categoryValues['Carbon'] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Chemical -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-blue-100 dark:bg-blue-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Chemical</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(rawMaterialsStats.categoryValues['Chemical'] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Cord (Combined) -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-orange-100 dark:bg-orange-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 dark:text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Cord (All)</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number((rawMaterialsStats.categoryValues['Cord - Cogged Belt'] || 0) + (rawMaterialsStats.categoryValues['Cord - Timing Belt'] || 0) + (rawMaterialsStats.categoryValues['Cord - Vee Belt'] || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fabric (Combined) -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-teal-100 dark:bg-teal-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-teal-600 dark:text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Fabric (All)</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number((rawMaterialsStats.categoryValues['Fabric - Cogged Belt'] || 0) + (rawMaterialsStats.categoryValues['Fabric - Timing Belt'] || 0) + (rawMaterialsStats.categoryValues['Fabric - Vee Belt'] || 0) + (rawMaterialsStats.categoryValues['Fabric - TPU Belt'] || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Oil -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-amber-100 dark:bg-amber-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-amber-600 dark:text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Oil</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(rawMaterialsStats.categoryValues['Oil'] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Others -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-slate-100 dark:bg-slate-700 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Others</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(rawMaterialsStats.categoryValues['Others'] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Resin -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-yellow-100 dark:bg-yellow-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 dark:text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Resin</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(rawMaterialsStats.categoryValues['Resin'] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TPU -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-cyan-100 dark:bg-cyan-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-cyan-600 dark:text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">TPU</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(rawMaterialsStats.categoryValues['TPU'] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fibre Glass Cord -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-emerald-100 dark:bg-emerald-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 dark:text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Fibre Glass Cord</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(rawMaterialsStats.categoryValues['Fibre Glass Cord'] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Steel Wire -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-zinc-100 dark:bg-zinc-700 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-zinc-600 dark:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Steel Wire</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(rawMaterialsStats.categoryValues['Steel Wire'] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Packing Material -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-rose-100 dark:bg-rose-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-rose-600 dark:text-rose-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Packing Material</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(rawMaterialsStats.categoryValues['Packing'] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Open -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-lime-100 dark:bg-lime-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-lime-600 dark:text-lime-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Open</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(rawMaterialsStats.categoryValues['Open'] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
                 </div>
               </div>
             </div>

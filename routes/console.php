@@ -9,7 +9,12 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Schedule daily stock alert report (low stock + out of stock)
-Schedule::command('report:low-stock')
-    ->dailyAt('08:00')
+Schedule::command('report:low-stock', [
+        '--email' => [
+            'sales@microbelts.com',
+            'ramesh.koloursyncc@gmail.com',
+        ],
+    ])
+    ->dailyAt('20:10')
     ->timezone('Asia/Kolkata')
-    ->description('Send daily stock alert report (low stock + out of stock) via email');
+    ->appendOutputTo(storage_path('logs/stock-alerts.log'));

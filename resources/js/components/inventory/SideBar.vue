@@ -26,6 +26,8 @@ const expandedRawTimingBelts = ref(false)
 const expandedRawTPUBelts = ref(false)
 const expandedRawSpecialBelts = ref(false)
 const expandedRawMaterialCategories = ref(false)
+const expandedRawCord = ref(false)
+const expandedRawFabric = ref(false)
 
 
 
@@ -1461,25 +1463,116 @@ const sidebarStyle = computed(() => {
                   <span>Chemical</span>
                 </button>
               </li>
+              
+              <!-- Soft/Stiff Cord with subsections -->
               <li>
                 <button
                   type="button"
-                  class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                  @click="$emit('navigate', 'raw-material-cord')"
+                  class="flex items-center w-full p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group justify-between"
+                  @click="expandedRawCord = !expandedRawCord"
                 >
-                  
                   <span>Soft/Stiff Cord</span>
+                  <svg
+                    class="w-3 h-3 text-gray-500 transition-transform"
+                    :class="expandedRawCord ? 'rotate-90' : ''"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
                 </button>
+                
+                <ul v-if="expandedRawCord" class="mt-1 ml-4 space-y-1 ps-2">
+                  <li>
+                    <button
+                      type="button"
+                      class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                      @click="$emit('navigate', 'raw-material-cord-cogged')"
+                    >
+                      <span>Cogged Belt Cord</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                      @click="$emit('navigate', 'raw-material-cord-timing')"
+                    >
+                      <span>Timing Belt Cord</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                      @click="$emit('navigate', 'raw-material-cord-vee')"
+                    >
+                      <span>Vee Belt Cord</span>
+                    </button>
+                  </li>
+                </ul>
               </li>
+              
+              <!-- Fabric with subsections -->
               <li>
                 <button
                   type="button"
-                  class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                  @click="$emit('navigate', 'raw-material-fabric')"
+                  class="flex items-center w-full p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group justify-between"
+                  @click="expandedRawFabric = !expandedRawFabric"
                 >
-                  
                   <span>Fabric</span>
+                  <svg
+                    class="w-3 h-3 text-gray-500 transition-transform"
+                    :class="expandedRawFabric ? 'rotate-90' : ''"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
                 </button>
+                
+                <ul v-if="expandedRawFabric" class="mt-1 ml-4 space-y-1 ps-2">
+                  <li>
+                    <button
+                      type="button"
+                      class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                      @click="$emit('navigate', 'raw-material-fabric-cogged')"
+                    >
+                      <span>Cogged Belt Fabric</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                      @click="$emit('navigate', 'raw-material-fabric-timing')"
+                    >
+                      <span>Timing Belt Fabric</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                      @click="$emit('navigate', 'raw-material-fabric-vee')"
+                    >
+                      <span>Vee Belt Fabric</span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                      @click="$emit('navigate', 'raw-material-fabric-tpu')"
+                    >
+                      <span>TPU Belt Fabric</span>
+                    </button>
+                  </li>
+                </ul>
               </li>
               <li>
                 <button

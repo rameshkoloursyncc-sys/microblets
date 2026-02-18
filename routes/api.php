@@ -37,6 +37,7 @@ Route::middleware(['App\Http\Middleware\CheckSession'])->group(function () {
 Route::middleware(['App\Http\Middleware\CheckSession'])->group(function () {
     // Dashboard API Routes
     Route::get('dashboard/inventory-stats', [\App\Http\Controllers\Api\DashboardController::class, 'getInventoryStats']);
+    Route::get('dashboard/raw-materials-stats', [\App\Http\Controllers\Api\DashboardController::class, 'getRawMaterialsStats']);
     Route::get('dashboard/low-stock-items', [\App\Http\Controllers\Api\DashboardController::class, 'getLowStockItems']);
     Route::post('dashboard/send-stock-alert', [\App\Http\Controllers\Api\DashboardController::class, 'sendStockAlert']);
     Route::get('dashboard/download-excel-report', [\App\Http\Controllers\Api\DashboardController::class, 'downloadExcelReport']);

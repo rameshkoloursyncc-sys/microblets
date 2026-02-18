@@ -18,7 +18,7 @@ CRON_SCHEDULE="0 17 * * *"
 DESCRIPTION="Daily at 5:00 PM IST"
 
 # Create the cron command
-CRON_COMMAND="$CRON_SCHEDULE cd $PROJECT_PATH && php artisan report:low-stock --email=rameshnda09@gmail.com --email=ramesh.koloursyncc@gmail.com >> /var/log/microbelts/stock-alerts.log 2>&1"
+CRON_COMMAND="$CRON_SCHEDULE cd $PROJECT_PATH && php artisan report:low-stock --email=sales@microbelts.com --email=ramesh.koloursyncc@gmail.com >> /var/log/microbelts/stock-alerts.log 2>&1"
 
 echo ""
 echo "📋 Cron Job Details:"
@@ -26,7 +26,7 @@ echo "Schedule: $DESCRIPTION"
 echo "Command: $CRON_COMMAND"
 echo ""
 echo "📧 Email Recipients:"
-echo "   - rameshnda09@gmail.com"
+echo "   - sales@microbelts.com"
 echo "   - ramesh.koloursyncc@gmail.com"
 
 echo ""
@@ -52,7 +52,7 @@ if [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]; then
     
     echo ""
     echo "🧪 Test commands:"
-    echo "   Manual test: php artisan report:low-stock --email=rameshnda09@gmail.com --email=ramesh.koloursyncc@gmail.com"
+    echo "   Manual test: php artisan report:low-stock --email=sales@microbelts.com--email=ramesh.koloursyncc@gmail.com"
     echo "   View logs: tail -f /var/log/microbelts/stock-alerts.log"
     
     echo ""
