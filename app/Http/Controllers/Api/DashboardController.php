@@ -285,7 +285,7 @@ class DashboardController extends Controller
             // Get all raw materials categories
             $categories = ['Carbon', 'Chemical', 'Cord - Cogged Belt', 'Cord - Timing Belt', 'Cord - Vee Belt', 
                           'Fabric - Cogged Belt', 'Fabric - Timing Belt', 'Fabric - Vee Belt', 'Fabric - TPU Belt',
-                          'Oil', 'Others', 'Resin', 'TPU', 'Fibre Glass Cord', 'Steel Wire', 'Packing', 'Open'];
+                          'Oil', 'Others', 'Resin', 'Rubber', 'TPU', 'Fibre Glass Cord', 'Steel Wire', 'Packing', 'Open'];
             
             // Calculate totals
             $result = DB::table('raw_carbons')

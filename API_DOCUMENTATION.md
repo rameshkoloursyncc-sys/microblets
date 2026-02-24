@@ -640,3 +640,8 @@ Update rate formulas.
 - Rate calculations are automatic based on formulas
 - Transaction history is maintained for all operations
 - User attribution is tracked for all changes
+
+
+
+
+php artisan migrate

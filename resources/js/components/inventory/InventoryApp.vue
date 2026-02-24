@@ -62,6 +62,7 @@ const rawMaterialsStats = ref({
     'Oil': 0,
     'Others': 0,
     'Resin': 0,
+    'Rubber': 0,
     'TPU': 0,
     'Fibre Glass Cord': 0,
     'Steel Wire': 0,
@@ -749,6 +750,7 @@ const customViewMapping = computed(() => {
   'raw-material-oil': { component: RawCarbonTable, props: { section: 'Oil', title: 'Raw Material - Oil' } },
   'raw-material-others': { component: RawCarbonTable, props: { section: 'Others', title: 'Raw Material - Others' } },
   'raw-material-resin': { component: RawCarbonTable, props: { section: 'Resin', title: 'Raw Material - Resin' } },
+  'raw-material-rubber': { component: RawCarbonTable, props: { section: 'Rubber', title: 'Raw Material - Rubber' } },
   'raw-material-tpu': { component: RawCarbonTable, props: { section: 'TPU', title: 'Raw Material - TPU' } },
   'raw-material-fibre-glass-cord': { component: RawCarbonTable, props: { section: 'Fibre Glass Cord', title: 'Raw Material - Fibre Glass Cord' } },
   'raw-material-steel-wire': { component: RawCarbonTable, props: { section: 'Steel Wire', title: 'Raw Material - Steel Wire' } },
@@ -1492,6 +1494,21 @@ onMounted(() => {
                   <div class="ml-3 sm:ml-4 min-w-0 flex-1">
                     <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Resin</p>
                     <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(rawMaterialsStats.categoryValues['Resin'] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rubber -->
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
+                <div class="flex items-center">
+                  <div class="p-2 sm:p-3 rounded-full bg-red-100 dark:bg-red-900 flex-shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                    </svg>
+                  </div>
+                  <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 truncate">Rubber</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white break-all">₹{{ Number(rawMaterialsStats.categoryValues['Rubber'] || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</p>
                   </div>
                 </div>
               </div>

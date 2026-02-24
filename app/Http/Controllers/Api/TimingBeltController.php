@@ -324,6 +324,16 @@ class TimingBeltController extends Controller
                     if ($tracking && $tracking->alert_sent) {
                         $tracking->resetAlert();
                     }
+                } else{
+                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'timing')
+                    ->where('product_id', $timingBelt->id)
+                    ->where('is_active', true)
+                    ->first();
+                
+                if ($tracking && $tracking->alert_sent) {
+                    $tracking->resetAlert();
+                }
+
                 }
 
                 // Create transaction record

@@ -411,6 +411,16 @@ class CoggedBeltController extends Controller
                     if ($tracking && $tracking->alert_sent) {
                         $tracking->resetAlert();
                     }
+                } else {
+                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'cogged')
+                    ->where('product_id', $veeBelt->id)
+                    ->where('is_active', true)
+                    ->first();
+                
+                if ($tracking && $tracking->alert_sent) {
+                    $tracking->resetAlert();
+                }
+
                 }
 
                 // Create transaction

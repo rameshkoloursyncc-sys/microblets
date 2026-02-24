@@ -316,6 +316,15 @@ class TpuBeltController extends Controller
                     if ($tracking && $tracking->alert_sent) {
                         $tracking->resetAlert();
                     }
+                } else {
+                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'tpu')
+                    ->where('product_id', $tpuBelt->id)
+                    ->where('is_active', true)
+                    ->first();
+                
+                if ($tracking && $tracking->alert_sent) {
+                    $tracking->resetAlert();
+                }
                 }
 
                 // Create transaction record

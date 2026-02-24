@@ -91,10 +91,10 @@ class StockAlertTracking extends Model
     {
         $this->current_stock = $newStock;
         
-        if ($newStock >= $this->reorder_level && $this->alert_sent) {
-            $this->resetAlert();
-        }
-        
+        // if ($newStock >= $this->reorder_level && $this->alert_sent) {
+        //     $this->resetAlert();
+        // }
+        $this->resetAlert();
         $this->calculateDiesNeeded();
         $this->save();
     }
@@ -108,6 +108,11 @@ class StockAlertTracking extends Model
                     ->where('is_active', true)
                     ->whereRaw('current_stock < reorder_level');
     }
+    
+//     public function scopeNeedsAlert($query)
+// {
+//     return $query->whereRaw('1 = 0');
+// }
 
     /**
      * Scope for items by belt type and section

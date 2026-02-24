@@ -400,14 +400,23 @@ class PolyBeltController extends Controller
 
                 // Check and reset stock alert if ribs are replenished above reorder level
                 if ($polyBelt->reorder_level && $polyBelt->ribs >= $polyBelt->reorder_level) {
+                        $tracking = \App\Models\StockAlertTracking::where('belt_type', 'poly')
+                            ->where('product_id', $polyBelt->id)
+                            ->where('is_active', true)
+                            ->first();
+                        
+                        if ($tracking && $tracking->alert_sent) {
+                            $tracking->resetAlert();
+                        }
+                } else {
                     $tracking = \App\Models\StockAlertTracking::where('belt_type', 'poly')
-                        ->where('product_id', $polyBelt->id)
-                        ->where('is_active', true)
-                        ->first();
-                    
-                    if ($tracking && $tracking->alert_sent) {
-                        $tracking->resetAlert();
-                    }
+                    ->where('product_id', $polyBelt->id)
+                    ->where('is_active', true)
+                    ->first();
+                
+                if ($tracking && $tracking->alert_sent) {
+                    $tracking->resetAlert();
+                }
                 }
 
                 // Create transaction

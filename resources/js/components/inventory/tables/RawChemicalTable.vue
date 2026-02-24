@@ -131,7 +131,7 @@
 <div class="flex-1 bg-white dark:bg-gray-800 shadow rounded overflow-hidden mb-6">
   <!-- Sticky Table Header -->
   <div class="flex-1 bg-white dark:bg-gray-800 shadow rounded overflow-hidden">
-  <div class="overflow-y-auto max-h-[calc(100vh-400px)] pb-4">
+  <div class="overflow-y-auto" style="max-height: calc(100vh - 350px); padding-bottom: 2rem;">
     <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
       <thead class="bg-gray-50 dark:bg-gray-700 text-xs uppercase sticky top-0 z-20">
         <tr>

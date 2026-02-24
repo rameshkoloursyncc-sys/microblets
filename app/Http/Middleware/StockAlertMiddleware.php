@@ -111,9 +111,9 @@ class StockAlertMiddleware
                 ],
                 [
                     'product_sku' => $product->sku ?? $this->generateSku($product, $beltType),
-                    'current_stock' => $currentStock,
-                    'reorder_level' => $reorderLevel,
-                    'stock_per_die' => $this->getStockPerDie($product, $beltType),
+                    'current_stock' => $currentStock, //80
+                    'reorder_level' => $reorderLevel, //100
+                    'stock_per_die' => $this->getStockPerDie($product, $beltType), //30
                     'is_active' => true
                 ]
             );

@@ -1608,6 +1608,16 @@ const sidebarStyle = computed(() => {
                 <button
                   type="button"
                   class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                  @click="$emit('navigate', 'raw-material-rubber')"
+                >
+                  
+                  <span>Rubber</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                   @click="$emit('navigate', 'raw-material-tpu')"
                 >
                   
@@ -1644,20 +1654,20 @@ const sidebarStyle = computed(() => {
                   <span>Packing Material</span>
                 </button>
               </li>
-                  <li>
-                    <button
-                      type="button"
-                      class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                      @click="$emit('navigate', 'raw-tpu-belts-open')"
-                    >
-                      
-                      <span>Open</span>
-                    </button>
-                  </li>
-                </ul>
+              <li>
+                <button
+                  type="button"
+                  class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                  @click="$emit('navigate', 'raw-material-open')"
+                >
+                  
+                  <span>Open</span>
+                </button>
               </li>
             </ul>
           </li>
+        </ul>
+      </li>
         </ul>
    </div>
 </aside>

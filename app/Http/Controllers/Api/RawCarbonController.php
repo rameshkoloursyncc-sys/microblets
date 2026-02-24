@@ -86,7 +86,7 @@ class RawCarbonController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'section' => 'required|string|max:50',
+            'section' => 'required|string|max:100',
             'packing' => 'required|string|max:20',
             'balance_stock' => 'required|numeric|min:0',
             'reorder_level' => 'nullable|integer|min:0',
@@ -158,7 +158,7 @@ class RawCarbonController extends Controller
         $rawCarbon = RawCarbon::findOrFail($id);
 
         $validated = $request->validate([
-            'section' => 'sometimes|string|max:50',
+            'section' => 'sometimes|string|max:100',
             'packing' => 'sometimes|string|max:20',
             'balance_stock' => 'sometimes|numeric|min:0',
             'reorder_level' => 'sometimes|integer|min:0',
@@ -265,7 +265,7 @@ class RawCarbonController extends Controller
         
         $validated = $request->validate([
             'products' => 'required|array',
-            'products.*.section' => 'required|string|max:50',
+            'products.*.section' => 'required|string|max:100',
             'products.*.packing' => 'required|string|max:20',
             'products.*.balance_stock' => 'required|numeric|min:0',
             'products.*.reorder_level' => 'nullable|integer|min:0',
@@ -428,6 +428,15 @@ class RawCarbonController extends Controller
                     if ($tracking && $tracking->alert_sent) {
                         $tracking->resetAlert();
                     }
+                } else {
+                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'rawcarbon')
+                    ->where('product_id', $rawCarbon->id)
+                    ->where('is_active', true)
+                    ->first();
+                
+                if ($tracking && $tracking->alert_sent) {
+                    $tracking->resetAlert();
+                }
                 }
 
                 // Create transaction
