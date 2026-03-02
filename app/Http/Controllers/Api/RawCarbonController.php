@@ -87,6 +87,7 @@ class RawCarbonController extends Controller
     {
         $validated = $request->validate([
             'section' => 'required|string|max:100',
+            'category' => 'required|string|max:100',
             'packing' => 'required|string|max:20',
             'balance_stock' => 'required|numeric|min:0',
             'reorder_level' => 'nullable|integer|min:0',
@@ -94,14 +95,15 @@ class RawCarbonController extends Controller
             'remark' => 'nullable|string',
         ]);
 
-        // Check if already exists
+        // Check if already exists (section + packing + category combination)
         $existing = RawCarbon::where('section', $validated['section'])
             ->where('packing', $validated['packing'])
+            ->where('category', $validated['category'])
             ->first();
 
         if ($existing) {
             return response()->json([
-                'message' => 'Product already exists',
+                'message' => 'Product already exists in this category',
                 'product' => $existing
             ], 409);
         }

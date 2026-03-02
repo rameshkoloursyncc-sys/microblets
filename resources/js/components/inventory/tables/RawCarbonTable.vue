@@ -331,12 +331,12 @@
         <div class="relative bg-white dark:bg-gray-800 rounded p-4 w-full max-w-lg z-50">
           <h3 class="font-semibold mb-2">Create Product</h3>
           <div class="grid grid-cols-1 gap-2">
-            <label>Section
-              <input v-model="createForm.section" class="w-full p-2 border rounded" :placeholder="section || 'e.g., A, B, SPA'" />
+            <label>Description (Material Name)
+              <input v-model="createForm.section" class="w-full p-2 border rounded" placeholder="e.g., FEF N550, HAF N330" />
             </label>
 
-            <label>Size
-              <input v-model="createForm.packing" class="w-full p-2 border rounded" placeholder="Enter size" />
+            <label>Packing (Size)
+              <input v-model="createForm.packing" class="w-full p-2 border rounded" placeholder="Enter packing size" />
             </label>
 
             <label>Balance Stock
@@ -499,8 +499,8 @@ const savingCell = ref<string|null>(null)
 
 const showCreateModal = ref(false)
 const createForm = ref({ 
-  section: props.section || '',
-  packing: 0, 
+  section: '', // Material name/description, not category
+  packing: '', 
   balance_stock: 0, 
   reorder_level: undefined as number | undefined, 
   rate: undefined as number | undefined,
@@ -557,27 +557,42 @@ const sidebarCollapsed = ref(false)
 const visibleProducts = computed(() => {
   let list = products.value.slice()
 
+  console.log('🔍 visibleProducts computed - searchTerm:', searchTerm.value, 'products count:', list.length)
+
   // Search filter
   if (searchTerm.value) {
     const q = searchTerm.value.toLowerCase().trim()
 
-    // Split by space to allow "section packing"
-    const searchParts = q.split(' ').filter(Boolean)
-
-    if (searchParts.length >= 2) {
-      // Combined search: exact section + packing match
-      const [sectionPart, packingPart] = searchParts
-
-      list = list.filter(p =>
-        p.section.toLowerCase() === sectionPart &&
-        String(p.packing).includes(packingPart)
-      )
-    } else {
-      // Single search: section OR packing
-      list = list.filter(p =>
-        p.section.toLowerCase().includes(q) ||
-        String(p.packing).includes(q)
-      )
+    // For raw materials, search in section (description) and packing
+    // Support both single-word and multi-word searches
+    list = list.filter(p => {
+      const sectionLower = p.section.toLowerCase()
+      const packingLower = String(p.packing).toLowerCase()
+      const categoryLower = p.category?.toLowerCase() || ''
+      
+      // Try exact match first
+      if (sectionLower.includes(q) || packingLower.includes(q) || categoryLower.includes(q)) {
+        return true
+      }
+      
+      // If no exact match, try partial word matching
+      // Split search query into words and check if all words are present
+      const searchWords = q.split(/\s+/).filter(w => w.length > 0)
+      if (searchWords.length > 1) {
+        const allWordsMatch = searchWords.every(word => 
+          sectionLower.includes(word) || packingLower.includes(word) || categoryLower.includes(word)
+        )
+        if (allWordsMatch) {
+          return true
+        }
+      }
+      
+      return false
+    })
+    
+    console.log('🔍 After search filter - results count:', list.length)
+    if (list.length === 0 && products.value.length > 0) {
+      console.log('🔍 No results found. Sample product sections:', products.value.slice(0, 3).map(p => p.section))
     }
   }
 
@@ -705,12 +720,17 @@ const getStockClass = (p: RawCarbon) => {
 
 const createProduct = async () => {
   try {
-    await apiCreateProduct(createForm.value)
+    // Add category field from props.section
+    const productData = {
+      ...createForm.value,
+      category: props.section // This is crucial for raw materials
+    }
+    await apiCreateProduct(productData)
     showNotification('success', 'Created', 'Product created successfully')
     showCreateModal.value = false
     createForm.value = { 
-      section: props.section || '',
-      packing: 0, 
+      section: '', // Clear section field - user should enter material name
+      packing: '', 
       balance_stock: 0, 
       reorder_level: undefined, 
       rate: undefined,
@@ -807,9 +827,10 @@ watch(() => props.section, async (newSection) => {
 
 // Watch for globalSearch changes
 watch(() => props.globalSearch, (newGlobalSearch) => {
-  console.log('GlobalSearch changed to:', newGlobalSearch)
+  console.log('🔍 RawCarbonTable - GlobalSearch changed to:', newGlobalSearch, 'for section:', props.section)
   if (newGlobalSearch) {
     searchTerm.value = newGlobalSearch
+    console.log('🔍 RawCarbonTable - searchTerm set to:', searchTerm.value)
   } else {
     searchTerm.value = ''
   }

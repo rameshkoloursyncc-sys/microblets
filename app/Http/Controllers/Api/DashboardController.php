@@ -1183,4 +1183,257 @@ public function debugStockData(Request $request)
     }
 }
 
+    /**
+     * Get dashboard snapshot for a specific date or date range
+     * Supports: single date, date range, week, month, year
+     */
+    public function getSnapshot(Request $request)
+    {
+        try {
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
+            $date = $request->input('date');
+            
+            // If single date provided, use it
+            if ($date && !$startDate && !$endDate) {
+                $snapshot = \App\Models\DashboardSnapshot::where('snapshot_date', $date)->first();
+                
+                if (!$snapshot) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No snapshot found for this date'
+                    ], 404);
+                }
+                
+                return response()->json([
+                    'success' => true,
+                    'type' => 'single',
+                    'data' => $this->formatSnapshotData($snapshot)
+                ]);
+            }
+            
+            // If date range provided, aggregate the data
+            if ($startDate && $endDate) {
+                $snapshots = \App\Models\DashboardSnapshot::whereBetween('snapshot_date', [$startDate, $endDate])
+                    ->orderBy('snapshot_date', 'asc')
+                    ->get();
+                
+                if ($snapshots->isEmpty()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No snapshots found for this date range'
+                    ], 404);
+                }
+                
+                // Aggregate the data
+                $aggregated = $this->aggregateSnapshots($snapshots);
+                
+                return response()->json([
+                    'success' => true,
+                    'type' => 'range',
+                    'date_range' => [
+                        'start' => $startDate,
+                        'end' => $endDate,
+                        'days' => $snapshots->count()
+                    ],
+                    'data' => $aggregated
+                ]);
+            }
+            
+            // Default: return today's snapshot
+            $today = now()->toDateString();
+            $snapshot = \App\Models\DashboardSnapshot::where('snapshot_date', $today)->first();
+            
+            if (!$snapshot) {
+                // If today's snapshot doesn't exist, get the latest available
+                $snapshot = \App\Models\DashboardSnapshot::orderBy('snapshot_date', 'desc')->first();
+            }
+            
+            if (!$snapshot) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No snapshots available'
+                ], 404);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'type' => 'single',
+                'data' => $this->formatSnapshotData($snapshot)
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching snapshot: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Format single snapshot data
+     */
+    private function formatSnapshotData($snapshot)
+    {
+        return [
+            'snapshot_date' => $snapshot->snapshot_date->format('Y-m-d'),
+            'finished_goods' => [
+                'total_products' => $snapshot->finished_total_products,
+                'in_stock' => $snapshot->finished_in_stock,
+                'low_stock' => $snapshot->finished_low_stock,
+                'out_of_stock' => $snapshot->finished_out_of_stock,
+                'total_value' => $snapshot->finished_total_value,
+                'categories' => [
+                    'vee_belts' => $snapshot->vee_belts_value,
+                    'cogged_belts' => $snapshot->cogged_belts_value,
+                    'poly_belts' => $snapshot->poly_belts_value,
+                    'tpu_belts' => $snapshot->tpu_belts_value,
+                    'timing_belts' => $snapshot->timing_belts_value,
+                    'special_belts' => $snapshot->special_belts_value,
+                ]
+            ],
+            'raw_materials' => [
+                'total_materials' => $snapshot->raw_total_materials,
+                'available' => $snapshot->raw_available,
+                'low_stock' => $snapshot->raw_low_stock,
+                'out_of_stock' => $snapshot->raw_out_of_stock,
+                'total_value' => $snapshot->raw_total_value,
+                'categories' => [
+                    'Carbon' => $snapshot->raw_carbon_value,
+                    'Chemical' => $snapshot->raw_chemical_value,
+                    'Cord (All)' => $snapshot->raw_cord_all_value,
+                    'Fabric (All)' => $snapshot->raw_fabric_all_value,
+                    'Oil' => $snapshot->raw_oil_value,
+                    'Others' => $snapshot->raw_others_value,
+                    'Resin' => $snapshot->raw_resin_value,
+                    'Rubber' => $snapshot->raw_rubber_value,
+                    'TPU' => $snapshot->raw_tpu_value,
+                    'Fibre Glass Cord' => $snapshot->raw_fibre_glass_cord_value,
+                    'Steel Wire' => $snapshot->raw_steel_wire_value,
+                    'Packing' => $snapshot->raw_packing_value,
+                    'Open' => $snapshot->raw_open_value,
+                ]
+            ],
+            'die_requirements' => $snapshot->die_requirements,
+            'total_alerts' => $snapshot->total_alerts,
+        ];
+    }
+    
+    /**
+     * Aggregate multiple snapshots (average values)
+     */
+    private function aggregateSnapshots($snapshots)
+    {
+        $count = $snapshots->count();
+        
+        return [
+            'snapshot_dates' => $snapshots->pluck('snapshot_date')->map(fn($d) => $d->format('Y-m-d'))->toArray(),
+            'finished_goods' => [
+                'avg_total_products' => round($snapshots->avg('finished_total_products')),
+                'avg_in_stock' => round($snapshots->avg('finished_in_stock')),
+                'avg_low_stock' => round($snapshots->avg('finished_low_stock')),
+                'avg_out_of_stock' => round($snapshots->avg('finished_out_of_stock')),
+                'avg_total_value' => round($snapshots->avg('finished_total_value'), 2),
+                'total_value_sum' => round($snapshots->sum('finished_total_value'), 2),
+                'categories' => [
+                    'vee_belts' => round($snapshots->avg('vee_belts_value'), 2),
+                    'cogged_belts' => round($snapshots->avg('cogged_belts_value'), 2),
+                    'poly_belts' => round($snapshots->avg('poly_belts_value'), 2),
+                    'tpu_belts' => round($snapshots->avg('tpu_belts_value'), 2),
+                    'timing_belts' => round($snapshots->avg('timing_belts_value'), 2),
+                    'special_belts' => round($snapshots->avg('special_belts_value'), 2),
+                ]
+            ],
+            'raw_materials' => [
+                'avg_total_materials' => round($snapshots->avg('raw_total_materials')),
+                'avg_available' => round($snapshots->avg('raw_available')),
+                'avg_low_stock' => round($snapshots->avg('raw_low_stock')),
+                'avg_out_of_stock' => round($snapshots->avg('raw_out_of_stock')),
+                'avg_total_value' => round($snapshots->avg('raw_total_value'), 2),
+                'total_value_sum' => round($snapshots->sum('raw_total_value'), 2),
+                'categories' => [
+                    'Carbon' => round($snapshots->avg('raw_carbon_value'), 2),
+                    'Chemical' => round($snapshots->avg('raw_chemical_value'), 2),
+                    'Cord (All)' => round($snapshots->avg('raw_cord_all_value'), 2),
+                    'Fabric (All)' => round($snapshots->avg('raw_fabric_all_value'), 2),
+                    'Oil' => round($snapshots->avg('raw_oil_value'), 2),
+                    'Others' => round($snapshots->avg('raw_others_value'), 2),
+                    'Resin' => round($snapshots->avg('raw_resin_value'), 2),
+                    'Rubber' => round($snapshots->avg('raw_rubber_value'), 2),
+                    'TPU' => round($snapshots->avg('raw_tpu_value'), 2),
+                    'Fibre Glass Cord' => round($snapshots->avg('raw_fibre_glass_cord_value'), 2),
+                    'Steel Wire' => round($snapshots->avg('raw_steel_wire_value'), 2),
+                    'Packing' => round($snapshots->avg('raw_packing_value'), 2),
+                    'Open' => round($snapshots->avg('raw_open_value'), 2),
+                ]
+            ],
+            'avg_total_alerts' => round($snapshots->avg('total_alerts')),
+            'trend' => $this->calculateTrend($snapshots),
+        ];
+    }
+    
+    /**
+     * Calculate trend (first vs last snapshot)
+     */
+    private function calculateTrend($snapshots)
+    {
+        if ($snapshots->count() < 2) {
+            return null;
+        }
+        
+        $first = $snapshots->first();
+        $last = $snapshots->last();
+        
+        $finishedChange = $last->finished_total_value - $first->finished_total_value;
+        $finishedPercent = $first->finished_total_value > 0 
+            ? round(($finishedChange / $first->finished_total_value) * 100, 2) 
+            : 0;
+            
+        $rawChange = $last->raw_total_value - $first->raw_total_value;
+        $rawPercent = $first->raw_total_value > 0 
+            ? round(($rawChange / $first->raw_total_value) * 100, 2) 
+            : 0;
+        
+        return [
+            'finished_goods' => [
+                'change' => round($finishedChange, 2),
+                'percent' => $finishedPercent,
+                'direction' => $finishedChange > 0 ? 'up' : ($finishedChange < 0 ? 'down' : 'stable')
+            ],
+            'raw_materials' => [
+                'change' => round($rawChange, 2),
+                'percent' => $rawPercent,
+                'direction' => $rawChange > 0 ? 'up' : ($rawChange < 0 ? 'down' : 'stable')
+            ]
+        ];
+    }
+    
+    /**
+     * Get available snapshot dates
+     */
+    public function getAvailableDates()
+    {
+        try {
+            $dates = \App\Models\DashboardSnapshot::orderBy('snapshot_date', 'desc')
+                ->pluck('snapshot_date')
+                ->map(fn($date) => $date->format('Y-m-d'))
+                ->toArray();
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'dates' => $dates,
+                    'count' => count($dates),
+                    'latest' => $dates[0] ?? null,
+                    'oldest' => end($dates) ?: null,
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching dates: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -32,6 +32,15 @@ class SendDailyLowStockReport extends Command
         $this->info('Generating daily stock alert report (low stock + out of stock)...');
 
         try {
+            // Create dashboard snapshot before sending report (5 PM snapshot)
+            $this->info('📊 Creating dashboard snapshot...');
+            try {
+                \Artisan::call('dashboard:snapshot');
+                $this->info('✅ Dashboard snapshot created successfully');
+            } catch (\Exception $e) {
+                $this->warn('⚠️  Could not create snapshot: ' . $e->getMessage());
+                // Continue with report even if snapshot fails
+            }
 
         $smartAlertService = new \App\Services\SmartStockAlertService();
 

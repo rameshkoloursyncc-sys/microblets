@@ -71,6 +71,14 @@ const rawMaterialsStats = ref({
   }
 })
 
+// Date filter state
+const finishedGoodsStartDate = ref<string | null>(null)
+const finishedGoodsEndDate = ref<string | null>(null)
+const rawMaterialsStartDate = ref<string | null>(null)
+const rawMaterialsEndDate = ref<string | null>(null)
+const loadingSnapshot = ref(false)
+const snapshotError = ref<string | null>(null)
+
 // Authentication
 const { user, isAuthenticated, isAdmin, initAuth, login, logout, startSessionKeepAlive, attemptSessionRestore } = useAuth()
 const authLoading = ref(true)
@@ -136,7 +144,103 @@ const handleSidebarToggle = (collapsed: boolean) => {
   sidebarCollapsed.value = collapsed
 }
 
-// Load dashboard statistics
+// Load snapshot data for date range
+const loadSnapshotData = async (startDate?: string, endDate?: string, section: 'finished' | 'raw' | 'both' = 'both') => {
+  loadingSnapshot.value = true
+  snapshotError.value = null
+  
+  try {
+    console.log('📅 Loading snapshot data...', { startDate, endDate, section })
+    
+    // Build query params
+    const params: any = {}
+    if (startDate && endDate) {
+      params.start_date = startDate
+      params.end_date = endDate
+    } else if (startDate) {
+      params.date = startDate
+    }
+    
+    const response = await axios.get('/api/dashboard/snapshot', { params })
+    
+    if (response.data.success) {
+      const data = response.data.data
+      console.log('📊 Snapshot data loaded:', data)
+      
+      // Check if it's aggregated data (date range) or single date
+      const fg = data.finished_goods
+      const rm = data.raw_materials
+      
+      // Update finished goods stats from snapshot (if requested)
+      if (section === 'finished' || section === 'both') {
+        finishedGoodsStats.value = {
+          totalProducts: Math.round(fg.avg_total_products || fg.total_products || 0),
+          inStock: Math.round(fg.avg_in_stock || fg.in_stock || 0),
+          lowStock: Math.round(fg.avg_low_stock || fg.low_stock || 0),
+          outOfStock: Math.round(fg.avg_out_of_stock || fg.out_of_stock || 0),
+          totalValue: fg.avg_total_value || fg.total_value || 0,
+          beltTypeValues: {
+            vee: fg.categories?.vee_belts || fg.vee_belts_value || 0,
+            cogged: fg.categories?.cogged_belts || fg.cogged_belts_value || 0,
+            poly: fg.categories?.poly_belts || fg.poly_belts_value || 0,
+            tpu: fg.categories?.tpu_belts || fg.tpu_belts_value || 0,
+            timing: fg.categories?.timing_belts || fg.timing_belts_value || 0,
+            special: fg.categories?.special_belts || fg.special_belts_value || 0
+          }
+        }
+      }
+      
+      // Update raw materials stats from snapshot (if requested)
+      if (section === 'raw' || section === 'both') {
+        rawMaterialsStats.value = {
+          totalProducts: Math.round(rm.avg_total_materials || rm.total_products || 0),
+          inStock: Math.round(rm.avg_available || rm.in_stock || 0),
+          lowStock: Math.round(rm.avg_low_stock || rm.low_stock || 0),
+          outOfStock: Math.round(rm.avg_out_of_stock || rm.out_of_stock || 0),
+          totalValue: rm.avg_total_value || rm.total_value || 0,
+          categoryValues: {
+            'Carbon': rm.categories?.Carbon || rm.carbon_value || 0,
+            'Chemical': rm.categories?.Chemical || rm.chemical_value || 0,
+            'Cord - Cogged Belt': rm.categories?.['Cord - Cogged Belt'] || rm.cord_cogged_value || 0,
+            'Cord - Timing Belt': rm.categories?.['Cord - Timing Belt'] || rm.cord_timing_value || 0,
+            'Cord - Vee Belt': rm.categories?.['Cord - Vee Belt'] || rm.cord_vee_value || 0,
+            'Fabric - Cogged Belt': rm.categories?.['Fabric - Cogged Belt'] || rm.fabric_cogged_value || 0,
+            'Fabric - Timing Belt': rm.categories?.['Fabric - Timing Belt'] || rm.fabric_timing_value || 0,
+            'Fabric - Vee Belt': rm.categories?.['Fabric - Vee Belt'] || rm.fabric_vee_value || 0,
+            'Fabric - TPU Belt': rm.categories?.['Fabric - TPU Belt'] || rm.fabric_tpu_value || 0,
+            'Oil': rm.categories?.Oil || rm.oil_value || 0,
+            'Others': rm.categories?.Others || rm.others_value || 0,
+            'Resin': rm.categories?.Resin || rm.resin_value || 0,
+            'Rubber': rm.categories?.Rubber || rm.rubber_value || 0,
+            'TPU': rm.categories?.TPU || rm.tpu_value || 0,
+            'Fibre Glass Cord': rm.categories?.['Fibre Glass Cord'] || rm.fibre_glass_cord_value || 0,
+            'Steel Wire': rm.categories?.['Steel Wire'] || rm.steel_wire_value || 0,
+            'Packing': rm.categories?.Packing || rm.packing_value || 0,
+            'Open': rm.categories?.Open || rm.open_value || 0
+          }
+        }
+      }
+      
+      console.log('✅ Snapshot data applied to dashboard:', {
+        section,
+        finishedGoods: section !== 'raw' ? finishedGoodsStats.value : 'not updated',
+        rawMaterials: section !== 'finished' ? rawMaterialsStats.value : 'not updated'
+      })
+    } else {
+      throw new Error(response.data.message || 'Failed to load snapshot')
+    }
+  } catch (error: any) {
+    console.error('❌ Error loading snapshot:', error)
+    snapshotError.value = error.response?.data?.message || 'Failed to load snapshot data'
+    
+    // Fall back to real-time data
+    await loadDashboardStats()
+  } finally {
+    loadingSnapshot.value = false
+  }
+}
+
+// Load dashboard statistics (real-time)
 const loadDashboardStats = async () => {
   try {
     console.log('🔄 Loading dashboard stats from backend API...')
@@ -209,35 +313,6 @@ const loadDashboardStats = async () => {
     console.error('❌ Error loading dashboard stats:', error)
     console.error('Error details:', error.response?.data || error.message)
     
-    // Fallback: try to get debug info for all belt types
-    try {
-      console.log('🔍 Fetching debug info for all belt types...')
-      const debugResponse = await axios.get('/api/dashboard/all-belts-debug')
-      console.log('🔍 All belts debug info:', debugResponse.data)
-      
-      // Also get individual debug info
-      const individualDebugPromises = [
-        axios.get('/api/dashboard/vee-belts-debug').then(r => ({ type: 'vee', data: r.data })),
-        axios.get('/api/dashboard/cogged-belts-debug').then(r => ({ type: 'cogged', data: r.data })),
-        axios.get('/api/dashboard/poly-belts-debug').then(r => ({ type: 'poly', data: r.data })),
-        axios.get('/api/dashboard/tpu-belts-debug').then(r => ({ type: 'tpu', data: r.data })),
-        axios.get('/api/dashboard/timing-belts-debug').then(r => ({ type: 'timing', data: r.data })),
-        axios.get('/api/dashboard/special-belts-debug').then(r => ({ type: 'special', data: r.data }))
-      ]
-      
-      const individualDebugResults = await Promise.allSettled(individualDebugPromises)
-      individualDebugResults.forEach((result, index) => {
-        if (result.status === 'fulfilled') {
-          console.log(`🔍 ${result.value.type} belts debug:`, result.value.data)
-        } else {
-          console.error(`❌ Failed to get ${['vee', 'cogged', 'poly', 'tpu', 'timing', 'special'][index]} debug:`, result.reason)
-        }
-      })
-      
-    } catch (debugError) {
-      console.error('❌ Debug requests failed:', debugError)
-    }
-    
     // Set error state
     finishedGoodsStats.value = { 
       totalProducts: 0, 
@@ -249,7 +324,59 @@ const loadDashboardStats = async () => {
         vee: 0, cogged: 0, poly: 0, tpu: 0, timing: 0, special: 0
       }
     }
-    rawMaterialsStats.value = { totalProducts: 0, inStock: 0, lowStock: 0, outOfStock: 0 }
+    rawMaterialsStats.value = { 
+      totalProducts: 0, 
+      inStock: 0, 
+      lowStock: 0, 
+      outOfStock: 0,
+      totalValue: 0,
+      categoryValues: {
+        'Carbon': 0,
+        'Chemical': 0,
+        'Cord - Cogged Belt': 0,
+        'Cord - Timing Belt': 0,
+        'Cord - Vee Belt': 0,
+        'Fabric - Cogged Belt': 0,
+        'Fabric - Timing Belt': 0,
+        'Fabric - Vee Belt': 0,
+        'Fabric - TPU Belt': 0,
+        'Oil': 0,
+        'Others': 0,
+        'Resin': 0,
+        'Rubber': 0,
+        'TPU': 0,
+        'Fibre Glass Cord': 0,
+        'Steel Wire': 0,
+        'Packing': 0,
+        'Open': 0
+      }
+    }
+  }
+}
+
+// Handle date selection for finished goods
+const handleFinishedGoodsDateChange = async () => {
+  console.log('📅 Finished goods date changed:', { start: finishedGoodsStartDate.value, end: finishedGoodsEndDate.value })
+  
+  if (finishedGoodsStartDate.value || finishedGoodsEndDate.value) {
+    // Load snapshot data for finished goods only
+    await loadSnapshotData(finishedGoodsStartDate.value || undefined, finishedGoodsEndDate.value || undefined, 'finished')
+  } else {
+    // Load real-time data for finished goods
+    await loadDashboardStats()
+  }
+}
+
+// Handle date selection for raw materials
+const handleRawMaterialsDateChange = async () => {
+  console.log('📅 Raw materials date changed:', { start: rawMaterialsStartDate.value, end: rawMaterialsEndDate.value })
+  
+  if (rawMaterialsStartDate.value || rawMaterialsEndDate.value) {
+    // Load snapshot data for raw materials only
+    await loadSnapshotData(rawMaterialsStartDate.value || undefined, rawMaterialsEndDate.value || undefined, 'raw')
+  } else {
+    // Load real-time data for raw materials
+    await loadDashboardStats()
   }
 }
 
@@ -448,38 +575,64 @@ const initializeDatepickers = () => {
       const rawEndEl = document.getElementById('datepicker-raw-end')
 
       if (finishedStartEl) {
-        new Datepicker(finishedStartEl, {
-          format: 'mm/dd/yyyy',
+        const datepicker = new Datepicker(finishedStartEl, {
+          format: 'yyyy-mm-dd',
           autohide: true,
           orientation: 'bottom'
+        })
+        
+        finishedStartEl.addEventListener('changeDate', (e: any) => {
+          finishedGoodsStartDate.value = e.target.value
+          console.log('📅 Finished goods start date selected:', finishedGoodsStartDate.value)
+          handleFinishedGoodsDateChange()
         })
       }
 
       if (finishedEndEl) {
-        new Datepicker(finishedEndEl, {
-          format: 'mm/dd/yyyy',
+        const datepicker = new Datepicker(finishedEndEl, {
+          format: 'yyyy-mm-dd',
           autohide: true,
           orientation: 'bottom'
+        })
+        
+        finishedEndEl.addEventListener('changeDate', (e: any) => {
+          finishedGoodsEndDate.value = e.target.value
+          console.log('📅 Finished goods end date selected:', finishedGoodsEndDate.value)
+          handleFinishedGoodsDateChange()
         })
       }
 
       if (rawStartEl) {
-        new Datepicker(rawStartEl, {
-          format: 'mm/dd/yyyy',
+        const datepicker = new Datepicker(rawStartEl, {
+          format: 'yyyy-mm-dd',
           autohide: true,
           orientation: 'bottom'
+        })
+        
+        rawStartEl.addEventListener('changeDate', (e: any) => {
+          rawMaterialsStartDate.value = e.target.value
+          console.log('📅 Raw materials start date selected:', rawMaterialsStartDate.value)
+          handleRawMaterialsDateChange()
         })
       }
 
       if (rawEndEl) {
-        new Datepicker(rawEndEl, {
-          format: 'mm/dd/yyyy',
+        const datepicker = new Datepicker(rawEndEl, {
+          format: 'yyyy-mm-dd',
           autohide: true,
           orientation: 'bottom'
         })
+        
+        rawEndEl.addEventListener('changeDate', (e: any) => {
+          rawMaterialsEndDate.value = e.target.value
+          console.log('📅 Raw materials end date selected:', rawMaterialsEndDate.value)
+          handleRawMaterialsDateChange()
+        })
       }
+      
+      console.log('✅ Date pickers initialized')
     } catch (error) {
-      console.error('Error initializing datepickers:', error)
+      console.error('❌ Error initializing datepickers:', error)
     }
   }, 500)
 }
@@ -756,6 +909,9 @@ const customViewMapping = computed(() => {
   'raw-material-steel-wire': { component: RawCarbonTable, props: { section: 'Steel Wire', title: 'Raw Material - Steel Wire' } },
   'raw-material-packing': { component: RawCarbonTable, props: { section: 'Packing', title: 'Raw Material - Packing Material' } },
   'raw-material-open': { component: RawCarbonTable, props: { section: 'Open', title: 'Raw Material - Open' } },
+  
+  // Raw Material Search - searches across ALL raw materials
+  'raw-material-search': { component: RawCarbonTable, props: { title: 'Raw Material Search Results' } },
   }
 });
 const handleNavigation = (view: string) => {
@@ -788,6 +944,9 @@ const handleSearch = (searchData: { type: string; sectionQuery?: string; sizeQue
   // Determine which search view to show based on section
   const section = globalSectionQuery.value.toUpperCase()
   
+  // Check if currently on a raw material view
+  const isOnRawMaterialView = currentView.value.startsWith('raw-material-')
+  
   // Check if it's a vee belt section
   const veeSections = ['A', 'B', 'C', 'D', 'E', 'SPA', 'SPB', 'SPC', 'SPZ', '3V', '5V', '8V']
   // Check if it's a cogged belt section
@@ -799,8 +958,27 @@ const handleSearch = (searchData: { type: string; sectionQuery?: string; sizeQue
   // Check if it's a TPU belt section (more specific sections to avoid conflicts)
   const tpuSections = ['8M RPP', 'S8M', 'AT5', 'AT10', 'T10', 'AT20']
   
+  // Check if search is for a finished goods section
+  const isFinishedGoodsSection = veeSections.includes(section) || 
+                                  coggedSections.includes(section) || 
+                                  polySections.includes(section) || 
+                                  timingSections.includes(section) || 
+                                  tpuSections.includes(section)
+  
   // Simple logic: section determines the view, size is just a filter
   if (section) {
+    // If on raw material view but searching for finished goods, navigate to finished goods
+    if (isOnRawMaterialView && isFinishedGoodsSection) {
+      console.log('🔍 Switching from raw material to finished goods view for:', section)
+      // Continue with normal finished goods navigation logic below
+    } 
+    // If on raw material view and searching for raw materials, stay and filter
+    else if (isOnRawMaterialView && !isFinishedGoodsSection) {
+      console.log('🔍 Staying on raw material view, filtering with:', globalSectionQuery.value)
+      // Don't change view, just let the globalSearch prop filter the data
+      return
+    }
+    
     if (globalSizeQuery.value) {
       // Section + Size = Use search view for filtering
       if (veeSections.includes(section)) {
@@ -814,7 +992,9 @@ const handleSearch = (searchData: { type: string; sectionQuery?: string; sizeQue
       } else if (tpuSections.includes(section)) {
         currentView.value = 'tpu-belts-search'
       } else {
-        currentView.value = 'inventory'
+        // Not a finished goods section, assume raw material search
+        console.log('🔍 Raw material search with section + size:', section, globalSizeQuery.value)
+        currentView.value = 'raw-material-search'
       }
     } else {
       // Section only = Direct to section page
@@ -901,7 +1081,9 @@ const handleSearch = (searchData: { type: string; sectionQuery?: string; sizeQue
         }
         currentView.value = sectionPageMap[section] || 'tpu-belts-search'
       } else {
-        currentView.value = 'inventory'
+        // Not a finished goods section, assume raw material search
+        console.log('🔍 Raw material search (section only):', section)
+        currentView.value = 'raw-material-search'
       }
     }
   }
@@ -972,6 +1154,7 @@ onMounted(() => {
     :is="customViewMapping[currentView].component || customViewMapping[currentView]" 
     v-bind="customViewMapping[currentView].props || {}"
     :sidebar-collapsed="sidebarCollapsed"
+    :global-search="globalSectionQuery"
     :key="`${customViewMapping[currentView].props?.key || currentView}-${refreshKey}`"
   />
 </div>
@@ -992,25 +1175,71 @@ onMounted(() => {
         <div class="mb-6">
           <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
           <p class="text-gray-600 dark:text-gray-400">Welcome to your Microbelts IMA dashboard</p>
+          
+          <!-- Snapshot Error Message -->
+          <div v-if="snapshotError" class="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200">
+            <div class="flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+              </svg>
+              <span class="font-medium">Error:</span>
+              <span class="ml-1">{{ snapshotError }}</span>
+            </div>
+          </div>
+          
+          <!-- Date Range Info -->
+          <div v-if="finishedGoodsStartDate || finishedGoodsEndDate || rawMaterialsStartDate || rawMaterialsEndDate" class="mt-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200">
+            <div class="flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span class="font-medium">Viewing snapshot data:</span>
+              <span class="ml-1">
+                <span v-if="finishedGoodsStartDate || finishedGoodsEndDate">
+                  Finished Goods: {{ finishedGoodsStartDate || 'Latest' }}<span v-if="finishedGoodsEndDate"> to {{ finishedGoodsEndDate }}</span>
+                </span>
+                <span v-if="(finishedGoodsStartDate || finishedGoodsEndDate) && (rawMaterialsStartDate || rawMaterialsEndDate)"> | </span>
+                <span v-if="rawMaterialsStartDate || rawMaterialsEndDate">
+                  Raw Materials: {{ rawMaterialsStartDate || 'Latest' }}<span v-if="rawMaterialsEndDate"> to {{ rawMaterialsEndDate }}</span>
+                </span>
+              </span>
+            </div>
+          </div>
         </div>
         
         <!-- Finished Goods Stats Section -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-4 flex-1 min-h-0">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-lg">Finished Goods</h2>
-            <div class="flex items-center  rounded-lg p-2 ">
-              <div class="relative max-w-sm">
-                <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
-                  <svg class="w-4 h-4 text-body" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z"/></svg>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center rounded-lg p-2">
+                <div class="relative max-w-sm">
+                  <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                    <svg class="w-4 h-4 text-body" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z"/></svg>
+                  </div>
+                  <input id="datepicker-finished-start" type="text" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Start date">
                 </div>
-                <input id="datepicker-finished-start" type="text" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Select date start">
+                <span class="mx-2 text-gray-500 dark:text-gray-400">to</span>
+                <div class="relative max-w-sm">
+                  <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                    <svg class="w-4 h-4 text-body" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z"/></svg>
+                  </div>
+                  <input id="datepicker-finished-end" type="text" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="End date">
+                </div>
               </div>
-              <span class="mx-4 text-gray-500 dark:text-gray-400">to</span>
-              <div class="relative max-w-sm">
-                <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
-                  <svg class="w-4 h-4 text-body" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z"/></svg>
-                </div>
-                <input id="datepicker-finished-end" type="text" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Select date end">
+              <button 
+                v-if="finishedGoodsStartDate || finishedGoodsEndDate"
+                @click="finishedGoodsStartDate = null; finishedGoodsEndDate = null; handleFinishedGoodsDateChange()"
+                class="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
+              >
+                Clear
+              </button>
+              <div v-if="loadingSnapshot" class="flex items-center text-sm text-blue-600 dark:text-blue-400">
+                <svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Loading...
               </div>
             </div>
           </div>
@@ -1303,20 +1532,29 @@ onMounted(() => {
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex-1 min-h-0">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-4 py-2 rounded-lg">Raw Materials</h2>
-            <div class="flex items-center rounded-lg p-2 ">
-              <div class="relative max-w-sm">
-                <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
-                <svg class="w-4 h-4 text-body" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z"/></svg>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center rounded-lg p-2">
+                <div class="relative max-w-sm">
+                  <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                    <svg class="w-4 h-4 text-body" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z"/></svg>
+                  </div>
+                  <input id="datepicker-raw-start" type="text" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Start date">
                 </div>
-                <input id="datepicker-raw-start" type="text" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Select date start">
-              </div>
-              <span class="mx-4 text-gray-500 dark:text-gray-400">to</span>
-              <div class="relative max-w-sm">
-                <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
-        <svg class="w-4 h-4 text-body" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z"/></svg>
+                <span class="mx-2 text-gray-500 dark:text-gray-400">to</span>
+                <div class="relative max-w-sm">
+                  <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                    <svg class="w-4 h-4 text-body" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z"/></svg>
+                  </div>
+                  <input id="datepicker-raw-end" type="text" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="End date">
                 </div>
-                <input id="datepicker-raw-end" type="text" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Select date end">
               </div>
+              <button 
+                v-if="rawMaterialsStartDate || rawMaterialsEndDate"
+                @click="rawMaterialsStartDate = null; rawMaterialsEndDate = null; handleRawMaterialsDateChange()"
+                class="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
+              >
+                Clear
+              </button>
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

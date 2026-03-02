@@ -43,6 +43,10 @@ Route::middleware(['App\Http\Middleware\CheckSession'])->group(function () {
     Route::get('dashboard/download-excel-report', [\App\Http\Controllers\Api\DashboardController::class, 'downloadExcelReport']);
     Route::get('dashboard/debug-stock-data', [\App\Http\Controllers\Api\DashboardController::class, 'debugStockData']);
     
+    // Dashboard Snapshot Routes
+    Route::get('dashboard/snapshot', [\App\Http\Controllers\Api\DashboardController::class, 'getSnapshot']);
+    Route::get('dashboard/available-dates', [\App\Http\Controllers\Api\DashboardController::class, 'getAvailableDates']);
+    
     // Smart Stock Alert Routes
     Route::post('dashboard/send-smart-stock-alert', [\App\Http\Controllers\Api\DashboardController::class, 'sendSmartStockAlert']);
     Route::get('dashboard/die-requirements', [\App\Http\Controllers\Api\DashboardController::class, 'getDieRequirements']);

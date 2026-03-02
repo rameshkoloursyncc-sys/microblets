@@ -8,6 +8,12 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+// Schedule daily dashboard snapshot (runs at midnight)
+Schedule::command('dashboard:snapshot')
+    ->dailyAt('00:01')
+    ->timezone('Asia/Kolkata')
+    ->appendOutputTo(storage_path('logs/dashboard-snapshots.log'));
+
 // Schedule daily stock alert report (low stock + out of stock)
 Schedule::command('report:low-stock', [
         '--email' => [

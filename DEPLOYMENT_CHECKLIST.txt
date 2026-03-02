@@ -1,0 +1,168 @@
+═══════════════════════════════════════════════════════════════
+  DASHBOARD SNAPSHOT SYSTEM - DEPLOYMENT CHECKLIST
+═══════════════════════════════════════════════════════════════
+
+PRE-DEPLOYMENT
+═══════════════════════════════════════════════════════════════
+[ ] Read DEPLOYMENT_SUMMARY.md
+[ ] Read PRODUCTION_DEPLOYMENT_SNAPSHOT.md
+[ ] Backup database (just in case)
+[ ] Backup current code
+
+LOCAL TESTING
+═══════════════════════════════════════════════════════════════
+[ ] Run: npm run build
+[ ] Run: php artisan migrate
+[ ] Run: php artisan dashboard:snapshot
+[ ] Verify: php artisan tinker --execute="echo \App\Models\DashboardSnapshot::count();"
+[ ] Test date picker in browser
+[ ] Check browser console for errors
+
+UPLOAD TO PRODUCTION
+═══════════════════════════════════════════════════════════════
+[ ] Upload app/ folder
+[ ] Upload database/migrations/ folder
+[ ] Upload routes/ folder
+[ ] Upload public/build/ folder (built assets)
+[ ] Upload resources/js/ folder (if needed)
+
+PRODUCTION DEPLOYMENT
+═══════════════════════════════════════════════════════════════
+[ ] SSH into server or open terminal
+[ ] Navigate to project: cd /path/to/project
+[ ] Run: php artisan migrate
+[ ] Verify migration: php artisan migrate:status | grep dashboard_snapshots
+[ ] Run: php artisan dashboard:snapshot
+[ ] Verify snapshot: php artisan tinker --execute="echo \App\Models\DashboardSnapshot::count();"
+
+CRON JOB SETUP
+═══════════════════════════════════════════════════════════════
+[ ] Find PHP path: which php
+[ ] Note PHP path: _______________________________
+[ ] Find project path: pwd
+[ ] Note project path: _______________________________
+[ ] Log into cPanel
+[ ] Navigate to Cron Jobs
+[ ] Set Minute: 1
+[ ] Set Hour: 0
+[ ] Set Day: *
+[ ] Set Month: *
+[ ] Set Weekday: *
+[ ] Enter command: cd /path/to/project && /path/to/php artisan dashboard:snapshot >> /dev/null 2>&1
+[ ] Click "Add New Cron Job"
+[ ] Verify cron job appears in "Current Cron Jobs"
+
+VERIFICATION
+═══════════════════════════════════════════════════════════════
+[ ] Test API: curl https://yourdomain.com/api/dashboard/snapshot
+[ ] Log into dashboard
+[ ] Open browser console (F12)
+[ ] Check date pickers appear
+[ ] Select a date from finished goods picker
+[ ] Verify data loads (check console logs)
+[ ] Select a date from raw materials picker
+[ ] Verify data loads independently
+[ ] Click "Clear" button
+[ ] Verify returns to real-time data
+[ ] Check for any console errors
+
+24-HOUR VERIFICATION
+═══════════════════════════════════════════════════════════════
+[ ] Wait until next day (after 00:01 AM)
+[ ] Run: php artisan tinker --execute="echo \App\Models\DashboardSnapshot::count();"
+[ ] Verify count increased by 1
+[ ] Check latest snapshot date matches today
+[ ] Test date picker with new snapshot
+
+FINAL CHECKS
+═══════════════════════════════════════════════════════════════
+[ ] No errors in Laravel logs: tail -f storage/logs/laravel.log
+[ ] No errors in browser console
+[ ] Date pickers work smoothly
+[ ] Data displays correctly
+[ ] Clear buttons work
+[ ] Loading indicators appear
+[ ] Info banners show selected dates
+
+OPTIONAL CLEANUP
+═══════════════════════════════════════════════════════════════
+[ ] Delete test snapshots if any
+[ ] Clear Laravel cache: php artisan cache:clear
+[ ] Clear config cache: php artisan config:clear
+
+DOCUMENTATION
+═══════════════════════════════════════════════════════════════
+[ ] Save cron job command for reference
+[ ] Note PHP path for future use
+[ ] Note project path for future use
+[ ] Bookmark cPanel Cron Jobs page
+
+MONITORING PLAN
+═══════════════════════════════════════════════════════════════
+[ ] Check snapshot count weekly
+[ ] Monitor Laravel logs for errors
+[ ] Verify cron job runs daily
+[ ] Test date picker monthly
+
+═══════════════════════════════════════════════════════════════
+  QUICK REFERENCE
+═══════════════════════════════════════════════════════════════
+
+Migration Command:
+  php artisan migrate
+
+Snapshot Command:
+  php artisan dashboard:snapshot
+
+Verify Snapshots:
+  php artisan tinker --execute="echo \App\Models\DashboardSnapshot::count();"
+
+Cron Job Template:
+  1 0 * * * cd /path/to/project && /path/to/php artisan dashboard:snapshot >> /dev/null 2>&1
+
+API Endpoints:
+  GET /api/dashboard/snapshot
+  GET /api/dashboard/snapshot?date=2026-03-01
+  GET /api/dashboard/snapshot?start_date=2026-02-27&end_date=2026-03-01
+  GET /api/dashboard/available-dates
+
+═══════════════════════════════════════════════════════════════
+  TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════
+
+If migration fails:
+  Check if table exists: php artisan tinker --execute="echo Schema::hasTable('dashboard_snapshots') ? 'exists' : 'not exists';"
+
+If cron not running:
+  Test manually: cd /path/to/project && php artisan dashboard:snapshot
+  Check PHP path: which php
+  Check permissions: chmod -R 775 storage bootstrap/cache
+
+If data shows zero:
+  Check browser console
+  Check API response: curl https://yourdomain.com/api/dashboard/snapshot
+  Check Laravel logs: tail -f storage/logs/laravel.log
+
+═══════════════════════════════════════════════════════════════
+  ROLLBACK (IF NEEDED)
+═══════════════════════════════════════════════════════════════
+
+To rollback:
+  php artisan migrate:rollback --step=1
+
+This only removes the snapshot feature.
+Your existing inventory data is completely safe.
+
+═══════════════════════════════════════════════════════════════
+  SUCCESS! 🎉
+═══════════════════════════════════════════════════════════════
+
+When all checkboxes are checked, your deployment is complete!
+
+Your dashboard now has:
+✅ Historical data tracking
+✅ Date filtering UI
+✅ Automated daily snapshots
+✅ Independent filtering for finished goods and raw materials
+
+═══════════════════════════════════════════════════════════════
