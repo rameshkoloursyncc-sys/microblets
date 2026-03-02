@@ -84,15 +84,15 @@ class TpuBeltController extends Controller
         }
 
         // Check for duplicates
-        $existing = TpuBelt::where('section', $request->section)
-                          ->where('width', $request->width)
-                          ->first();
+        // $existing = TpuBelt::where('section', $request->section)
+        //                   ->where('width', $request->width)
+        //                   ->first();
 
-        if ($existing) {
-            return response()->json([
-                'message' => 'TPU belt with this section and width already exists'
-            ], 409);
-        }
+        // if ($existing) {
+        //     return response()->json([
+        //         'message' => 'TPU belt with this section and width already exists'
+        //     ], 409);
+        // }
 
         try {
             $tpuBelt = TpuBelt::create($request->all());

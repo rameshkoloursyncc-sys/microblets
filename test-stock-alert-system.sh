@@ -6,7 +6,7 @@ echo "============================="
 # Test 1: Send manual stock alert
 echo ""
 echo "📧 Test 1: Sending manual stock alert..."
-php artisan report:low-stock --email=test@example.com
+php artisan report:low-stock --email=ramesh.koloursyncc@gmail.com
 
 echo ""
 echo "✅ Manual alert test completed"
