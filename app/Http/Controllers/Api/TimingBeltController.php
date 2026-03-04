@@ -314,26 +314,70 @@ class TimingBeltController extends Controller
                 
                 $timingBelt->save();
 
-                // Check and reset stock alert if total_mm is replenished above reorder level
-                if ($timingBelt->reorder_level && $timingBelt->total_mm >= $timingBelt->reorder_level) {
-                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'timing')
-                        ->where('product_id', $timingBelt->id)
-                        ->where('is_active', true)
-                        ->first();
-                    
-                    if ($tracking && $tracking->alert_sent) {
-                        $tracking->resetAlert();
-                    }
-                } else{
-                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'timing')
+                // Update stock alert tracking immediately when total_mm changes
+                $tracking = \App\Models\StockAlertTracking::where('belt_type', 'timing')
                     ->where('product_id', $timingBelt->id)
-                    ->where('is_active', true)
                     ->first();
                 
-                if ($tracking && $tracking->alert_sent) {
-                    $tracking->resetAlert();
-                }
-
+                if ($tracking) {
+                    if ($timingBelt->reorder_level && $timingBelt->total_mm >= $timingBelt->reorder_level) {
+                        $tracking->update([
+                            'current_stock' => $timingBelt->total_mm,
+                            'previous_stock' => $timingBelt->total_mm,
+                            'dies_needed' => 0,
+                            'alert_sent' => false,
+                            'last_alerted_stock' => null,
+                            'is_active' => true
+                        ]);
+                    } else if ($timingBelt->reorder_level && $timingBelt->total_mm < $timingBelt->reorder_level) {
+                        $stockPerDie = \App\Models\DieConfiguration::getStockPerDie('timing', $timingBelt->section);
+                        
+                        $previousStock = $tracking->current_stock;
+                        $newStock = $timingBelt->total_mm;
+                        
+                        if ($newStock > $previousStock) {
+                            // Recalculate dies based on new stock level
+                            $deficit = $timingBelt->reorder_level - $newStock;
+                            $diesNeeded = ceil($deficit / $stockPerDie);
+                            
+                            $tracking->update([
+                                'current_stock' => $newStock,
+                                'previous_stock' => $newStock,
+                                'dies_needed' => $diesNeeded,
+                                'stock_per_die' => $stockPerDie
+                            ]);
+                        } else if ($newStock < $previousStock) {
+                            if ($tracking->alert_sent && $tracking->last_alerted_stock !== null && $newStock < $tracking->last_alerted_stock) {
+                                $deficit = $tracking->last_alerted_stock - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'stock_per_die' => $stockPerDie,
+                                    'alert_sent' => false
+                                ]);
+                            } else if (!$tracking->alert_sent) {
+                                $deficit = $timingBelt->reorder_level - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'stock_per_die' => $stockPerDie,
+                                    'alert_sent' => false
+                                ]);
+                            } else {
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'stock_per_die' => $stockPerDie
+                                ]);
+                            }
+                        }
+                    }
                 }
 
                 // Create transaction record

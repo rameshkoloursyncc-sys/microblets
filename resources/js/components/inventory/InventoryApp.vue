@@ -398,7 +398,7 @@ const sendStockAlert = async () => {
     console.log('📧 Sending stock alert report...')
     
     const response = await axios.post('/api/dashboard/send-stock-alert', {
-      force: true // Send even if no alerts (for testing)
+      force: false // Send even if no alerts (for testing)
     })
     
     if (response.data.success) {
@@ -445,7 +445,7 @@ const sendSmartStockAlert = async () => {
     console.log('🏭 Sending smart stock alert report...')
     
     const response = await axios.post('/api/dashboard/send-smart-stock-alert', {
-      force: true // Force send for testing - will sync current data and send alerts
+      force: false // Force send for testing - will sync current data and send alerts
       // emails will be taken from .env file automatically
     })
     
@@ -537,14 +537,41 @@ const loadDieRequirements = async () => {
     
     const response = await axios.get('/api/dashboard/die-requirements')
     
+    console.log('📦 DIE REQUIREMENTS RAW RESPONSE:', {
+      status: response.status,
+      success: response.data.success,
+      data: response.data.data,
+      full_response: response.data
+    })
+    
     if (response.data.success) {
       dieRequirements.value = response.data.data
-      console.log('✅ Die requirements loaded:', response.data.data)
+      
+      console.log('✅ Die requirements loaded and parsed:', {
+        belt_types: Object.keys(response.data.data),
+        total_sections: Object.values(response.data.data).reduce((sum: number, sections: any) => sum + sections.length, 0),
+        details: response.data.data
+      })
+      
+      // Log each belt type's requirements
+      Object.entries(response.data.data).forEach(([beltType, sections]: [string, any]) => {
+        console.log(`📊 ${beltType.toUpperCase()}:`, {
+          sections: sections.map((s: any) => ({
+            section: s.section,
+            total_dies: s.total_dies,
+            items_count: s.items_count
+          }))
+        })
+      })
     } else {
       console.error('❌ Failed to load die requirements:', response.data.message)
     }
   } catch (error: any) {
-    console.error('❌ Error loading die requirements:', error)
+    console.error('❌ Error loading die requirements:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    })
   } finally {
     loadingDieRequirements.value = false
   }

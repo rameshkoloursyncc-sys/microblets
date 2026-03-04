@@ -192,15 +192,69 @@ class RawCarbonController extends Controller
                     'user_id' => session('user')['id'] ?? null,
                 ]);
 
-                // Check and reset stock alert if stock is replenished above reorder level
-                if ($rawCarbon->reorder_level && $validated['balance_stock'] >= $rawCarbon->reorder_level) {
-                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'rawcarbon')
-                        ->where('product_id', $rawCarbon->id)
-                        ->where('is_active', true)
-                        ->first();
-                    
-                    if ($tracking && $tracking->alert_sent) {
-                        $tracking->resetAlert();
+                // Update stock alert tracking immediately when stock changes
+                $tracking = \App\Models\StockAlertTracking::where('belt_type', 'rawcarbon')
+                    ->where('product_id', $rawCarbon->id)
+                    ->first();
+                
+                if ($tracking) {
+                    if ($rawCarbon->reorder_level && $validated['balance_stock'] >= $rawCarbon->reorder_level) {
+                        $tracking->update([
+                            'current_stock' => $validated['balance_stock'],
+                            'previous_stock' => $validated['balance_stock'],
+                            'dies_needed' => 0,
+                            'alert_sent' => false,
+                            'last_alerted_stock' => null,
+                            'is_active' => true
+                        ]);
+                    } else if ($rawCarbon->reorder_level && $validated['balance_stock'] < $rawCarbon->reorder_level) {
+                        $stockPerDie = \App\Models\DieConfiguration::getStockPerDie('rawcarbon', $rawCarbon->section);
+                        
+                        $previousStock = $tracking->current_stock;
+                        $newStock = $validated['balance_stock'];
+                        
+                        if ($newStock > $previousStock) {
+                            // Recalculate dies based on new stock level
+                            $deficit = $rawCarbon->reorder_level - $newStock;
+                            $diesNeeded = ceil($deficit / $stockPerDie);
+                            
+                            $tracking->update([
+                                'current_stock' => $newStock,
+                                'previous_stock' => $newStock,
+                                'dies_needed' => $diesNeeded,
+                                'stock_per_die' => $stockPerDie
+                            ]);
+                        } else if ($newStock < $previousStock) {
+                            if ($tracking->alert_sent && $tracking->last_alerted_stock !== null && $newStock < $tracking->last_alerted_stock) {
+                                $deficit = $tracking->last_alerted_stock - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'stock_per_die' => $stockPerDie,
+                                    'alert_sent' => false
+                                ]);
+                            } else if (!$tracking->alert_sent) {
+                                $deficit = $rawCarbon->reorder_level - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'stock_per_die' => $stockPerDie,
+                                    'alert_sent' => false
+                                ]);
+                            } else {
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'stock_per_die' => $stockPerDie
+                                ]);
+                            }
+                        }
                     }
                 }
             }
@@ -420,25 +474,91 @@ class RawCarbonController extends Controller
 
                 $rawCarbon->save();
 
-                // Check and reset stock alert if stock is replenished above reorder level
-                if ($rawCarbon->reorder_level && $rawCarbon->balance_stock >= $rawCarbon->reorder_level) {
-                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'rawcarbon')
-                        ->where('product_id', $rawCarbon->id)
-                        ->where('is_active', true)
-                        ->first();
-                    
-                    if ($tracking && $tracking->alert_sent) {
-                        $tracking->resetAlert();
-                    }
-                } else {
-                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'rawcarbon')
+                // Update stock alert tracking immediately
+                $tracking = \App\Models\StockAlertTracking::where('belt_type', 'rawcarbon')
                     ->where('product_id', $rawCarbon->id)
-                    ->where('is_active', true)
                     ->first();
                 
-                if ($tracking && $tracking->alert_sent) {
-                    $tracking->resetAlert();
+                // Create tracking if doesn't exist and stock is below reorder level
+                if (!$tracking && $rawCarbon->reorder_level && $rawCarbon->balance_stock < $rawCarbon->reorder_level) {
+                    $stockPerDie = \App\Models\DieConfiguration::getStockPerDie('rawcarbon', $rawCarbon->section);
+                    $deficit = $rawCarbon->reorder_level - $rawCarbon->balance_stock;
+                    $diesNeeded = ceil($deficit / $stockPerDie);
+                    
+                    $tracking = \App\Models\StockAlertTracking::create([
+                        'belt_type' => 'rawcarbon',
+                        'section' => $rawCarbon->section,
+                        'product_id' => $rawCarbon->id,
+                        'product_sku' => $rawCarbon->section . '-' . $rawCarbon->packing,
+                        'current_stock' => $rawCarbon->balance_stock,
+                        'reorder_level' => $rawCarbon->reorder_level,
+                        'stock_per_die' => $stockPerDie,
+                        'dies_needed' => $diesNeeded,
+                        'alert_sent' => false,
+                        'is_active' => true,
+                        'previous_stock' => $rawCarbon->balance_stock,
+                        'last_alerted_stock' => null
+                    ]);
                 }
+                
+                if ($tracking) {
+                    if ($rawCarbon->reorder_level && $rawCarbon->balance_stock >= $rawCarbon->reorder_level) {
+                        $tracking->update([
+                            'current_stock' => $rawCarbon->balance_stock,
+                            'previous_stock' => $rawCarbon->balance_stock,
+                            'dies_needed' => 0,
+                            'alert_sent' => false,
+                            'last_alerted_stock' => null,
+                            'is_active' => true
+                        ]);
+                    } else if ($rawCarbon->reorder_level && $rawCarbon->balance_stock < $rawCarbon->reorder_level) {
+                        $stockPerDie = \App\Models\DieConfiguration::getStockPerDie('rawcarbon', $rawCarbon->section);
+                        $previousStock = $tracking->current_stock;
+                        $newStock = $rawCarbon->balance_stock;
+                        
+                        if ($newStock > $previousStock) {
+                            // Recalculate dies based on new stock level
+                            $deficit = $rawCarbon->reorder_level - $newStock;
+                            $diesNeeded = ceil($deficit / $stockPerDie);
+                            
+                            $tracking->update([
+                                'current_stock' => $newStock,
+                                'previous_stock' => $newStock,
+                                'dies_needed' => $diesNeeded,
+                                'stock_per_die' => $stockPerDie
+                            ]);
+                        } else if ($newStock < $previousStock) {
+                            if ($tracking->alert_sent && $tracking->last_alerted_stock !== null && $newStock < $tracking->last_alerted_stock) {
+                                $deficit = $tracking->last_alerted_stock - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'stock_per_die' => $stockPerDie,
+                                    'alert_sent' => false
+                                ]);
+                            } else if (!$tracking->alert_sent) {
+                                $deficit = $rawCarbon->reorder_level - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'stock_per_die' => $stockPerDie,
+                                    'alert_sent' => false
+                                ]);
+                            } else {
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'stock_per_die' => $stockPerDie
+                                ]);
+                            }
+                        }
+                    }
                 }
 
                 // Create transaction

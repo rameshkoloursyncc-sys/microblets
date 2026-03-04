@@ -1,0 +1,157 @@
+FRONTEND CONSOLE LOGGING - COMPLETE
+====================================
+
+LOGGING ADDED TO:
+-----------------
+1. VeeBeltTable.vue - Stock update logging
+2. InventoryApp.vue - Die requirements logging
+3. VeeBeltController.php - Returns tracking data in response
+
+WHAT YOU'LL SEE IN BROWSER CONSOLE:
+------------------------------------
+
+WHEN YOU UPDATE STOCK (IN/OUT):
+================================
+
+1. BEFORE UPDATE:
+=== VEE BELT UPDATE - BEFORE ===
+{
+  product_id: 123,
+  section: "A",
+  size: "18",
+  field: "balance_stock",
+  old_value: 11,
+  new_value: 185,
+  reorder_level: 100,
+  stock_alert: {...}
+}
+
+2. AFTER UPDATE SUCCESS:
+=== VEE BELT UPDATE - SUCCESS ===
+{
+  product_id: 123,
+  field: "balance_stock",
+  new_value: 185,
+  response_data: {...},
+  tracking: {...}
+}
+
+3. TRACKING DATA FROM SERVER:
+📊 TRACKING DATA FROM SERVER:
+{
+  current_stock: 185,
+  previous_stock: 185,
+  last_alerted_stock: null,
+  dies_needed: 0,
+  alert_sent: false,
+  reorder_level: 100,
+  stock_per_die: 35
+}
+
+WHEN YOU CHECK DASHBOARD:
+==========================
+
+1. LOADING DIE REQUIREMENTS:
+🔧 Loading die requirements...
+
+2. RAW RESPONSE:
+📦 DIE REQUIREMENTS RAW RESPONSE:
+{
+  status: 200,
+  success: true,
+  data: {...},
+  full_response: {...}
+}
+
+3. PARSED DATA:
+✅ Die requirements loaded and parsed:
+{
+  belt_types: ["vee", "cogged"],
+  total_sections: 3,
+  details: {...}
+}
+
+4. PER BELT TYPE:
+📊 VEE:
+{
+  sections: [
+    {
+      section: "A",
+      total_dies: 2,
+      items_count: 1
+    }
+  ]
+}
+
+TESTING STEPS:
+--------------
+
+1. Open browser console (F12)
+2. Go to Vee Belts inventory
+3. Find your test product (A18)
+4. Update balance_stock field
+
+SCENARIO 1: IN above min (11 → 185)
+------------------------------------
+Expected console logs:
+✅ BEFORE: old_value: 11, new_value: 185
+✅ SUCCESS: tracking data returned
+✅ TRACKING: 
+   - current_stock: 185
+   - previous_stock: 185
+   - last_alerted_stock: null (RESET!)
+   - dies_needed: 0 (RESET!)
+   - alert_sent: false
+
+SCENARIO 2: OUT below min (185 → 90)
+-------------------------------------
+Expected console logs:
+✅ BEFORE: old_value: 185, new_value: 90
+✅ SUCCESS: tracking data returned
+✅ TRACKING:
+   - current_stock: 90
+   - previous_stock: 185
+   - last_alerted_stock: null (fresh start)
+   - dies_needed: 1 (100-90=10, ceil(10/35)=1)
+   - alert_sent: false
+
+SCENARIO 3: Check Dashboard
+----------------------------
+Expected console logs:
+✅ Loading die requirements...
+✅ RAW RESPONSE: full data structure
+✅ Parsed data: belt types and sections
+✅ VEE: section A with correct dies
+
+WHAT TO LOOK FOR:
+-----------------
+
+❌ PROBLEM: After IN 185, tracking shows:
+   - last_alerted_stock: 71 (NOT null)
+   - dies_needed: 2 (NOT 0)
+   
+❌ PROBLEM: After OUT 90, tracking shows:
+   - dies_needed: 2 (NOT 1)
+   - Calculated from wrong baseline
+
+✅ CORRECT: After IN 185, tracking shows:
+   - last_alerted_stock: null
+   - dies_needed: 0
+   
+✅ CORRECT: After OUT 90, tracking shows:
+   - dies_needed: 1
+   - Fresh calculation from min
+
+SHARE WITH ME:
+--------------
+
+1. Copy the console logs from:
+   - IN 185 transaction (all 3 log blocks)
+   - OUT 90 transaction (all 3 log blocks)
+   - Dashboard die requirements (all log blocks)
+
+2. Take screenshots if easier
+
+3. Tell me what you see vs what you expect
+
+This will show us EXACTLY where the logic is failing!

@@ -306,25 +306,70 @@ class TpuBeltController extends Controller
                 }
                 $tpuBelt->save();
 
-                // Check and reset stock alert if meter is replenished above reorder level
-                if ($tpuBelt->reorder_level && $tpuBelt->meter >= $tpuBelt->reorder_level) {
-                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'tpu')
-                        ->where('product_id', $tpuBelt->id)
-                        ->where('is_active', true)
-                        ->first();
-                    
-                    if ($tracking && $tracking->alert_sent) {
-                        $tracking->resetAlert();
-                    }
-                } else {
-                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'tpu')
+                // Update stock alert tracking immediately when meter changes
+                $tracking = \App\Models\StockAlertTracking::where('belt_type', 'tpu')
                     ->where('product_id', $tpuBelt->id)
-                    ->where('is_active', true)
                     ->first();
                 
-                if ($tracking && $tracking->alert_sent) {
-                    $tracking->resetAlert();
-                }
+                if ($tracking) {
+                    if ($tpuBelt->reorder_level && $tpuBelt->meter >= $tpuBelt->reorder_level) {
+                        $tracking->update([
+                            'current_stock' => $tpuBelt->meter,
+                            'previous_stock' => $tpuBelt->meter,
+                            'dies_needed' => 0,
+                            'alert_sent' => false,
+                            'last_alerted_stock' => null,
+                            'is_active' => true
+                        ]);
+                    } else if ($tpuBelt->reorder_level && $tpuBelt->meter < $tpuBelt->reorder_level) {
+                        $stockPerDie = \App\Models\DieConfiguration::getStockPerDie('tpu', $tpuBelt->section);
+                        
+                        $previousStock = $tracking->current_stock;
+                        $newStock = $tpuBelt->meter;
+                        
+                        if ($newStock > $previousStock) {
+                            // Recalculate dies based on new stock level
+                            $deficit = $tpuBelt->reorder_level - $newStock;
+                            $diesNeeded = ceil($deficit / $stockPerDie);
+                            
+                            $tracking->update([
+                                'current_stock' => $newStock,
+                                'previous_stock' => $newStock,
+                                'dies_needed' => $diesNeeded,
+                                'stock_per_die' => $stockPerDie
+                            ]);
+                        } else if ($newStock < $previousStock) {
+                            if ($tracking->alert_sent && $tracking->last_alerted_stock !== null && $newStock < $tracking->last_alerted_stock) {
+                                $deficit = $tracking->last_alerted_stock - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'stock_per_die' => $stockPerDie,
+                                    'alert_sent' => false
+                                ]);
+                            } else if (!$tracking->alert_sent) {
+                                $deficit = $tpuBelt->reorder_level - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'stock_per_die' => $stockPerDie,
+                                    'alert_sent' => false
+                                ]);
+                            } else {
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'stock_per_die' => $stockPerDie
+                                ]);
+                            }
+                        }
+                    }
                 }
 
                 // Create transaction record

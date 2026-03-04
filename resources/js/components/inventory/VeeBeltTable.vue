@@ -555,10 +555,50 @@ const saveCell = async (product: VeeBelt, field: keyof VeeBelt) => {
   savingCell.value = cellId
   cancelEdit()
 
+  // LOG: Before update
+  console.log('=== VEE BELT UPDATE - BEFORE ===', {
+    product_id: product.id,
+    section: product.section,
+    size: product.size,
+    field: field,
+    old_value: product[field],
+    new_value: val,
+    reorder_level: product.reorder_level,
+    stock_alert: product.stock_alert
+  })
+
   try {
-    await apiUpdateProduct(product.id, { [field]: val })
+    const response = await apiUpdateProduct(product.id, { [field]: val })
+    
+    // LOG: After update success with tracking data
+    console.log('=== VEE BELT UPDATE - SUCCESS ===', {
+      product_id: product.id,
+      field: field,
+      new_value: val,
+      response_data: response.data,
+      tracking: response.data.tracking
+    })
+    
+    if (response.data.tracking) {
+      console.log('📊 TRACKING DATA FROM SERVER:', {
+        current_stock: response.data.tracking.current_stock,
+        previous_stock: response.data.tracking.previous_stock,
+        last_alerted_stock: response.data.tracking.last_alerted_stock,
+        dies_needed: response.data.tracking.dies_needed,
+        alert_sent: response.data.tracking.alert_sent,
+        reorder_level: response.data.tracking.reorder_level,
+        stock_per_die: response.data.tracking.stock_per_die
+      })
+    }
+    
     showNotification('success', 'Updated', `Updated ${String(field)}`)
   } catch (err: any) {
+    console.error('=== VEE BELT UPDATE - ERROR ===', {
+      product_id: product.id,
+      field: field,
+      error: err.response?.data || err.message
+    })
+    
     showNotification('error', 'Error', err.response?.data?.message || 'Update failed')
   } finally {
     savingCell.value = null

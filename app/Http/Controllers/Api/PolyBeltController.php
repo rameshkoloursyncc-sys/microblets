@@ -172,15 +172,90 @@ class PolyBeltController extends Controller
                     'user_id' => session('user')['id'] ?? null,
                 ]);
 
-                // Check and reset stock alert if ribs are replenished above reorder level
-                if ($polyBelt->reorder_level && $validated['ribs'] >= $polyBelt->reorder_level) {
-                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'poly')
-                        ->where('product_id', $polyBelt->id)
-                        ->where('is_active', true)
-                        ->first();
+                // Update stock alert tracking immediately when ribs change
+                $tracking = \App\Models\StockAlertTracking::where('belt_type', 'poly')
+                    ->where('product_id', $polyBelt->id)
+                    ->first();
+                
+                if (!$tracking && $polyBelt->reorder_level && $validated['ribs'] < $polyBelt->reorder_level) {
+                    $stockPerDie = \App\Models\DieConfiguration::getStockPerDie('poly', $polyBelt->section);
+                    $deficit = $polyBelt->reorder_level - $validated['ribs'];
+                    $diesNeeded = ceil($deficit / $stockPerDie);
                     
-                    if ($tracking && $tracking->alert_sent) {
-                        $tracking->resetAlert();
+                    $tracking = \App\Models\StockAlertTracking::create([
+                        'belt_type' => 'poly',
+                        'section' => $polyBelt->section,
+                        'product_id' => $polyBelt->id,
+                        'product_sku' => $polyBelt->section . '-' . $polyBelt->size,
+                        'current_stock' => $validated['ribs'],
+                        'reorder_level' => $polyBelt->reorder_level,
+                        'stock_per_die' => $stockPerDie,
+                        'dies_needed' => $diesNeeded,
+                        'alert_sent' => false,
+                        'is_active' => true,
+                        'previous_stock' => $validated['ribs'],
+                        'last_alerted_stock' => null
+                    ]);
+                }
+                
+                if ($tracking) {
+                    if ($polyBelt->reorder_level && $validated['ribs'] >= $polyBelt->reorder_level) {
+                        $tracking->update([
+                            'current_stock' => $validated['ribs'],
+                            'previous_stock' => $validated['ribs'],
+                            'dies_needed' => 0,
+                            'alert_sent' => false,
+                            'last_alerted_stock' => null,
+                            'is_active' => true
+                        ]);
+                    } else if ($polyBelt->reorder_level && $validated['ribs'] < $polyBelt->reorder_level) {
+                        $stockPerDie = \App\Models\DieConfiguration::getStockPerDie('poly', $polyBelt->section);
+                        
+                        $previousStock = $tracking->current_stock;
+                        $newStock = $validated['ribs'];
+                        
+                        if ($newStock > $previousStock) {
+                            // Recalculate dies based on new stock level
+                            $deficit = $polyBelt->reorder_level - $newStock;
+                            $diesNeeded = ceil($deficit / $stockPerDie);
+                            
+                            $tracking->update([
+                                'current_stock' => $newStock,
+                                'previous_stock' => $newStock,
+                                'dies_needed' => $diesNeeded,
+                                'stock_per_die' => $stockPerDie
+                            ]);
+                        } else if ($newStock < $previousStock) {
+                            if ($tracking->alert_sent && $tracking->last_alerted_stock !== null && $newStock < $tracking->last_alerted_stock) {
+                                $deficit = $tracking->last_alerted_stock - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'stock_per_die' => $stockPerDie,
+                                    'alert_sent' => false
+                                ]);
+                            } else if (!$tracking->alert_sent) {
+                                $deficit = $polyBelt->reorder_level - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'stock_per_die' => $stockPerDie,
+                                    'alert_sent' => false
+                                ]);
+                            } else {
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'stock_per_die' => $stockPerDie
+                                ]);
+                            }
+                        }
                     }
                 }
             }
@@ -398,27 +473,69 @@ class PolyBeltController extends Controller
 
                 $polyBelt->save();
 
-                // Check and reset stock alert if ribs are replenished above reorder level
-                if ($polyBelt->reorder_level && $polyBelt->ribs >= $polyBelt->reorder_level) {
-                        $tracking = \App\Models\StockAlertTracking::where('belt_type', 'poly')
-                            ->where('product_id', $polyBelt->id)
-                            ->where('is_active', true)
-                            ->first();
-                        
-                        if ($tracking && $tracking->alert_sent) {
-                            $tracking->resetAlert();
-                        }
-                } else {
-                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'poly')
+                // Update stock alert tracking immediately
+                $tracking = \App\Models\StockAlertTracking::where('belt_type', 'poly')
                     ->where('product_id', $polyBelt->id)
-                    ->where('is_active', true)
                     ->first();
                 
-                if ($tracking && $tracking->alert_sent) {
-                    $tracking->resetAlert();
+                if (!$tracking && $polyBelt->reorder_level && $polyBelt->ribs < $polyBelt->reorder_level) {
+                    $stockPerDie = \App\Models\DieConfiguration::getStockPerDie('poly', $polyBelt->section);
+                    $deficit = $polyBelt->reorder_level - $polyBelt->ribs;
+                    $diesNeeded = ceil($deficit / $stockPerDie);
+                    
+                    $tracking = \App\Models\StockAlertTracking::create([
+                        'belt_type' => 'poly',
+                        'section' => $polyBelt->section,
+                        'product_id' => $polyBelt->id,
+                        'product_sku' => $polyBelt->section . '-' . $polyBelt->size,
+                        'current_stock' => $polyBelt->ribs,
+                        'reorder_level' => $polyBelt->reorder_level,
+                        'stock_per_die' => $stockPerDie,
+                        'dies_needed' => $diesNeeded,
+                        'alert_sent' => false,
+                        'is_active' => true,
+                        'previous_stock' => $polyBelt->ribs,
+                        'last_alerted_stock' => null
+                    ]);
                 }
+                
+                if ($tracking) {
+                    if ($polyBelt->reorder_level && $polyBelt->ribs >= $polyBelt->reorder_level) {
+                        $tracking->update([
+                            'current_stock' => $polyBelt->ribs,
+                            'previous_stock' => $polyBelt->ribs,
+                            'dies_needed' => 0,
+                            'alert_sent' => false,
+                            'last_alerted_stock' => null,
+                            'is_active' => true
+                        ]);
+                    } else if ($polyBelt->reorder_level && $polyBelt->ribs < $polyBelt->reorder_level) {
+                        $stockPerDie = \App\Models\DieConfiguration::getStockPerDie('poly', $polyBelt->section);
+                        $previousStock = $tracking->current_stock;
+                        $newStock = $polyBelt->ribs;
+                        
+                        if ($newStock > $previousStock) {
+                            // Recalculate dies based on new stock level
+                            $deficit = $polyBelt->reorder_level - $newStock;
+                            $diesNeeded = ceil($deficit / $stockPerDie);
+                            
+                            $tracking->update(['current_stock' => $newStock, 'previous_stock' => $newStock, 'dies_needed' => $diesNeeded, 'stock_per_die' => $stockPerDie]);
+                        } else if ($newStock < $previousStock) {
+                            if ($tracking->alert_sent && $tracking->last_alerted_stock !== null && $newStock < $tracking->last_alerted_stock) {
+                                $deficit = $tracking->last_alerted_stock - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                $tracking->update(['current_stock' => $newStock, 'previous_stock' => $previousStock, 'dies_needed' => $diesNeeded, 'stock_per_die' => $stockPerDie, 'alert_sent' => false]);
+                            } else if (!$tracking->alert_sent) {
+                                $deficit = $polyBelt->reorder_level - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                $tracking->update(['current_stock' => $newStock, 'previous_stock' => $previousStock, 'dies_needed' => $diesNeeded, 'stock_per_die' => $stockPerDie, 'alert_sent' => false]);
+                            } else {
+                                $tracking->update(['current_stock' => $newStock, 'previous_stock' => $previousStock, 'stock_per_die' => $stockPerDie]);
+                            }
+                        }
+                    }
                 }
-
+                
                 // Create transaction
                 InventoryTransaction::create([
                     'category' => 'poly_belts',

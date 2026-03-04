@@ -24,7 +24,9 @@ class StockAlertTracking extends Model
         'alert_sent',
         'alert_sent_at',
         'is_active',
-        'alert_history'
+        'alert_history',
+        'last_alerted_stock',
+        'previous_stock'
     ];
 
     protected $casts = [
@@ -35,19 +37,48 @@ class StockAlertTracking extends Model
         'alert_sent' => 'boolean',
         'is_active' => 'boolean',
         'alert_sent_at' => 'datetime',
-        'alert_history' => 'array'
+        'alert_history' => 'array',
+        'last_alerted_stock' => 'decimal:2',
+        'previous_stock' => 'decimal:2'
     ];
 
     /**
      * Calculate dies needed based on stock deficit
+     * Now supports incremental deficit calculation
      */
     public function calculateDiesNeeded()
     {
+        // If stock is at or above reorder level, no dies needed
         if ($this->current_stock >= $this->reorder_level) {
             return 0;
         }
 
-        $deficit = $this->reorder_level - $this->current_stock;
+        $deficit = 0;
+        
+        // NEW LOGIC: Handle incremental alerts
+        if ($this->alert_sent && $this->last_alerted_stock !== null) {
+            // Already alerted before
+            
+            // Check if stock improved since last alert (IN transaction)
+            if ($this->current_stock > $this->last_alerted_stock) {
+                // Stock improved, no new alert needed
+                return 0;
+            }
+            
+            // Stock dropped below last alerted level
+            // Calculate deficit from previous stock if available (incremental drop)
+            if ($this->previous_stock !== null && $this->previous_stock > $this->current_stock) {
+                // Incremental deficit: only the new drop
+                $deficit = $this->previous_stock - $this->current_stock;
+            } else {
+                // Fallback: calculate from last alerted stock
+                $deficit = $this->last_alerted_stock - $this->current_stock;
+            }
+        } else {
+            // First time alert - calculate from minimum inventory (OLD LOGIC - PRESERVED)
+            $deficit = $this->reorder_level - $this->current_stock;
+        }
+
         $diesNeeded = ceil($deficit / $this->stock_per_die);
         
         $this->dies_needed = $diesNeeded;
@@ -55,7 +86,7 @@ class StockAlertTracking extends Model
     }
 
     /**
-     * Mark alert as sent
+     * Mark alert as sent and store current stock level
      */
     public function markAlertSent()
     {
@@ -69,7 +100,9 @@ class StockAlertTracking extends Model
         $this->update([
             'alert_sent' => true,
             'alert_sent_at' => now(),
-            'alert_history' => $history
+            'alert_history' => $history,
+            'last_alerted_stock' => $this->current_stock, // Store stock at alert time
+            'previous_stock' => $this->current_stock // Set baseline for next comparison
         ]);
     }
 
@@ -80,7 +113,9 @@ class StockAlertTracking extends Model
     {
         $this->update([
             'alert_sent' => false,
-            'alert_sent_at' => null
+            'alert_sent_at' => null,
+            'last_alerted_stock' => null, // NEW: Clear last alerted stock
+            'previous_stock' => null // NEW: Clear previous stock
         ]);
     }
 

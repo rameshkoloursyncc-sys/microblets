@@ -1,0 +1,155 @@
+VEE BELT TRACKING - LOGGING GUIDE
+==================================
+
+LOGGING ADDED TO: VeeBeltController.php
+
+HOW TO VIEW LOGS:
+-----------------
+
+Option 1: Real-time log monitoring
+tail -f storage/logs/laravel.log
+
+Option 2: View recent logs
+tail -100 storage/logs/laravel.log
+
+Option 3: Search for specific product
+grep "section.*A" storage/logs/laravel.log | tail -50
+
+WHAT TO TEST:
+-------------
+
+Your Scenario:
+1. Current: 11, Dies: 2, Alert NOT sent
+2. IN 174 → Current: 185 (above min 100)
+3. OUT 95 → Current: 90 (below min 100)
+
+Expected:
+- Step 2: Dies should be 0, last_alerted_stock should be null
+- Step 3: Dies should be 1 (fresh calculation: 100-90=10)
+
+WHAT LOGS WILL SHOW:
+--------------------
+
+For each stock update, you'll see:
+
+1. INITIAL INFO:
+   - Product details (section, size)
+   - Old stock vs new stock
+   - Transaction type (IN/OUT)
+   - Whether tracking exists
+
+2. TRACKING BEFORE UPDATE:
+   - current_stock
+   - previous_stock
+   - last_alerted_stock
+   - dies_needed
+   - alert_sent
+
+3. CASE DETECTION:
+   - "Stock above reorder level - RESET"
+   - "Stock below reorder level"
+   - "Stock IMPROVED (IN transaction)"
+   - "Stock DROPPED (OUT transaction)"
+
+4. ALERT LOGIC:
+   - "Incremental alert needed"
+   - "First time alert"
+   - "Stock dropped but no new alert"
+
+5. CALCULATION DETAILS:
+   - Deficit formula
+   - Dies calculation formula
+   - Actual values
+
+6. TRACKING AFTER UPDATE:
+   - All updated values
+
+EXAMPLE LOG OUTPUT:
+-------------------
+
+=== VEE BELT STOCK UPDATE ===
+{
+  "product_id": 123,
+  "section": "A",
+  "size": "18",
+  "old_stock": 11,
+  "new_stock": 185,
+  "reorder_level": 100,
+  "type": "IN",
+  "tracking_exists": "YES"
+}
+
+TRACKING BEFORE UPDATE
+{
+  "current_stock": 11,
+  "previous_stock": 71,
+  "last_alerted_stock": 71,
+  "dies_needed": 2,
+  "alert_sent": "NO"
+}
+
+CASE: Stock above reorder level - RESET
+
+TRACKING AFTER RESET
+{
+  "current_stock": 185,
+  "previous_stock": 185,
+  "dies_needed": 0,
+  "alert_sent": "NO",
+  "last_alerted_stock": "null"
+}
+
+TESTING STEPS:
+--------------
+
+1. Clear old logs (optional):
+   > storage/logs/laravel.log
+
+2. Start monitoring:
+   tail -f storage/logs/laravel.log
+
+3. Do IN 174 (11 → 185):
+   - Watch logs
+   - Should see "Stock above reorder level - RESET"
+   - dies_needed should be 0
+   - last_alerted_stock should be null
+
+4. Do OUT 95 (185 → 90):
+   - Watch logs
+   - Should see "First time alert" (fresh start)
+   - deficit should be 100 - 90 = 10
+   - dies_needed should be ceil(10 / stock_per_die)
+
+5. Share log output with me if something is wrong
+
+WHAT TO LOOK FOR:
+-----------------
+
+✅ CORRECT: After IN above min
+   - dies_needed: 0
+   - last_alerted_stock: null
+   - alert_sent: NO
+
+✅ CORRECT: After OUT below min (fresh)
+   - deficit: reorder_level - new_stock
+   - dies_needed: calculated from deficit
+   - alert_sent: NO
+
+❌ WRONG: If after IN above min
+   - dies_needed: still 2 (not reset)
+   - last_alerted_stock: still has value (not null)
+
+❌ WRONG: If after OUT below min
+   - deficit: calculated from old last_alerted_stock
+   - dies_needed: wrong value
+
+SHARE WITH ME:
+--------------
+
+Copy the log output from your test and share:
+1. The "=== VEE BELT STOCK UPDATE ===" section
+2. The "TRACKING BEFORE UPDATE" section
+3. The "CASE:" section
+4. The "TRACKING AFTER" section
+
+This will help me see exactly what's happening!

@@ -177,16 +177,215 @@ class VeeBeltController extends Controller
                     'user_id' => session('user')['id'] ?? null,
                 ]);
 
-                // Reset alert if stock goes above reorder level
-                if ($veeBelt->reorder_level && $validated['balance_stock'] >= $veeBelt->reorder_level) {
-                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'vee')
-                        ->where('product_id', $veeBelt->id)
-                        ->where('is_active', true)
-                        ->first();
+                // Update stock alert tracking immediately when stock changes
+                $tracking = \App\Models\StockAlertTracking::where('belt_type', 'vee')
+                    ->where('product_id', $veeBelt->id)
+                    ->first();
+                
+                \Log::info("=== VEE BELT STOCK UPDATE ===", [
+                    'product_id' => $veeBelt->id,
+                    'section' => $veeBelt->section,
+                    'size' => $veeBelt->size,
+                    'old_stock' => $oldStock,
+                    'new_stock' => $validated['balance_stock'],
+                    'reorder_level' => $veeBelt->reorder_level,
+                    'type' => $type,
+                    'tracking_exists' => $tracking ? 'YES' : 'NO'
+                ]);
+                
+                // Create tracking if doesn't exist and stock is below reorder level
+                if (!$tracking && $veeBelt->reorder_level && $validated['balance_stock'] < $veeBelt->reorder_level) {
+                    \Log::info("CREATING NEW TRACKING RECORD");
                     
-                    if ($tracking && $tracking->alert_sent) {
-                        $tracking->resetAlert();
+                    $stockPerDie = \App\Models\DieConfiguration::getStockPerDie('vee', $veeBelt->section);
+                    $deficit = $veeBelt->reorder_level - $validated['balance_stock'];
+                    $diesNeeded = ceil($deficit / $stockPerDie);
+                    
+                    $tracking = \App\Models\StockAlertTracking::create([
+                        'belt_type' => 'vee',
+                        'section' => $veeBelt->section,
+                        'product_id' => $veeBelt->id,
+                        'product_sku' => $veeBelt->section . '-' . $veeBelt->size,
+                        'current_stock' => $validated['balance_stock'],
+                        'reorder_level' => $veeBelt->reorder_level,
+                        'stock_per_die' => $stockPerDie,
+                        'dies_needed' => $diesNeeded,
+                        'alert_sent' => false,
+                        'is_active' => true,
+                        'previous_stock' => $validated['balance_stock'],
+                        'last_alerted_stock' => null
+                    ]);
+                    
+                    \Log::info("NEW TRACKING CREATED", [
+                        'current_stock' => $validated['balance_stock'],
+                        'dies_needed' => $diesNeeded,
+                        'deficit' => $deficit
+                    ]);
+                }
+                
+                if ($tracking) {
+                    \Log::info("TRACKING BEFORE UPDATE", [
+                        'current_stock' => $tracking->current_stock,
+                        'previous_stock' => $tracking->previous_stock,
+                        'last_alerted_stock' => $tracking->last_alerted_stock,
+                        'dies_needed' => $tracking->dies_needed,
+                        'alert_sent' => $tracking->alert_sent ? 'YES' : 'NO'
+                    ]);
+                    
+                    // Stock went above reorder level - reset tracking
+                    if ($veeBelt->reorder_level && $validated['balance_stock'] >= $veeBelt->reorder_level) {
+                        \Log::info("CASE: Stock above reorder level - RESET", [
+                            'balance_stock' => $validated['balance_stock'],
+                            'reorder_level' => $veeBelt->reorder_level,
+                            'comparison' => $validated['balance_stock'] . ' >= ' . $veeBelt->reorder_level
+                        ]);
+                        
+                        $tracking->update([
+                            'current_stock' => $validated['balance_stock'],
+                            'previous_stock' => $validated['balance_stock'],
+                            'dies_needed' => 0,
+                            'alert_sent' => false,
+                            'last_alerted_stock' => null,
+                            'is_active' => true
+                        ]);
+                        
+                        \Log::info("TRACKING AFTER RESET", [
+                            'current_stock' => $validated['balance_stock'],
+                            'previous_stock' => $validated['balance_stock'],
+                            'dies_needed' => 0,
+                            'alert_sent' => 'NO',
+                            'last_alerted_stock' => 'null'
+                        ]);
                     }
+                    // Stock still below reorder level - update current and previous stock
+                    else if ($veeBelt->reorder_level && $validated['balance_stock'] < $veeBelt->reorder_level) {
+                        \Log::info("CASE: Stock below reorder level", [
+                            'balance_stock' => $validated['balance_stock'],
+                            'reorder_level' => $veeBelt->reorder_level,
+                            'comparison' => $validated['balance_stock'] . ' < ' . $veeBelt->reorder_level
+                        ]);
+                        $stockPerDie = \App\Models\DieConfiguration::getStockPerDie('vee', $veeBelt->section);
+                        
+                        $previousStock = $tracking->current_stock;
+                        $newStock = $validated['balance_stock'];
+                        
+                        \Log::info("CASE: Stock below reorder level", [
+                            'previous_stock' => $previousStock,
+                            'new_stock' => $newStock,
+                            'stock_per_die' => $stockPerDie
+                        ]);
+                        
+                        if ($newStock > $previousStock) {
+                            \Log::info("SUB-CASE: Stock IMPROVED (IN transaction)");
+                            
+                            // Recalculate dies based on new stock level
+                            $deficit = $veeBelt->reorder_level - $newStock;
+                            $diesNeeded = ceil($deficit / $stockPerDie);
+                            
+                            $tracking->update([
+                                'current_stock' => $newStock,
+                                'previous_stock' => $newStock,
+                                'dies_needed' => $diesNeeded,
+                                'stock_per_die' => $stockPerDie
+                            ]);
+                            
+                            \Log::info("TRACKING AFTER IN", [
+                                'current_stock' => $newStock,
+                                'previous_stock' => $newStock,
+                                'deficit' => $deficit,
+                                'dies_needed' => $diesNeeded,
+                                'alert_sent' => $tracking->alert_sent ? 'YES' : 'NO'
+                            ]);
+                        } else if ($newStock < $previousStock) {
+                            \Log::info("SUB-CASE: Stock DROPPED (OUT transaction)");
+                            
+                            if ($tracking->alert_sent && $tracking->last_alerted_stock !== null && $newStock < $tracking->last_alerted_stock) {
+                                \Log::info("ALERT LOGIC: Incremental alert needed", [
+                                    'alert_sent' => 'YES',
+                                    'last_alerted_stock' => $tracking->last_alerted_stock,
+                                    'new_stock' => $newStock,
+                                    'condition' => 'newStock < last_alerted_stock'
+                                ]);
+                                
+                                $deficit = $tracking->last_alerted_stock - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                
+                                \Log::info("CALCULATION", [
+                                    'deficit' => $deficit,
+                                    'formula' => "last_alerted_stock ({$tracking->last_alerted_stock}) - new_stock ({$newStock})",
+                                    'dies_needed' => $diesNeeded,
+                                    'formula_dies' => "ceil({$deficit} / {$stockPerDie})"
+                                ]);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'stock_per_die' => $stockPerDie,
+                                    'alert_sent' => false
+                                ]);
+                                
+                                \Log::info("TRACKING AFTER INCREMENTAL ALERT", [
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'alert_sent' => 'NO (new alert needed)'
+                                ]);
+                            } else if (!$tracking->alert_sent) {
+                                \Log::info("ALERT LOGIC: First time alert", [
+                                    'alert_sent' => 'NO',
+                                    'condition' => 'First time below min'
+                                ]);
+                                
+                                $deficit = $veeBelt->reorder_level - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                
+                                \Log::info("CALCULATION", [
+                                    'deficit' => $deficit,
+                                    'formula' => "reorder_level ({$veeBelt->reorder_level}) - new_stock ({$newStock})",
+                                    'dies_needed' => $diesNeeded,
+                                    'formula_dies' => "ceil({$deficit} / {$stockPerDie})"
+                                ]);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'stock_per_die' => $stockPerDie,
+                                    'alert_sent' => false
+                                ]);
+                                
+                                \Log::info("TRACKING AFTER FIRST ALERT", [
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'alert_sent' => 'NO'
+                                ]);
+                            } else {
+                                \Log::info("ALERT LOGIC: Stock dropped but no new alert", [
+                                    'alert_sent' => 'YES',
+                                    'last_alerted_stock' => $tracking->last_alerted_stock,
+                                    'new_stock' => $newStock,
+                                    'condition' => 'newStock >= last_alerted_stock (no new alert)'
+                                ]);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'stock_per_die' => $stockPerDie
+                                ]);
+                                
+                                \Log::info("TRACKING AFTER UPDATE (no alert change)", [
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $tracking->dies_needed,
+                                    'alert_sent' => 'YES (unchanged)'
+                                ]);
+                            }
+                        }
+                    }
+                } else {
+                    \Log::warning("NO TRACKING RECORD FOUND - Will be created by sync");
                 }
             }
 
@@ -206,13 +405,40 @@ class VeeBeltController extends Controller
 
             DB::commit();
 
+            // Get updated tracking data for response
+            $trackingData = null;
+            if (isset($validated['balance_stock'])) {
+                $trackingRecord = \App\Models\StockAlertTracking::where('belt_type', 'vee')
+                    ->where('product_id', $veeBelt->id)
+                    ->first();
+                
+                if ($trackingRecord) {
+                    $trackingData = [
+                        'current_stock' => $trackingRecord->current_stock,
+                        'previous_stock' => $trackingRecord->previous_stock,
+                        'last_alerted_stock' => $trackingRecord->last_alerted_stock,
+                        'dies_needed' => $trackingRecord->dies_needed,
+                        'alert_sent' => $trackingRecord->alert_sent,
+                        'reorder_level' => $trackingRecord->reorder_level,
+                        'stock_per_die' => $trackingRecord->stock_per_die
+                    ];
+                }
+            }
+
             return response()->json([
                 'message' => 'Product updated successfully',
-                'product' => $veeBelt->fresh()
+                'product' => $veeBelt->fresh(),
+                'tracking' => $trackingData
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error("VEE BELT UPDATE FAILED", [
+                'product_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'message' => 'Failed to update product',
                 'error' => $e->getMessage()
@@ -399,26 +625,135 @@ class VeeBeltController extends Controller
 
                 $veeBelt->save();
 
-                // Reset alert if stock goes above reorder level during IN operation
-                if ($validated['type'] === 'IN' && $veeBelt->reorder_level && $veeBelt->balance_stock >= $veeBelt->reorder_level) {
-                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'vee')
-                        ->where('product_id', $veeBelt->id)
-                        ->where('is_active', true)
-                        ->first();
-                    
-                    if ($tracking && $tracking->alert_sent) {
-                        $tracking->resetAlert();
-                    }
-                } else {
-                    $tracking = \App\Models\StockAlertTracking::where('belt_type', 'vee')
+                // Update stock alert tracking immediately
+                $tracking = \App\Models\StockAlertTracking::where('belt_type', 'vee')
                     ->where('product_id', $veeBelt->id)
-                    ->where('is_active', true)
                     ->first();
                 
-                if ($tracking && $tracking->alert_sent) {
-                    $tracking->resetAlert();
+                \Log::info("=== VEE BELT IN/OUT ===", [
+                    'product_id' => $veeBelt->id,
+                    'section' => $veeBelt->section,
+                    'size' => $veeBelt->size,
+                    'old_stock' => $oldStock,
+                    'new_stock' => $veeBelt->balance_stock,
+                    'reorder_level' => $veeBelt->reorder_level,
+                    'type' => $validated['type'],
+                    'quantity' => $validated['quantity'],
+                    'tracking_exists' => $tracking ? 'YES' : 'NO'
+                ]);
+                
+                // Create tracking if doesn't exist and stock is below reorder level
+                if (!$tracking && $veeBelt->reorder_level && $veeBelt->balance_stock < $veeBelt->reorder_level) {
+                    \Log::info("CREATING NEW TRACKING RECORD");
+                    
+                    $stockPerDie = \App\Models\DieConfiguration::getStockPerDie('vee', $veeBelt->section);
+                    $deficit = $veeBelt->reorder_level - $veeBelt->balance_stock;
+                    $diesNeeded = ceil($deficit / $stockPerDie);
+                    
+                    $tracking = \App\Models\StockAlertTracking::create([
+                        'belt_type' => 'vee',
+                        'section' => $veeBelt->section,
+                        'product_id' => $veeBelt->id,
+                        'product_sku' => $veeBelt->section . '-' . $veeBelt->size,
+                        'current_stock' => $veeBelt->balance_stock,
+                        'reorder_level' => $veeBelt->reorder_level,
+                        'stock_per_die' => $stockPerDie,
+                        'dies_needed' => $diesNeeded,
+                        'alert_sent' => false,
+                        'is_active' => true,
+                        'previous_stock' => $veeBelt->balance_stock,
+                        'last_alerted_stock' => null
+                    ]);
+                    
+                    \Log::info("NEW TRACKING CREATED", [
+                        'current_stock' => $veeBelt->balance_stock,
+                        'dies_needed' => $diesNeeded
+                    ]);
                 }
-
+                
+                if ($tracking) {
+                    \Log::info("TRACKING BEFORE UPDATE", [
+                        'current_stock' => $tracking->current_stock,
+                        'previous_stock' => $tracking->previous_stock,
+                        'last_alerted_stock' => $tracking->last_alerted_stock,
+                        'dies_needed' => $tracking->dies_needed,
+                        'alert_sent' => $tracking->alert_sent ? 'YES' : 'NO'
+                    ]);
+                    
+                    // Stock went above reorder level - reset tracking
+                    if ($veeBelt->reorder_level && $veeBelt->balance_stock >= $veeBelt->reorder_level) {
+                        \Log::info("CASE: Stock above reorder level - RESET");
+                        
+                        $tracking->update([
+                            'current_stock' => $veeBelt->balance_stock,
+                            'previous_stock' => $veeBelt->balance_stock,
+                            'dies_needed' => 0,
+                            'alert_sent' => false,
+                            'last_alerted_stock' => null,
+                            'is_active' => true
+                        ]);
+                    }
+                    // Stock still below reorder level
+                    else if ($veeBelt->reorder_level && $veeBelt->balance_stock < $veeBelt->reorder_level) {
+                        $stockPerDie = \App\Models\DieConfiguration::getStockPerDie('vee', $veeBelt->section);
+                        
+                        $previousStock = $tracking->current_stock;
+                        $newStock = $veeBelt->balance_stock;
+                        
+                        \Log::info("CASE: Stock below reorder level");
+                        
+                        if ($newStock > $previousStock) {
+                            \Log::info("SUB-CASE: Stock IMPROVED (IN)");
+                            
+                            $deficit = $veeBelt->reorder_level - $newStock;
+                            $diesNeeded = ceil($deficit / $stockPerDie);
+                            
+                            $tracking->update([
+                                'current_stock' => $newStock,
+                                'previous_stock' => $newStock,
+                                'dies_needed' => $diesNeeded,
+                                'stock_per_die' => $stockPerDie
+                            ]);
+                        } else if ($newStock < $previousStock) {
+                            \Log::info("SUB-CASE: Stock DROPPED (OUT)");
+                            
+                            if ($tracking->alert_sent && $tracking->last_alerted_stock !== null && $newStock < $tracking->last_alerted_stock) {
+                                \Log::info("ALERT LOGIC: Incremental alert needed");
+                                
+                                $deficit = $tracking->last_alerted_stock - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'stock_per_die' => $stockPerDie,
+                                    'alert_sent' => false
+                                ]);
+                            } else if (!$tracking->alert_sent) {
+                                \Log::info("ALERT LOGIC: First time alert");
+                                
+                                $deficit = $veeBelt->reorder_level - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'dies_needed' => $diesNeeded,
+                                    'stock_per_die' => $stockPerDie,
+                                    'alert_sent' => false
+                                ]);
+                            } else {
+                                \Log::info("ALERT LOGIC: Stock dropped but no new alert");
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'stock_per_die' => $stockPerDie
+                                ]);
+                            }
+                        }
+                    }
                 }
                 
 

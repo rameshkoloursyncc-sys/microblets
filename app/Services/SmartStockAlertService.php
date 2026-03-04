@@ -80,6 +80,7 @@ class SmartStockAlertService
 
     /**
      * Sync current stock data to tracking table
+     * NOW HANDLES: Incremental alerts, IN/OUT transactions, stock improvements
      */
     public function syncStockAlertTracking()
     {
@@ -122,10 +123,6 @@ class SmartStockAlertService
                     // Get dynamic stock per die configuration
                     $stockPerDie = \App\Models\DieConfiguration::getStockPerDie($config['name'], $item->section);
                     
-                    // Calculate dies needed
-                    $deficit = max(0, $item->reorder_level - $item->current_stock);
-                    $diesNeeded = ceil($deficit / $stockPerDie);
-
                     // Create SKU
                     $sku = $item->section . '-' . $item->size;
 
@@ -136,17 +133,103 @@ class SmartStockAlertService
                         ->first();
 
                     if ($tracking) {
-                        // Update existing record
-                        $tracking->update([
-                            'current_stock' => $item->current_stock,
-                            'min-inventory' => $item->reorder_level,
-                            'stock_per_die' => $stockPerDie,
-                            'dies_needed' => $diesNeeded,
-                            'is_active' => true,
-                            // Reset alert if stock was replenished
-                            'alert_sent' => $item->current_stock >= $item->reorder_level ? false : $tracking->alert_sent
-                        ]);
+                        // ===== EXISTING RECORD - INCREMENTAL LOGIC =====
+                        
+                        $previousStock = $tracking->current_stock; // Stock before this sync
+                        $newStock = $item->current_stock; // Current stock from database
+                        
+                        // Case 1: Stock improved (IN transaction)
+                        if ($newStock > $previousStock) {
+                            // If stock is back above minimum, reset everything
+                            if ($newStock >= $item->reorder_level) {
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $newStock,
+                                    'reorder_level' => $item->reorder_level,
+                                    'stock_per_die' => $stockPerDie,
+                                    'dies_needed' => 0,
+                                    'is_active' => true,
+                                    'alert_sent' => false,
+                                    'last_alerted_stock' => null
+                                ]);
+                                continue;
+                            }
+                            
+                            // Stock improved but still below minimum - just update stock, keep alert status
+                            $tracking->update([
+                                'current_stock' => $newStock,
+                                'previous_stock' => $newStock, // Update for next comparison
+                                'reorder_level' => $item->reorder_level,
+                                'stock_per_die' => $stockPerDie,
+                                'is_active' => true
+                                // Keep alert_sent and last_alerted_stock unchanged
+                            ]);
+                            continue;
+                        }
+                        // Case 2: Stock dropped (OUT transaction)
+                        else if ($newStock < $previousStock) {
+                            // Determine if we need a new alert
+                            if ($tracking->alert_sent && $tracking->last_alerted_stock !== null) {
+                                // Already alerted before - only alert if dropped below last alerted level
+                                if ($newStock < $tracking->last_alerted_stock) {
+                                    // Stock dropped below last alerted level - NEW ALERT NEEDED
+                                    // Calculate deficit from last_alerted_stock (not previous_stock)
+                                    $deficit = $tracking->last_alerted_stock - $newStock;
+                                    $diesNeeded = ceil($deficit / $stockPerDie);
+                                    
+                                    $tracking->update([
+                                        'current_stock' => $newStock,
+                                        'previous_stock' => $previousStock,
+                                        'reorder_level' => $item->reorder_level,
+                                        'stock_per_die' => $stockPerDie,
+                                        'dies_needed' => $diesNeeded,
+                                        'is_active' => true,
+                                        'alert_sent' => false // Trigger new alert
+                                    ]);
+                                } else {
+                                    // Stock dropped but still above last alerted level - no new alert
+                                    $tracking->update([
+                                        'current_stock' => $newStock,
+                                        'previous_stock' => $previousStock,
+                                        'reorder_level' => $item->reorder_level,
+                                        'stock_per_die' => $stockPerDie,
+                                        'is_active' => true
+                                        // Keep alert_sent = true, no new alert
+                                    ]);
+                                }
+                            } else {
+                                // First time below minimum OR alert not sent yet
+                                $firstTimeDeficit = $item->reorder_level - $newStock;
+                                $firstTimeDies = ceil($firstTimeDeficit / $stockPerDie);
+                                
+                                $tracking->update([
+                                    'current_stock' => $newStock,
+                                    'previous_stock' => $previousStock,
+                                    'reorder_level' => $item->reorder_level,
+                                    'stock_per_die' => $stockPerDie,
+                                    'dies_needed' => $firstTimeDies,
+                                    'is_active' => true,
+                                    'alert_sent' => false
+                                ]);
+                            }
+                        }
+                        // Case 3: Stock unchanged
+                        else {
+                            // Just update metadata, keep everything else
+                            $tracking->update([
+                                'reorder_level' => $item->reorder_level,
+                                'stock_per_die' => $stockPerDie,
+                                'is_active' => true
+                            ]);
+                        }
+                        
                     } else {
+                        // ===== NEW RECORD - FIRST TIME LOW STOCK =====
+                        
+                        // Calculate initial deficit and dies needed
+                        $deficit = max(0, $item->reorder_level - $item->current_stock);
+                        $diesNeeded = ceil($deficit / $stockPerDie);
+
                         // Create new tracking record
                         StockAlertTracking::create([
                             'belt_type' => $config['name'],
@@ -158,16 +241,24 @@ class SmartStockAlertService
                             'stock_per_die' => $stockPerDie,
                             'dies_needed' => $diesNeeded,
                             'alert_sent' => false,
-                            'is_active' => true
+                            'is_active' => true,
+                            'previous_stock' => $item->current_stock, // Initialize with current
+                            'last_alerted_stock' => null // Will be set when alert is sent
                         ]);
                     }
                 }
 
                 // Deactivate tracking for items that are no longer low stock
+                // Also reset their tracking fields for clean slate
                 StockAlertTracking::where('belt_type', $config['name'])
                     ->where('is_active', true)
                     ->whereNotIn('product_id', $lowStockItems->pluck('id'))
-                    ->update(['is_active' => false]);
+                    ->update([
+                        'is_active' => false,
+                        'alert_sent' => false,
+                        'last_alerted_stock' => null,
+                        'previous_stock' => null
+                    ]);
 
             } catch (\Exception $e) {
                 \Log::warning("Error syncing stock tracking for {$table}: " . $e->getMessage());
