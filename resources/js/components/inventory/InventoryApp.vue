@@ -756,6 +756,17 @@ const navigationMapping: Record<string, { title: string; categories: string[] }>
   'raw-material-packing': { title: 'Raw Material - Packing Material', categories: ['Packing Material'] },
 }
 const customViewMapping = computed(() => {
+  // Combine section and size for search views
+  const combinedSearch = globalSectionQuery.value && globalSizeQuery.value 
+    ? `${globalSectionQuery.value} ${globalSizeQuery.value}` 
+    : globalSectionQuery.value || globalSizeQuery.value
+  
+  console.log('🔍 customViewMapping computed:', {
+    globalSectionQuery: globalSectionQuery.value,
+    globalSizeQuery: globalSizeQuery.value,
+    combinedSearch: combinedSearch
+  })
+  
   return {
     // Vee Belts Search - All sections
     'vee-belts-search': { 
@@ -763,7 +774,7 @@ const customViewMapping = computed(() => {
       props: { 
         title: 'Vee Belts Search Results', 
         section: globalSectionQuery.value,
-        globalSearch: globalSizeQuery.value,
+        globalSearch: combinedSearch,
         key: `vee-search-${globalSectionQuery.value}-${globalSizeQuery.value}` // Force re-render on change
       } 
     },
@@ -776,7 +787,7 @@ const customViewMapping = computed(() => {
       props: { 
         title: 'Cogged Belts Search Results', 
         section: globalSectionQuery.value,
-        globalSearch: globalSizeQuery.value,
+        globalSearch: combinedSearch,
         refreshKey: refreshKey.value,
         key: `cogged-search-${globalSectionQuery.value}-${globalSizeQuery.value}-${refreshKey.value}` // Force re-render on change
       } 
@@ -797,7 +808,7 @@ const customViewMapping = computed(() => {
       props: { 
         title: 'Poly Belts Search Results', 
         section: globalSectionQuery.value,
-        globalSearch: globalSizeQuery.value,
+        globalSearch: combinedSearch,
         refreshKey: refreshKey.value,
         key: `poly-search-${globalSectionQuery.value}-${globalSizeQuery.value}-${refreshKey.value}` // Force re-render on change
       } 
@@ -809,7 +820,7 @@ const customViewMapping = computed(() => {
       props: { 
         title: 'TPU Belts Search Results', 
         section: globalSectionQuery.value,
-        globalSearch: globalSizeQuery.value,
+        globalSearch: combinedSearch,
         refreshKey: refreshKey.value,
         key: `tpu-search-${globalSectionQuery.value}-${globalSizeQuery.value}-${refreshKey.value}` // Force re-render on change
       } 
@@ -853,7 +864,7 @@ const customViewMapping = computed(() => {
     props: { 
       title: 'Timing Belts Search Results', 
       section: globalSectionQuery.value,
-      globalSearch: globalSizeQuery.value,
+      globalSearch: combinedSearch,
       refreshKey: refreshKey.value,
       key: `timing-search-${globalSectionQuery.value}-${globalSizeQuery.value}-${refreshKey.value}` // Force re-render on change
     } 
@@ -893,7 +904,7 @@ const customViewMapping = computed(() => {
     props: { 
       title: 'Special Belts Search Results', 
       section: globalSectionQuery.value,
-      globalSearch: globalSizeQuery.value,
+      globalSearch: combinedSearch,
       key: `special-search-${globalSectionQuery.value}-${globalSizeQuery.value}` // Force re-render on change
     } 
   },
@@ -937,8 +948,15 @@ const customViewMapping = computed(() => {
   'raw-material-packing': { component: RawCarbonTable, props: { section: 'Packing', title: 'Raw Material - Packing Material' } },
   'raw-material-open': { component: RawCarbonTable, props: { section: 'Open', title: 'Raw Material - Open' } },
   
-  // Raw Material Search - searches across ALL raw materials
-  'raw-material-search': { component: RawCarbonTable, props: { title: 'Raw Material Search Results' } },
+  // Raw Material Search - searches across ALL raw materials (section only, no size)
+  'raw-material-search': { 
+    component: RawCarbonTable, 
+    props: { 
+      title: 'Raw Material Search Results',
+      globalSearch: globalSectionQuery.value,
+      key: `raw-search-${globalSectionQuery.value}`
+    } 
+  },
   }
 });
 const handleNavigation = (view: string) => {
@@ -964,9 +982,16 @@ const handleNavigation = (view: string) => {
 }
 
 const handleSearch = (searchData: { type: string; sectionQuery?: string; sizeQuery?: string }) => {
+  console.log('🔍 handleSearch called with:', searchData)
+  
   // Set global search parameters
   globalSectionQuery.value = searchData.sectionQuery || ''
   globalSizeQuery.value = searchData.sizeQuery || ''
+  
+  console.log('🔍 After setting:', {
+    globalSectionQuery: globalSectionQuery.value,
+    globalSizeQuery: globalSizeQuery.value
+  })
   
   // Determine which search view to show based on section
   const section = globalSectionQuery.value.toUpperCase()
@@ -1181,7 +1206,6 @@ onMounted(() => {
     :is="customViewMapping[currentView].component || customViewMapping[currentView]" 
     v-bind="customViewMapping[currentView].props || {}"
     :sidebar-collapsed="sidebarCollapsed"
-    :global-search="globalSectionQuery"
     :key="`${customViewMapping[currentView].props?.key || currentView}-${refreshKey}`"
   />
 </div>
