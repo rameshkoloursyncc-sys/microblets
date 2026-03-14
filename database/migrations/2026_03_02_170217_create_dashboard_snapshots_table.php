@@ -73,3 +73,6 @@ return new class extends Migration
         Schema::dropIfExists('dashboard_snapshots');
     }
 };
+
+
+// mysql -u u558881185_ks_micro -p u558881185_micro_ima -e "SELECT COUNT(*) as total, MAX(snapshot_date) as latest_date, MAX(created_at) as last_created FROM dashboard_snapshots;"

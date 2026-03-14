@@ -277,7 +277,7 @@
       </div>
 
       <!-- Data Seeding -->
-      <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+     <!-- <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           {{ beltTypeConfig[selectedBeltType].name }} Data Seeding
         </h2>
@@ -335,9 +335,10 @@
             </button>
           </div>
         </div>
-      </div>
-         
-  </div>
+      </div> -->
+
+
+    </div>
 
     <!--  Notifications -->
       <div class="fixed right-4 top-4 space-y-3 z-50">

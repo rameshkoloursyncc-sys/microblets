@@ -211,28 +211,40 @@
           <h3 class="font-semibold mb-2">Create Timing Belt</h3>
           <div class="grid grid-cols-1 gap-2">
             <label>Section
-              <input v-model="createForm.section" class="w-full p-2 border rounded" placeholder="e.g., XL, L, H, 5M, 8M" />
+              <input v-model="createForm.section" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" placeholder="e.g., XL, L, H, 5M, 8M" />
             </label>
 
             <label>Size
-              <input v-model="createForm.size" class="w-full p-2 border rounded" placeholder="e.g., 150, 200" />
+              <input v-model="createForm.size" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" placeholder="e.g., 150, 200" />
             </label>
 
             <label>{{ props.section?.startsWith('NEOPRENE') ? 'Full Sleeve' : 'Full Sleeve' }}
-              <input v-model="createForm.type" class="w-full p-2 border rounded" :placeholder="props.section?.startsWith('NEOPRENE') ? 'e.g., 18' : 'e.g., 18, 21, 10, 24'" />
+              <input v-model="createForm.type" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" :placeholder="props.section?.startsWith('NEOPRENE') ? 'e.g., 18' : 'e.g., 18, 21, 10, 24'" />
             </label>
             
             <label> MM Sleeve
-              <input v-model.number="createForm.total_mm" type="number" step="0.01" class="w-full p-2 border rounded" min="0" placeholder="Total inventory in mm" />
+              <input v-model.number="createForm.total_mm" type="number" step="0.01" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" min="0" placeholder="Total inventory in mm" />
             </label>
 
             <label>Remark
-              <textarea v-model="createForm.remark" class="w-full p-2 border rounded" rows="2"></textarea>
+              <textarea v-model="createForm.remark" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" rows="2"></textarea>
             </label>
 
             <div class="flex justify-end gap-2 mt-2">
               <button @click="showCreateModal = false" class="px-3 py-1">Cancel</button>
-              <button @click="createProduct" class="px-3 py-1 bg-blue-600 text-white rounded" :disabled="loading">
+              <button @click="createProduct" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" :disabled="loading">
                 Create
               </button>
             </div>

@@ -351,27 +351,39 @@
           <h3 class="font-semibold mb-2">Create Product</h3>
           <div class="grid grid-cols-1 gap-2">
             <label>Section
-              <input v-model="createForm.section" class="w-full p-2 border rounded" :placeholder="section || 'e.g., PJ, PK, PL'" />
+              <input v-model="createForm.section" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" :placeholder="section || 'e.g., PJ, PK, PL'" />
             </label>
 
             <label>Size
-              <input v-model.number="createForm.size" type="number" step="0.01" class="w-full p-2 border rounded" placeholder="Enter size (e.g., 1600)" />
+              <input v-model.number="createForm.size" type="number" step="0.01" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" placeholder="Enter size (e.g., 1600)" />
             </label>
 
             <label>Ribs (Inventory Quantity)
-              <input v-model.number="createForm.ribs" type="number" class="w-full p-2 border rounded" min="0" placeholder="Number of ribs in stock" />
+              <input v-model.number="createForm.ribs" type="number" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" min="0" placeholder="Number of ribs in stock" />
             </label>
 
             <label>Minimum Ribs Level
-              <input v-model.number="createForm.reorder_level" type="number" class="w-full p-2 border rounded" min="0" placeholder="Leave empty to disable tracking" />
+              <input v-model.number="createForm.reorder_level" type="number" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" min="0" placeholder="Leave empty to disable tracking" />
             </label>
 
             <label>Rate per Rib (leave empty for auto-calculation)
-              <input v-model.number="createForm.rate_per_rib" type="number" step="0.01" class="w-full p-2 border rounded" />
+              <input v-model.number="createForm.rate_per_rib" type="number" step="0.01" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" />
             </label>
 
             <label>Remark
-              <textarea v-model="createForm.remark" class="w-full p-2 border rounded" rows="2"></textarea>
+              <textarea v-model="createForm.remark" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" rows="2"></textarea>
             </label>
 
             <div class="flex justify-end gap-2 mt-2">

@@ -1624,7 +1624,7 @@ const sidebarStyle = computed(() => {
                   <span>TPU</span>
                 </button>
               </li>
-              <li>
+              <!-- <li>
                 <button
                   type="button"
                   class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -1633,7 +1633,7 @@ const sidebarStyle = computed(() => {
                   
                   <span>Fibre Glass Cord</span>
                 </button>
-              </li>
+              </li> -->
               <li>
                 <button
                   type="button"
@@ -1654,7 +1654,7 @@ const sidebarStyle = computed(() => {
                   <span>Packing Material</span>
                 </button>
               </li>
-              <li>
+              <!-- <li>
                 <button
                   type="button"
                   class="flex items-center gap-2 block w-full text-left p-2 text-xs text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -1663,7 +1663,7 @@ const sidebarStyle = computed(() => {
                   
                   <span>Open</span>
                 </button>
-              </li>
+              </li> -->
             </ul>
           </li>
         </ul>

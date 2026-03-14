@@ -90,12 +90,12 @@
           
           <!-- Create Button -->
           <div class="w-full sm:w-auto sm:ml-auto">
-               <button @click="showImportModal = true" class="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700">
+               <!-- <button @click="showImportModal = true" class="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700">
               Import JSON
             </button>
             <button @click="downloadJSON" class="px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700">
               Download JSON
-            </button>
+            </button> -->
             <button @click="showCreateModal = true" class="w-full sm:w-auto px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
               Create Product
             </button>
@@ -331,28 +331,54 @@
         <div class="relative bg-white dark:bg-gray-800 rounded p-4 w-full max-w-lg z-50">
           <h3 class="font-semibold mb-2">Create Product</h3>
           <div class="grid grid-cols-1 gap-2">
-            <label>Description (Material Name)
-              <input v-model="createForm.section" class="w-full p-2 border rounded" placeholder="e.g., FEF N550, HAF N330" />
+            <label>Description (Material Name) *
+              <input v-model="createForm.section" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" placeholder="e.g., FEF N550, HAF N330" />
+          <p v-if="errors.section" class="text-red-500 text-xs mt-1">
+    {{ errors.section }}
+  </p>
+            </label>
+            
+
+            <label>Packing *
+              <input v-model="createForm.packing" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" placeholder="Enter packing size" />
+            <p v-if="errors.packing" class="text-red-500 text-xs mt-1">
+    {{ errors.packing }}
+  </p>
             </label>
 
-            <label>Packing (Size)
-              <input v-model="createForm.packing" class="w-full p-2 border rounded" placeholder="Enter packing size" />
+            <label>Balance Stock *
+              <input v-model.number="createForm.balance_stock" type="number" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" min="0" placeholder="required" />
+            <p v-if="errors.balance_stock" class="text-red-500 text-xs mt-1">
+    {{ errors.balance_stock }}
+  </p>
             </label>
 
-            <label>Balance Stock
-              <input v-model.number="createForm.balance_stock" type="number" class="w-full p-2 border rounded" min="0" placeholder="Leave empty to disable tracking" />
+            <label>Minimum Inventory Level
+              <input v-model.number="createForm.reorder_level" type="number" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" min="0" placeholder="required" />
+         
             </label>
 
-            <label>Minimum Inventory Level (leave empty for no tracking)
-              <input v-model.number="createForm.reorder_level" type="number" class="w-full p-2 border rounded" min="0" placeholder="Leave empty to disable tracking" />
+            <label>Rate per item *
+              <input v-model.number="createForm.rate" type="number" step="0.01" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+            <p v-if="errors.rate" class="text-red-500 text-xs mt-1">
+    {{ errors.rate }}
+  </p>
             </label>
 
-            <label>Rate per item (leave empty for auto-calculation)
-              <input v-model.number="createForm.rate" type="number" step="0.01" class="w-full p-2 border rounded" />
-            </label>
-
-            <label>Remark
-              <textarea v-model="createForm.remark" class="w-full p-2 border rounded" rows="2"></textarea>
+            <label>Remark 
+              <textarea v-model="createForm.remark" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" rows="2"></textarea>
             </label>
 
             <div class="flex justify-end gap-2 mt-2">
@@ -501,7 +527,7 @@ const showCreateModal = ref(false)
 const createForm = ref({ 
   section: '', // Material name/description, not category
   packing: '', 
-  balance_stock: 0, 
+  balance_stock: 0 | undefined as number | undefined,  
   reorder_level: undefined as number | undefined, 
   rate: undefined as number | undefined,
   remark: ''
@@ -617,7 +643,12 @@ const totalValue = computed(() => {
 })
 
 const lowStockCount = computed(() => {
-  return visibleProducts.value.filter(p => p.reorder_level !== null && p.reorder_level >= 1 && p.reorder_level !== null && p.reorder_level >= 1 && p.reorder_level !== null && p.reorder_level >= 1 && p.balance_stock <= p.reorder_level && p.balance_stock > 0).length
+  return visibleProducts.value.filter(p =>
+    p.reorder_level !== null &&
+    p.reorder_level !== undefined &&
+    p.balance_stock <= p.reorder_level &&
+    p.balance_stock > 0
+  ).length
 })
 
 // Filtered transaction history by date
@@ -717,22 +748,53 @@ const getStockClass = (p: RawCarbon) => {
   }
   return 'text-green-600 font-bold'
 }
+const errors = ref({
+  section: '',
+  packing: '',
+  balance_stock: '',
+  reorder_level: '',
+  rate: ''
+})
 
 const createProduct = async () => {
   try {
+    const form = createForm.value;
+    errors.value = {}
+    if(!form.section?.trim()){
+         errors.value.section = "Description name is required"
+       showNotification('error', 'Validation Error', 'Material name is required')
+      return
+    } 
+      if(!form.packing?.trim()){
+           errors.value.packing = "Packing  is required"
+       showNotification('error', 'Validation Error', 'Packing  is required')
+      return
+    }
+      if (form.balance_stock === null || form.balance_stock === undefined || isNaN(form.balance_stock)) {
+  errors.value.balance_stock = "Balance Stock is required"
+  showNotification('error', 'Validation Error', 'Balance Stock is required')
+  return
+}
+
+if (form.rate === null || form.rate === undefined || isNaN(form.rate)) {
+  errors.value.rate = "Rate is required"
+  showNotification('error', 'Validation Error', 'Rate is required')
+  return
+}
     // Add category field from props.section
     const productData = {
       ...createForm.value,
       category: props.section // This is crucial for raw materials
     }
+
     await apiCreateProduct(productData)
     showNotification('success', 'Created', 'Product created successfully')
     showCreateModal.value = false
     createForm.value = { 
       section: '', // Clear section field - user should enter material name
       packing: '', 
-      balance_stock: 0, 
-      reorder_level: undefined, 
+      balance_stock: 0 ,
+      reorder_level: null as number | null,
       rate: undefined,
       remark: ''
     }

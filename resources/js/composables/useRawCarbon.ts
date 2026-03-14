@@ -78,7 +78,7 @@ export function useRawCarbon(section?: string) {
         balance_stock: Number(item.balance_stock),
         in_stock: Number(item.in_stock || 0),
         out_stock: Number(item.out_stock || 0),
-        reorder_level: Number(item.reorder_level),
+        reorder_level: Number(item.reorder_level) || 0,
         rate: Number(item.rate),
         value: Number(item.value),
       }))

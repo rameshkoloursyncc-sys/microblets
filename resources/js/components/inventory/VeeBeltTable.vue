@@ -295,34 +295,48 @@
         <h3 class="font-semibold mb-2">Create Product</h3>
         <div class="grid grid-cols-1 gap-2">
           <label>Section
-            <input v-model="createForm.section" class="w-full p-2 border rounded"
+            <input v-model="createForm.section" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600"
               :placeholder="section || 'e.g., A, B, SPA'" />
           </label>
 
           <label>Size
-            <input v-model="createForm.size" class="w-full p-2 border rounded" placeholder="Enter size" />
+            <input v-model="createForm.size" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" placeholder="Enter size" />
           </label>
 
           <label>Balance Stock
-            <input v-model.number="createForm.balance_stock" type="number" class="w-full p-2 border rounded" min="0" />
+            <input v-model.number="createForm.balance_stock" type="number" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" min="0" />
           </label>
 
           <label>Minimum Inventory Level (leave empty for no tracking)
-            <input v-model.number="createForm.reorder_level" type="number" class="w-full p-2 border rounded" min="0"
+            <input v-model.number="createForm.reorder_level" type="number" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" min="0"
               placeholder="Leave empty to disable tracking" />
           </label>
 
           <label>Rate per item (leave empty for auto-calculation)
-            <input v-model.number="createForm.rate" type="number" step="0.01" class="w-full p-2 border rounded" />
+            <input v-model.number="createForm.rate" type="number" step="0.01" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" />
           </label>
 
           <label>Remark
-            <textarea v-model="createForm.remark" class="w-full p-2 border rounded" rows="2"></textarea>
+            <textarea v-model="createForm.remark" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" rows="2"></textarea>
           </label>
 
           <div class="flex justify-end gap-2 mt-2">
             <button @click="showCreateModal = false" class="px-3 py-1">Cancel</button>
-            <button @click="createProduct" class="px-3 py-1 bg-blue-600 text-white rounded" :disabled="loading">
+            <button @click="createProduct" class="w-full p-2 border rounded
+         bg-white text-gray-900 border-gray-300
+         dark:bg-gray-700 dark:text-white dark:border-gray-600" :disabled="loading">
               Create
             </button>
           </div>

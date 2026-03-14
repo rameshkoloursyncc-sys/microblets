@@ -328,9 +328,16 @@ class TpuBeltController extends Controller
                         $newStock = $tpuBelt->meter;
                         
                         if ($newStock > $previousStock) {
-                            // Recalculate dies based on new stock level
-                            $deficit = $tpuBelt->reorder_level - $newStock;
-                            $diesNeeded = ceil($deficit / $stockPerDie);
+                            // Recalculate dies based on last alerted stock (incremental) or reorder level (first time)
+                            if ($tracking->last_alerted_stock !== null) {
+                                // Use incremental calculation from last alerted stock
+                                $deficit = $tracking->last_alerted_stock - $newStock;
+                                $diesNeeded = $deficit > 0 ? ceil($deficit / $stockPerDie) : 0;
+                            } else {
+                                // First time, use reorder level
+                                $deficit = $tpuBelt->reorder_level - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                            }
                             
                             $tracking->update([
                                 'current_stock' => $newStock,

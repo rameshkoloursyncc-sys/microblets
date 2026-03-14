@@ -278,9 +278,16 @@ class VeeBeltController extends Controller
                         if ($newStock > $previousStock) {
                             \Log::info("SUB-CASE: Stock IMPROVED (IN transaction)");
                             
-                            // Recalculate dies based on new stock level
-                            $deficit = $veeBelt->reorder_level - $newStock;
-                            $diesNeeded = ceil($deficit / $stockPerDie);
+                            // Recalculate dies based on last alerted stock (incremental) or reorder level (first time)
+                            if ($tracking->last_alerted_stock !== null) {
+                                // Use incremental calculation from last alerted stock
+                                $deficit = $tracking->last_alerted_stock - $newStock;
+                                $diesNeeded = $deficit > 0 ? ceil($deficit / $stockPerDie) : 0;
+                            } else {
+                                // First time, use reorder level
+                                $deficit = $veeBelt->reorder_level - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                            }
                             
                             $tracking->update([
                                 'current_stock' => $newStock,
@@ -292,8 +299,10 @@ class VeeBeltController extends Controller
                             \Log::info("TRACKING AFTER IN", [
                                 'current_stock' => $newStock,
                                 'previous_stock' => $newStock,
+                                'last_alerted_stock' => $tracking->last_alerted_stock,
                                 'deficit' => $deficit,
                                 'dies_needed' => $diesNeeded,
+                                'calculation' => $tracking->last_alerted_stock !== null ? 'incremental' : 'from_reorder_level',
                                 'alert_sent' => $tracking->alert_sent ? 'YES' : 'NO'
                             ]);
                         } else if ($newStock < $previousStock) {
@@ -705,8 +714,16 @@ class VeeBeltController extends Controller
                         if ($newStock > $previousStock) {
                             \Log::info("SUB-CASE: Stock IMPROVED (IN)");
                             
-                            $deficit = $veeBelt->reorder_level - $newStock;
-                            $diesNeeded = ceil($deficit / $stockPerDie);
+                            // Recalculate dies based on last alerted stock (incremental) or reorder level (first time)
+                            if ($tracking->last_alerted_stock !== null) {
+                                // Use incremental calculation from last alerted stock
+                                $deficit = $tracking->last_alerted_stock - $newStock;
+                                $diesNeeded = $deficit > 0 ? ceil($deficit / $stockPerDie) : 0;
+                            } else {
+                                // First time, use reorder level
+                                $deficit = $veeBelt->reorder_level - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                            }
                             
                             $tracking->update([
                                 'current_stock' => $newStock,

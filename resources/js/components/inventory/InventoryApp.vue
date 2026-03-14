@@ -1464,13 +1464,13 @@ onMounted(() => {
           <!-- Stock Alert Section -->
           <div class="mt-8">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
-              <div class="flex items-center justify-between mb-4">
+              <!-- <div class="flex items-center justify-between mb-4">
                 <div>
-                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Excel Stock Reports</h3>
-                  <p class="text-sm text-gray-600 dark:text-gray-400">Send comprehensive Excel stock reports with die requirements via email</p>
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Stock Reports</h3>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">Send comprehensive Excel stock reports with die requirements via email 5 PM Daily</p>
                 </div>
                 <div class="flex gap-3">
-                  <button 
+                   <button 
                     @click="sendStockAlert"
                     :disabled="sendingAlert"
                     class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-lg transition-colors duration-200"
@@ -1498,7 +1498,7 @@ onMounted(() => {
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                     {{ sendingSmartAlert ? 'Sending Smart Excel...' : 'Email Smart Excel Report' }}
-                  </button>
+                  </button> 
                   
                   <button 
                     @click="downloadExcelReport"
@@ -1513,10 +1513,11 @@ onMounted(() => {
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                     {{ downloadingExcel ? 'Downloading...' : 'Download Excel Report' }}
-                  </button>
+                  </button> 
+                  
                 </div>
               </div>
-              
+               -->
               <!-- Alert Status Messages -->
               <div v-if="alertMessage" class="mt-4 p-3 rounded-lg" :class="alertMessage.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200' : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'">
                 <div class="flex items-center">
@@ -1577,6 +1578,10 @@ onMounted(() => {
               </div>
             </div>
           </div>
+       
+
+
+          
         </div>
 
         <!-- Raw Materials Stats Section -->

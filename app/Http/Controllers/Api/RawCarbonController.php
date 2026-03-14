@@ -48,7 +48,7 @@ class RawCarbonController extends Controller
 
         // Sort
         // Sort by packing (width) in ascending order
-        $query->orderByRaw('CAST(packing AS UNSIGNED) ASC');
+        $query->orderByRaw('CAST(NULLIF(packing, "") AS UNSIGNED) ASC');
 
         // Paginate or get all
         if ($request->boolean('paginate', true)) {
@@ -90,7 +90,7 @@ class RawCarbonController extends Controller
             'category' => 'required|string|max:100',
             'packing' => 'required|string|max:20',
             'balance_stock' => 'required|numeric|min:0',
-            'reorder_level' => 'nullable|integer|min:0',
+            'reorder_level' => 'nullable|numeric|min:0',
             'rate' => 'nullable|numeric|min:0',
             'remark' => 'nullable|string',
         ]);
@@ -163,7 +163,7 @@ class RawCarbonController extends Controller
             'section' => 'sometimes|string|max:100',
             'packing' => 'sometimes|string|max:20',
             'balance_stock' => 'sometimes|numeric|min:0',
-            'reorder_level' => 'sometimes|integer|min:0',
+            'reorder_level' => 'nullable|numeric|min:0',
             'rate' => 'sometimes|numeric|min:0',
             'remark' => 'nullable|string',
         ]);
@@ -214,9 +214,16 @@ class RawCarbonController extends Controller
                         $newStock = $validated['balance_stock'];
                         
                         if ($newStock > $previousStock) {
-                            // Recalculate dies based on new stock level
-                            $deficit = $rawCarbon->reorder_level - $newStock;
-                            $diesNeeded = ceil($deficit / $stockPerDie);
+                            // Recalculate dies based on last alerted stock (incremental) or reorder level (first time)
+                            if ($tracking->last_alerted_stock !== null) {
+                                // Use incremental calculation from last alerted stock
+                                $deficit = $tracking->last_alerted_stock - $newStock;
+                                $diesNeeded = $deficit > 0 ? ceil($deficit / $stockPerDie) : 0;
+                            } else {
+                                // First time, use reorder level
+                                $deficit = $rawCarbon->reorder_level - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                            }
                             
                             $tracking->update([
                                 'current_stock' => $newStock,
@@ -324,7 +331,7 @@ class RawCarbonController extends Controller
             'products.*.section' => 'required|string|max:100',
             'products.*.packing' => 'required|string|max:20',
             'products.*.balance_stock' => 'required|numeric|min:0',
-            'products.*.reorder_level' => 'nullable|integer|min:0',
+            'products.*.reorder_level' => 'nullable|numeric|min:0',
             'products.*.rate' => 'nullable|numeric|min:0',
             'products.*.remark' => 'nullable|string',
             'mode' => 'required|in:append,replace',
@@ -517,9 +524,16 @@ class RawCarbonController extends Controller
                         $newStock = $rawCarbon->balance_stock;
                         
                         if ($newStock > $previousStock) {
-                            // Recalculate dies based on new stock level
-                            $deficit = $rawCarbon->reorder_level - $newStock;
-                            $diesNeeded = ceil($deficit / $stockPerDie);
+                            // Recalculate dies based on last alerted stock (incremental) or reorder level (first time)
+                            if ($tracking->last_alerted_stock !== null) {
+                                // Use incremental calculation from last alerted stock
+                                $deficit = $tracking->last_alerted_stock - $newStock;
+                                $diesNeeded = $deficit > 0 ? ceil($deficit / $stockPerDie) : 0;
+                            } else {
+                                // First time, use reorder level
+                                $deficit = $rawCarbon->reorder_level - $newStock;
+                                $diesNeeded = ceil($deficit / $stockPerDie);
+                            }
                             
                             $tracking->update([
                                 'current_stock' => $newStock,
